@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" href="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=68103224&is=680ee0a4&hm=1e2890020e65536830747150cf2b3af8fe9df9a91cd878f8fb3fea8b19070ac1&=&format=webp&quality=lossless" />
   <title>Tikify – Removed TikTok Viewer</title>
 
   <!-- Open Graph / Facebook Embed -->
   <meta property="og:title" content="Tikify – TikTok Viewer" />
   <meta property="og:description" content="Watch  TikTok videos. Search users, browse latest or top videos, and download your favorites." />
-  <meta property="og:image" content="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=68103224&is=680ee0a4&hm=1e2890020e65536830747150cf2b3af8fe9df9a91cd878f8fb3fea8b19070ac1&=&format=webp&quality=lossless" />
+  <meta property="og:image" content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg?ex=68101890&is=680ec710&hm=af0c0b334d70dd00c729c91a43f706028689ed04fb6e64e0c32e09244ad85f4b&=&format=webp" />
   <meta property="og:url" content="https://tikify.up.railway.app/" />
   <meta property="og:type" content="website" />
 
@@ -15,7 +16,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Tikify – TikTok Viewer" />
   <meta name="twitter:description" content="Watch TikTok videos. Search users, browse latest or top videos, and download your favorites." />
-  <meta name="twitter:image" content="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=68103224&is=680ee0a4&hm=1e2890020e65536830747150cf2b3af8fe9df9a91cd878f8fb3fea8b19070ac1&=&format=webp&quality=lossless" />
+  <meta name="twitter:image" content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg?ex=68101890&is=680ec710&hm=af0c0b334d70dd00c729c91a43f706028689ed04fb6e64e0c32e09244ad85f4b&=&format=webp" />
 
   <style>
     /* reset & base */
@@ -40,9 +41,10 @@
 
     /* Auth container */
     #auth-container {
-      display: none; /* shown if not logged in */
+      display: none;             /* shown if not logged in */
       height: 100vh; width: 100%;
-      background: #000; color: #fff;
+      background: #000;
+      color: #fff;
       display: flex; flex-direction: column;
       justify-content: center; align-items: center;
     }
@@ -65,7 +67,9 @@
     .tabs button.active { background: #333; }
     .form-container { width: 300px; }
     .form-container form {
-      display: none; flex-direction: column; gap: 12px;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
     }
     .form-container form.active { display: flex; }
     .form-container input {
@@ -213,10 +217,10 @@
         const token = localStorage.getItem('tikify_token');
         if (token) {
           document.getElementById('app-content').style.display = 'block';
-          initApp();
+          initApp();   // bind play listeners etc
         } else {
           document.getElementById('auth-container').style.display = 'flex';
-          initAuth();
+          initAuth();  // bind tab and form logic
         }
       }, 600);
     });
@@ -246,7 +250,7 @@
       tabLogin.onclick    = showLogin;
       tabRegister.onclick = showRegister;
 
-      // --- FIXED LOGIN ---
+      // -- FIXED LOGIN: use URL-encoded form & redirect to main page --
       formLogin.onsubmit = e => {
         e.preventDefault();
         errorLogin.textContent = '';
@@ -267,7 +271,8 @@
         })
         .then(data => {
           localStorage.setItem('tikify_token', data.access_token);
-          location.reload();
+          // redirect to main page
+          window.location.href = '/';
         })
         .catch(err => {
           errorLogin.textContent = err.message;

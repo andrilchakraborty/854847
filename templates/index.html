@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <link
     rel="icon"
-    href="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=68103224&is=680ee0a4&hm=1e2890020e65536830747150cf2b3af8fe9df9a91cd878f8fb3fea8b19070ac1&=&format=webp&quality=lossless"
+    href="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=6810dae4&is=680f8964&hm=3541cfcdc557fae800e4603bec2508dcaa17d8ee2634dbb942cf3478c8289c26&=&format=webp&quality=lossless"
     type="image/png"
   />
   <title>Bop Central</title>
@@ -19,7 +19,7 @@
     property="og:image"
     content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg?ex=6810c150&is=680f6fd0&hm=7d128535b31463dfba1e9fd139a7ad7ae51b1ec7f08b7a54c09e2bcc5dac131e&=&format=webp"
   />
-  <meta property="og:url" content="https://tikify.onrender.com/" />
+  <meta property="og:url" content="https://bop-central.onrender.com/" />
   <meta property="og:type" content="website" />
 
   <!-- Twitter Card -->
@@ -113,6 +113,25 @@
         filter: drop-shadow(0 0 30px #4a00e0);
       }
     }
+    .tabs { display: flex; margin-bottom: 20px; }
+    .tabs button {
+      flex: 1; padding: 10px; background: #151515; border: none;
+      cursor: pointer; color: #fff; font-weight: bold;
+    }
+    .tabs button.active { background: #333; }
+    .form-container { width: 300px; }
+    .form-container form {
+      display: none; flex-direction: column; gap: 12px;
+    }
+    .form-container form.active { display: flex; }
+    .form-container input {
+      padding: 8px; border-radius: 4px; border: none;
+    }
+    .form-container button {
+      padding: 10px; border: none; border-radius: 4px;
+      cursor: pointer; background: #4a00e0; color: #fff;
+    }
+    .form-error { color: #ff004f; font-size: 0.9rem; }
 
     /* Main app container */
     #app-content {
@@ -240,6 +259,18 @@
       background: #333;
     }
 
+    /* Search bar for saved users */
+    #user-search {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px;
+      margin: 20px auto;
+      display: block;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
     /* Grids and cards */
     .users-grid {
       display: grid;
@@ -314,18 +345,6 @@
       background: #333;
     }
 
-    /* Search bar for saved users */
-    #user-search {
-      width: 100%;
-      max-width: 400px;
-      padding: 10px;
-      margin: 20px auto;
-      display: block;
-      border: none;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
-
     /* Admin dashboard */
     #admin-dashboard {
       display: none;
@@ -346,21 +365,11 @@
       color: #fff;
     }
     .admin-section th,
-    .admin-section td {
-      padding: 12px;
-      border: 1px solid #333;
-      text-align: left;
-    }
-    .admin-section th {
-      background: #333;
-    }
+    .admin-section td { padding: 12px; border: 1px solid #333; text-align: left; }
+    .admin-section th { background: #333; }
     .admin-section button.delete {
-      background: #ff4d4f;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      color: #fff;
+      background: #ff4d4f; border: none; padding: 6px 12px;
+      border-radius: 4px; cursor: pointer; color: #fff;
     }
   </style>
 </head>
@@ -405,7 +414,6 @@
   <!-- Main App -->
   <div id="app-content">
     <header>
-      <!-- logo at left -->
       <a href="/" class="logo-container">
         <img
           src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=6810dae4&is=680f8964&hm=3541cfcdc557fae800e4603bec2508dcaa17d8ee2634dbb942cf3478c8289c26&=&format=webp&quality=lossless"
@@ -413,7 +421,6 @@
           class="logo"
         />
       </a>
-      <!-- centered navigation -->
       <nav>
         <a href="/" data-view="home">Home</a>
         <a href="/?type=latest" data-view="latest">Latest</a>
@@ -421,7 +428,6 @@
         <a href="/?view=urls" data-view="urls">Saved URLs</a>
         <a href="/?view=users" data-view="users">Saved Users</a>
       </nav>
-      <!-- sidebar toggle -->
       <button id="sidebar-toggle">☰</button>
     </header>
 
@@ -465,7 +471,6 @@
       {% if users %}
       <section id="saved-users">
         <h3 style="text-align:center;">Saved Users</h3>
-        <!-- Search bar for filtering saved users -->
         <input
           type="text"
           id="user-search"
@@ -474,7 +479,7 @@
         />
         <div class="users-grid" id="users-grid">
           {% for username, data in users.items() %}
-          <a href="/?q={{ username }}" class="user-link" style="text-decoration:none;">
+          <a href="/?q={{ username }}" class="user-link">
             <div class="user-card">
               <img src="{{ data.avatar }}" alt="@{{ username }}’s avatar" />
               <span class="handle">@{{ username }}</span>
@@ -506,12 +511,8 @@
             <div class="title">{{ v.text }}</div>
             <div class="views" id="views-{{ v.aweme_id }}">{{ v.play_count }} views</div>
             <div class="card-buttons">
-              <a href="/download?video_id={{ v.aweme_id }}&hd=0">
-                <button type="button">Download</button>
-              </a>
-              <a href="/download?video_id={{ v.aweme_id }}&hd=1">
-                <button type="button">HD</button>
-              </a>
+              <a href="/download?video_id={{ v.aweme_id }}&hd=0"><button type="button">Download</button></a>
+              <a href="/download?video_id={{ v.aweme_id }}&hd=1"><button type="button">HD</button></a>
             </div>
           </div>
           {% endfor %}
@@ -529,7 +530,7 @@
       <table>
         <thead><tr><th>Username</th><th>Action</th></tr></thead>
         <tbody>
-          {% for u in all_users %}
+          {% for u in all_users %} 
           <tr>
             <td>{{ u.username }}</td>
             <td><button class="delete" data-username="{{ u.username }}">Delete</button></td>
@@ -548,12 +549,12 @@
   </div>
 
   <script>
-    // ========== Sidebar toggle ==========
+    // Sidebar toggle
     document.getElementById('sidebar-toggle').addEventListener('click', () => {
       document.querySelector('.about-us').classList.toggle('open');
     });
 
-    // ========== Anti-Inspect & Anti-Copy ==========
+    // Anti-Inspect & Anti-Copy
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('copy', e => e.preventDefault());
     document.addEventListener('cut', e => e.preventDefault());
@@ -588,18 +589,17 @@
         '<h1 style="color:#f00;text-align:center;margin-top:20vh">Nuh uh buddy, go away!</h1>';
       setTimeout(() => (window.location.href = '/'), 1500);
     }
-    // ==============================================
 
-    // ========== Your existing app & auth scripts ==========
-    function showAdmin() {
-      document.getElementById('loader').style.display = 'none';
-      document.getElementById('auth-container').style.display = 'none';
-      document.getElementById('app-content').style.display = 'none';
-      document.getElementById('admin-dashboard').style.display = 'block';
-      loadSavedAdmin();
-      bindAdminDeletes();
+    // Live-filter for saved users
+    function filterUsers() {
+      const query = document.getElementById('user-search').value.toLowerCase();
+      document.querySelectorAll('#users-grid .user-link').forEach(link => {
+        const handle = link.querySelector('.handle').textContent.toLowerCase();
+        link.style.display = handle.includes(query) ? '' : 'none';
+      });
     }
 
+    // Admin & URLs logic
     async function loadSavedAdmin() {
       const res = await fetch('/api/saved-urls');
       const saved = await res.json();
@@ -613,8 +613,8 @@
         `;
         tbody.appendChild(tr);
       });
+      bindAdminDeletes();
     }
-
     function bindAdminDeletes() {
       document.querySelectorAll('#admin-dashboard button.delete[data-username]').forEach(btn => {
         btn.onclick = async () => {
@@ -633,15 +633,12 @@
         };
       });
     }
-
-    let savedUrls = [];
     async function fetchSavedUrls() {
       const res = await fetch('/api/saved-urls');
-      savedUrls = await res.json();
-      renderUrlSection();
+      const saved = await res.json();
+      renderUrlSection(saved);
     }
-
-    function renderUrlSection() {
+    function renderUrlSection(savedUrls) {
       const section = document.getElementById('url-section');
       const grid = document.getElementById('url-grid');
       if (!savedUrls.length) {
@@ -654,165 +651,88 @@
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
-          <video controls data-aweme-id="${v.aweme_id}">
-            <source src="${v.play_url}" type="video/mp4">
-          </video>
+          ${v.play_url.endsWith('.mp4')
+            ? `<video controls poster="${v.cover}" data-aweme-id="${v.aweme_id}"><source src="${v.play_url}" type="video/mp4"></video>`
+            : `<img src="${v.cover}" alt="Cover image">`}
           <div class="title">Video ${v.aweme_id}</div>
-          <div class="views" id="views-${v.aweme_id}">0 views</div>
+          <div class="views" id="views-${v.aweme_id}">${v.play_count} views</div>
           <div class="card-buttons">
-            <a href="/download?video_id=${v.aweme_id}&hd=0"><button type="button">Download</button></a>
-            <a href="/download?video_id=${v.aweme_id}&hd=1"><button type="button">HD</button></a>
+            <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
+            <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
           </div>`;
         grid.appendChild(card);
       });
+      // update listeners on newly inserted videos
     }
 
-    async function addSavedUrl(data) {
-      await fetch('/api/saved-urls', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          aweme_id: data.aweme_id,
-          play_url: data.play_url,
-          hd_url: data.hd_url
-        })
+    // highlight nav
+    function highlightNav() {
+      const params = new URLSearchParams(location.search);
+      const hasQ = !!params.get('q');
+      const view = params.get('view')||params.get('type')||(hasQ?'videos':'home');
+      document.querySelectorAll('nav a').forEach(a => {
+        a.classList.toggle('active', a.dataset.view===view);
+      });
+      ['home','urls','users','videos'].forEach(p=>{
+        const el = document.getElementById('page-'+p);
+        el.style.display = (p===view || (['latest','top'].includes(view)&&p==='videos'))?'block':'none';
       });
     }
 
+    // Auth handling
     function initAuth() {
       const tabLogin = document.getElementById('tab-login');
       const tabRegister = document.getElementById('tab-register');
       const formLogin = document.getElementById('form-login');
       const formReg = document.getElementById('form-register');
-      const errorLogin = document.getElementById('error-login');
-      const errorReg = document.getElementById('error-register');
-      function showLogin() {
-        tabLogin.classList.add('active');
-        tabRegister.classList.remove('active');
-        formLogin.classList.add('active');
-        formReg.classList.remove('active');
-      }
-      function showRegister() {
-        tabRegister.classList.add('active');
-        tabLogin.classList.remove('active');
-        formReg.classList.add('active');
-        formLogin.classList.remove('active');
-      }
+      const errLogin = document.getElementById('error-login');
+      const errReg = document.getElementById('error-register');
+      function showLogin(){ tabLogin.classList.add('active'); tabRegister.classList.remove('active'); formLogin.classList.add('active'); formReg.classList.remove('active'); }
+      function showRegister(){ tabRegister.classList.add('active'); tabLogin.classList.remove('active'); formReg.classList.add('active'); formLogin.classList.remove('active'); }
       tabLogin.onclick = showLogin;
       tabRegister.onclick = showRegister;
 
       formLogin.onsubmit = async e => {
-        e.preventDefault();
-        errorLogin.textContent = '';
+        e.preventDefault(); errLogin.textContent='';
         const params = new URLSearchParams();
-        params.append('username', document.getElementById('login-username').value);
-        params.append('password', document.getElementById('login-password').value);
-        const r = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: params
-        });
-        const payload = await r.json();
-        if (!r.ok) {
-          errorLogin.textContent = payload.detail || 'Login failed';
-          return;
-        }
-        localStorage.setItem('tikify_token', payload.access_token);
-        window.location.href = '/';
+        params.append('username',document.getElementById('login-username').value);
+        params.append('password',document.getElementById('login-password').value);
+        const r = await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:params});
+        const p = await r.json();
+        if(!r.ok){ errLogin.textContent=p.detail||'Login failed'; return; }
+        localStorage.setItem('tikify_token',p.access_token);
+        location.href='/';
       };
-
       formReg.onsubmit = async e => {
-        e.preventDefault();
-        errorReg.textContent = '';
-        const r = await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: document.getElementById('reg-username').value,
-            password: document.getElementById('reg-password').value,
-            invite_code: document.getElementById('reg-invite').value
-          })
-        });
-        if (!r.ok) {
-          const err = await r.json();
-          errorReg.textContent = err.detail || 'Registration failed';
-          return;
-        }
+        e.preventDefault(); errReg.textContent='';
+        const r = await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+          username:document.getElementById('reg-username').value,
+          password:document.getElementById('reg-password').value,
+          invite_code:document.getElementById('reg-invite').value
+        })});
+        if(!r.ok){ const err=await r.json(); errReg.textContent=err.detail||'Registration failed'; return; }
         showLogin();
       };
     }
 
-    async function initApp() {
+    // App init
+    async function initApp(){
       highlightNav();
       await fetchSavedUrls();
-
-      document.getElementById('url-form').onsubmit = async e => {
-        e.preventDefault();
-        const url = document.getElementById('url-input').value.trim();
-        if (!url) return;
-        const r = await fetch('/api/from-url', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
-        if (!r.ok) return console.error(await r.json());
-        const data = await r.json();
-        await addSavedUrl({
-          aweme_id: data.aweme_id,
-          play_url: data.play_url,
-          hd_url: data.hd_url
-        });
-        await fetchSavedUrls();
-        document.getElementById('url-input').value = '';
-      };
-      document.querySelectorAll('video[data-aweme-id]').forEach(video => {
-        video.addEventListener(
-          'play',
-          async () => {
-            const id = video.dataset.awemeId;
-            const r = await fetch(`/api/view/${id}`, {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('tikify_token')}`
-              }
-            });
-            if (!r.ok) return;
-            const data = await r.json();
-            const el = document.getElementById(`views-${id}`);
-            if (el) el.textContent = `${data.play_count} views`;
-          },
-          { once: true }
-        );
-      });
     }
 
-    function highlightNav() {
-      const params = new URLSearchParams(window.location.search);
-      const hasQ = !!params.get('q');
-      const viewType =
-        params.get('view') || params.get('type') || (hasQ ? 'videos' : 'home');
-      document.querySelectorAll('nav a').forEach(a => {
-        a.classList.remove('active');
-        if (a.dataset.view === viewType) a.classList.add('active');
-      });
-      document.getElementById('page-home').style.display =
-        viewType === 'home' ? 'block' : 'none';
-      document.getElementById('page-urls').style.display =
-        viewType === 'urls' ? 'block' : 'none';
-      document.getElementById('page-users').style.display =
-        viewType === 'users' ? 'block' : 'none';
-      document.getElementById('page-videos').style.display =
-        ['latest','top','videos'].includes(viewType) ? 'block' : 'none';
-    }
-
-    // Live-filter for saved users
-    function filterUsers() {
-      const query = document.getElementById('user-search').value.toLowerCase();
-      document.querySelectorAll('#users-grid .user-link').forEach(link => {
-        const handle = link.querySelector('.handle').textContent.toLowerCase();
-        link.style.display = handle.includes(query) ? '' : 'none';
-      });
-    }
+    // capture all video play events and increment view
+    document.body.addEventListener('play', async (e) => {
+      if (e.target.tagName === 'VIDEO' && e.target.dataset.awemeId) {
+        const id = e.target.dataset.awemeId;
+        const r = await fetch(`/api/view/${id}`, { method: 'POST' });
+        if (r.ok) {
+          const { play_count } = await r.json();
+          const el = document.getElementById(`views-${id}`);
+          if (el) el.textContent = `${play_count} views`;
+        }
+      }
+    }, true);
 
     window.addEventListener('load', async () => {
       document.getElementById('loader').classList.add('fade-out');

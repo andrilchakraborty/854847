@@ -11,7 +11,7 @@
   <meta property="og:description" content="Watch  TikTok videos. Search users, browse latest or top videos, and download your favorites." />
   <meta property="og:image"
         content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg?ex=68101890&is=680ec710&hm=af0c0b334d70dd00c729c91a43f706028689ed04fb6e64e0c32e09244ad85f4b&=&format=webp" />
-  <meta property="og:url" content="https://tikify.up.railway.app/" />
+  <meta property="og:url" content="https://tikify.onrender.com/" />
   <meta property="og:type" content="website" />
 
   <!-- Twitter Card -->
@@ -44,16 +44,14 @@
 
     /* Auth container */
     #auth-container {
-      display: none;             /* hidden until JS shows it */
+      display: none;
       height: 100vh; width: 100%;
-      background: #000;
-      color: #fff;
-      flex-direction: column;
+      background: #000; color: #fff;
+      display: flex; flex-direction: column;
       justify-content: center; align-items: center;
     }
     #auth-container img {
-      width: 150px;
-      margin-bottom: 20px;
+      width: 150px; margin-bottom: 20px;
       filter: drop-shadow(0 0 10px #8e2de2);
       animation: glowPulse 2s ease-in-out infinite;
     }
@@ -63,9 +61,8 @@
     }
     .tabs { display: flex; margin-bottom: 20px; }
     .tabs button {
-      flex: 1; padding: 10px;
-      background: #151515; border: none; cursor: pointer;
-      color: #fff; font-weight: bold;
+      flex: 1; padding: 10px; background: #151515; border: none;
+      cursor: pointer; color: #fff; font-weight: bold;
     }
     .tabs button.active { background: #333; }
     .form-container { width: 300px; }
@@ -85,27 +82,53 @@
     /* Main app content */
     #app-content { display: none; }
 
-    /* Animations & Layout */
-    @keyframes fadeInUp  { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    /* Header & Navigation */
     header { padding: 20px; display: flex; justify-content: space-between; align-items: center; opacity:0; animation:fadeInUp .6s ease-out forwards; animation-delay:.2s; }
-    header h1 { font-size:1.8rem; background:linear-gradient(90deg,#8e2de2,#4a00e0);-webkit-background-clip:text;color:transparent; }
-    nav a { margin-left:20px;color:#fff;text-decoration:none; } nav a:hover{color:#ff004f;}
-    .hero { border:2px solid;border-image:linear-gradient(90deg,#8e2de2,#00ff6a)1;padding:2rem;margin:20px auto;max-width:800px;border-radius:8px;text-align:center;opacity:0;animation:fadeInUp .6s ease-out forwards;animation-delay:.4s; }
-    .search-bar { width:500px;margin:20px auto;display:flex;opacity:0;animation:fadeInUp .6s ease-out forwards;animation-delay:.6s; }
-    .search-bar input{flex:1;padding:12px;border-radius:4px 0 0 4px;border:none;}
-    .search-bar button{padding:12px 20px;border:none;border-radius:0 4px 4px 0;cursor:pointer;background:#151515;color:#fff;}
-    .search-bar button:hover{background:#333;}
-    .users-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:16px;max-width:800px;margin:20px auto;opacity:0;animation:fadeInUp .6s ease-out forwards;animation-delay:1s;}
-    .user-card{background:#151515;padding:12px;border-radius:6px;text-align:center;transform:translateY(20px);opacity:0;animation:fadeInUp .5s ease-out forwards;animation-delay:1.2s;transition:transform .2s;}
+    header h1 { font-size:1.8rem; background:linear-gradient(90deg,#8e2de2,#4a00e0); -webkit-background-clip:text; color:transparent; }
+    nav a {
+      margin-left:20px; color:#fff; text-decoration:none; padding:6px 12px; border-radius:4px;
+    }
+    nav a.active, nav a:hover { background:#333; color:#ff004f; }
+
+    /* Shared animations */
+    @keyframes fadeInUp  { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Layout wrappers */
+    #page-home, #page-urls, #page-users, #page-videos { opacity:0; animation:fadeInUp .6s ease-out forwards; }
+    #page-home { animation-delay:.4s; }
+    #page-urls { animation-delay:.4s; }
+    #page-users { animation-delay:.4s; }
+    #page-videos { animation-delay:.4s; }
+
+    /* Hero */
+    .hero { border:2px solid; border-image:linear-gradient(90deg,#8e2de2,#00ff6a)1; padding:2rem; margin:20px auto; max-width:800px; border-radius:8px; text-align:center; }
+
+    /* Search & URL forms */
+    .search-bar, .url-bar {
+      width:500px; margin:20px auto; display:flex;
+    }
+    .search-bar input, .url-bar input {
+      flex:1; padding:12px; border-radius:4px 0 0 4px; border:none;
+    }
+    .search-bar button, .url-bar button {
+      padding:12px 20px; border:none; border-radius:0 4px 4px 0;
+      cursor:pointer; background:#151515; color:#fff;
+    }
+    .search-bar button:hover, .url-bar button:hover { background:#333; }
+
+    /* Grids and cards */
+    .users-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:16px; max-width:800px; margin:20px auto;}
+    .user-card{background:#151515; padding:12px; border-radius:6px; text-align:center; transition:transform .2s;}
     .user-card:hover{transform:scale(1.05);}
-    .user-card img{width:80px;height:80px;border-radius:50%;margin-bottom:8px;}
-    .user-card .handle{display:block;font-weight:bold;font-size:.85rem;word-wrap:break-word;hyphens:auto;}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;max-width:1000px;margin:30px auto;opacity:0;animation:fadeInUp .6s ease-out forwards;animation-delay:1.4s;}
-    .card{background:#151515;padding:16px;border-radius:6px;text-align:center;transform:translateY(20px);opacity:0;animation:fadeInUp .5s ease-out forwards;animation-delay:1.6s;}
-    .card img,.card video{width:100%;height:auto;margin-bottom:10px;border-radius:4px;}
-    .card .title{font-size:1rem;margin-top:6px;}
-    .card .views{font-size:.85rem;margin-top:4px;color:#aaa;}
-    .card-buttons a button{padding:8px 16px;border:none;border-radius:4px;cursor:pointer;background:#151515;color:#fff;}
+    .user-card img{width:80px; height:80px; border-radius:50%; margin-bottom:8px;}
+    .user-card .handle{display:block; font-weight:bold; font-size:.85rem; hyphens:auto;}
+
+    .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:20px; max-width:1000px; margin:30px auto;}
+    .card{background:#151515; padding:16px; border-radius:6px; text-align:center; transition:transform .2s;}
+    .card img, .card video{width:100%; height:auto; margin-bottom:10px; border-radius:4px;}
+    .card .title{font-size:1rem; margin-top:6px;}
+    .card .views{font-size:.85rem; margin-top:4px; color:#aaa;}
+    .card-buttons a button{padding:8px 16px; border:none; border-radius:4px; cursor:pointer; background:#151515; color:#fff;}
     .card-buttons a button:hover{background:#333;}
   </style>
 </head>
@@ -148,73 +171,93 @@
     <header>
       <h1>Tikify</h1>
       <nav>
-        <a href="/">Home</a>
-        <a href="/?type=latest">Latest</a>
-        <a href="/?type=top">Top</a>
+        <a href="/" data-view="home">Home</a>
+        <a href="/?type=latest" data-view="latest">Latest</a>
+        <a href="/?type=top" data-view="top">Top</a>
+        <a href="/?view=urls"    data-view="urls">Saved URLs</a>
+        <a href="/?view=users"   data-view="users">Saved Users</a>
       </nav>
     </header>
 
-    <section class="hero">
-      <h2>Tikify – Watch Removed TikTok Videos</h2>
-      <p>Search users, browse latest or top videos.</p>
-    </section>
+    <!-- HOME PAGE -->
+    <div id="page-home">
+      <section class="hero">
+        <h2>Tikify – Watch & Download TikTok Videos</h2>
+        <p>Search users, browse latest or top videos, or fetch by URL.</p>
+      </section>
+      <!-- Username search only -->
+      <form class="search-bar" method="get" action="/">
+        <input name="q" type="text" placeholder="Search by username…" value="{{ active_q }}">
+        <button type="submit">Go</button>
+      </form>
+    </div>
 
-    <!-- Search bar -->
-    <form class="search-bar" method="get" action="/">
-      <input name="q" type="text" placeholder="Search by username…" value="{{ active_q }}">
-      <button type="submit">Go</button>
-    </form>
+    <!-- URLS PAGE -->
+    <div id="page-urls" style="display:none;">
+      <!-- URL fetch form -->
+      <form class="url-bar" id="url-form">
+        <input type="url" id="url-input" placeholder="Enter TikTok video URL…" required>
+        <button type="submit">Fetch Video</button>
+      </form>
+      <!-- Saved URLs -->
+      <section id="url-section" style="display:none;">
+        <h3 style="text-align:center;">Saved URLs</h3>
+        <div class="grid" id="url-grid"></div>
+      </section>
+    </div>
 
-    <!-- Saved Users Section -->
-    {% if users %}
-    <section id="saved-users" style="opacity:0; animation:fadeInUp .6s ease-out forwards; animation-delay:1s;">
-      <h3 style="text-align:center;">Saved Users</h3>
-      <div class="users-grid">
-        {% for username, data in users.items() %}
-          <a href="/?q={{ username }}" style="text-decoration:none;">
-            <div class="user-card">
-              <img src="{{ data.avatar }}" alt="@{{ username }}'s avatar">
-              <span class="handle">@{{ username }}</span>
+    <!-- USERS PAGE -->
+    <div id="page-users" style="display:none;">
+      {% if users %}
+      <section id="saved-users">
+        <h3 style="text-align:center;">Saved Users</h3>
+        <div class="users-grid">
+          {% for username, data in users.items() %}
+            <a href="/?q={{ username }}" style="text-decoration:none;">
+              <div class="user-card">
+                <img src="{{ data.avatar }}" alt="@{{ username }}’s avatar">
+                <span class="handle">@{{ username }}</span>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+    </div>
+
+    <!-- VIDEOS PAGE -->
+    <div id="page-videos" style="display:none;">
+      {% if user_videos %}
+      <section id="videos">
+        <h3 style="text-align:center;">
+          {% if view_type=='latest' %}Latest Videos{% elif view_type=='top' %}Top Videos{% else %}Videos for @{{ active_q }}{% endif %}
+        </h3>
+        <div class="grid">
+          {% for v in user_videos %}
+            <div class="card">
+              {% if v.play_url.endswith('.mp4') %}
+                <video controls poster="{{ v.cover }}" data-aweme-id="{{ v.aweme_id }}">
+                  <source src="{{ v.play_url }}" type="video/mp4">
+                </video>
+              {% else %}
+                <img src="{{ v.cover }}" alt="Cover image">
+              {% endif %}
+              <div class="title">{{ v.text }}</div>
+              <div class="views" id="views-{{ v.aweme_id }}">{{ v.play_count }} views</div>
+              <div class="card-buttons">
+                <a href="/download?video_id={{ v.aweme_id }}&hd=0"><button type="button">Download</button></a>
+                <a href="/download?video_id={{ v.aweme_id }}&hd=1"><button type="button">HD</button></a>
+              </div>
             </div>
-          </a>
-        {% endfor %}
-      </div>
-    </section>
-    {% endif %}
-
-    <!-- Videos Section -->
-    {% if user_videos %}
-    <section id="videos" style="opacity:0; animation:fadeInUp .6s ease-out forwards; animation-delay:1.4s;">
-      <h3 style="text-align:center;">
-        {% if view_type=='latest' %}Latest Videos
-        {% elif view_type=='top'    %}Top Videos
-        {% else                   %}Videos for @{{ active_q }}{% endif %}
-      </h3>
-      <div class="grid">
-        {% for v in user_videos %}
-          <div class="card">
-            {% if v.play_url.endswith('.mp4') %}
-              <video controls poster="{{ v.cover }}" data-aweme-id="{{ v.aweme_id }}">
-                <source src="{{ v.play_url }}" type="video/mp4">
-              </video>
-            {% else %}
-              <img src="{{ v.cover }}" alt="Cover image">
-            {% endif %}
-            <div class="title">{{ v.text }}</div>
-            <div class="views" id="views-{{ v.aweme_id }}">{{ v.play_count }} views</div>
-            <div class="card-buttons">
-              <a href="/download?video_id={{ v.aweme_id }}&hd=0"><button type="button">Download</button></a>
-              <a href="/download?video_id={{ v.aweme_id }}&hd=1"><button type="button">HD</button></a>
-            </div>
-          </div>
-        {% endfor %}
-      </div>
-    </section>
-    {% endif %}
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+    </div>
   </div>
 
   <script>
-    // On load: hide loader, then decide auth vs app
+    // On load: hide loader, show auth or app
     window.addEventListener('load', () => {
       document.getElementById('loader').classList.add('fade-out');
       setTimeout(() => {
@@ -222,15 +265,58 @@
         const token = localStorage.getItem('tikify_token');
         if (token) {
           document.getElementById('auth-container').style.display = 'none';
-          document.getElementById('app-content').style.display = 'block';
+          document.getElementById('app-content').style.display   = 'block';
           initApp();
         } else {
-          document.getElementById('app-content').style.display = 'none';
+          document.getElementById('app-content').style.display   = 'none';
           document.getElementById('auth-container').style.display = 'flex';
           initAuth();
         }
       }, 600);
     });
+
+    function highlightNav() {
+      const params = new URLSearchParams(window.location.search);
+      const hasQ = !!params.get('q');
+      // if there's a username query, treat it as the "videos" view
+      const viewType = params.get('view') || params.get('type') || (hasQ ? 'videos' : 'home');
+      document.querySelectorAll('nav a').forEach(a => {
+        a.classList.remove('active');
+        if (a.dataset.view === viewType) a.classList.add('active');
+      });
+      document.getElementById('page-home').style.display   = viewType === 'home'   ? 'block' : 'none';
+      document.getElementById('page-urls').style.display   = viewType === 'urls'   ? 'block' : 'none';
+      document.getElementById('page-users').style.display  = viewType === 'users'  ? 'block' : 'none';
+      document.getElementById('page-videos').style.display = ['latest','top','videos'].includes(viewType) ? 'block' : 'none';
+    }
+
+    // Render saved URLs section
+    function renderUrlSection() {
+      const saved = JSON.parse(localStorage.getItem('tikify_saved_urls') || '[]');
+      const section = document.getElementById('url-section');
+      const grid    = document.getElementById('url-grid');
+      if (!saved.length) {
+        section.style.display = 'none';
+        return;
+      }
+      section.style.display = 'block';
+      grid.innerHTML = '';
+      saved.forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <video controls data-aweme-id="${v.aweme_id}">
+            <source src="${v.play_url}" type="video/mp4">
+          </video>
+          <div class="title">Video ${v.aweme_id}</div>
+          <div class="views" id="views-${v.aweme_id}">0 views</div>
+          <div class="card-buttons">
+            <a href="/download?video_id=${v.aweme_id}&hd=0"><button type="button">Download</button></a>
+            <a href="/download?video_id=${v.aweme_id}&hd=1"><button type="button">HD</button></a>
+          </div>`;
+        grid.appendChild(card);
+      });
+    }
 
     // Authentication UI
     function initAuth() {
@@ -240,71 +326,34 @@
       const formReg     = document.getElementById('form-register');
       const errorLogin  = document.getElementById('error-login');
       const errorReg    = document.getElementById('error-register');
-
-      function showLogin() {
-        tabLogin.classList.add('active');
-        tabRegister.classList.remove('active');
-        formLogin.classList.add('active');
-        formReg.classList.remove('active');
-      }
-      function showRegister() {
-        tabRegister.classList.add('active');
-        tabLogin.classList.remove('active');
-        formReg.classList.add('active');
-        formLogin.classList.remove('active');
-      }
-
+      function showLogin()    { tabLogin.classList.add('active'); tabRegister.classList.remove('active'); formLogin.classList.add('active'); formReg.classList.remove('active'); }
+      function showRegister() { tabRegister.classList.add('active'); tabLogin.classList.remove('active'); formReg.classList.add('active'); formLogin.classList.remove('active'); }
       tabLogin.onclick    = showLogin;
       tabRegister.onclick = showRegister;
 
-      // LOGIN: URL-encoded form + redirect
       formLogin.onsubmit = e => {
-        e.preventDefault();
-        errorLogin.textContent = '';
-
+        e.preventDefault(); errorLogin.textContent = '';
         const params = new URLSearchParams();
         params.append('username', document.getElementById('login-username').value);
         params.append('password', document.getElementById('login-password').value);
-
-        fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: params
-        })
-        .then(async r => {
-          const payload = await r.json();
-          if (!r.ok) throw new Error(payload.detail || 'Login failed');
-          return payload;
-        })
-        .then(data => {
-          localStorage.setItem('tikify_token', data.access_token);
-          window.location.href = '/';
-        })
-        .catch(err => {
-          errorLogin.textContent = err.message;
-        });
+        fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:params })
+          .then(async r => { const payload=await r.json(); if(!r.ok) throw new Error(payload.detail||'Login failed'); return payload; })
+          .then(data => { localStorage.setItem('tikify_token', data.access_token); window.location.href='/'; })
+          .catch(err => { errorLogin.textContent = err.message; });
       };
 
-      // REGISTER remains JSON-based
       formReg.onsubmit = e => {
-        e.preventDefault();
-        errorReg.textContent = '';
+        e.preventDefault(); errorReg.textContent = '';
         fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({
             username: document.getElementById('reg-username').value,
             password: document.getElementById('reg-password').value,
             invite_code: document.getElementById('reg-invite').value
           })
         })
-        .then(r => {
-          if (!r.ok) throw r;
-          return r.json();
-        })
-        .then(() => {
-          showLogin();
-        })
+        .then(r => { if(!r.ok) throw r; return r.json(); })
+        .then(() => { showLogin(); })
         .catch(async err => {
           const msg = err.json ? (await err.json()).detail : 'Registration failed';
           errorReg.textContent = msg;
@@ -312,8 +361,35 @@
       };
     }
 
-    // After login: bind view-count bump
+    // After login: bind view-count, URL form, render URL section, highlight nav
     function initApp() {
+      highlightNav();
+      renderUrlSection();
+
+      const urlForm = document.getElementById('url-form');
+      if (urlForm) urlForm.onsubmit = e => {
+        e.preventDefault();
+        const url = document.getElementById('url-input').value.trim();
+        if (!url) return;
+        fetch('/api/from-url', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({url})
+        })
+        .then(async r => {
+          if (!r.ok) throw new Error((await r.json()).detail||'Failed to fetch');
+          return r.json();
+        })
+        .then(data => {
+          const saved = JSON.parse(localStorage.getItem('tikify_saved_urls')||'[]');
+          saved.unshift(data);
+          localStorage.setItem('tikify_saved_urls', JSON.stringify(saved));
+          renderUrlSection();
+          document.getElementById('url-input').value = '';
+        })
+        .catch(err => console.error(err));
+      };
+
       document.querySelectorAll('video[data-aweme-id]').forEach(video => {
         video.addEventListener('play', () => {
           const id = video.dataset.awemeId;

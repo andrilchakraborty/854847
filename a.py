@@ -86,7 +86,7 @@ HEADERS = {
 }
 DEFAULT_AVATAR = (
     "https://media.discordapp.net/attachments/1343576085098664020/"
-    "1366204471633510530/IMG_20250427_190832_902.jpg?format=webp"
+    "1366204471633510530/IMG_20250427_190832_902.jpg?ex=68101890&is=680ec710&hm=af0c0b334d70dd00c729c91a43f706028689ed04fb6e64e0c32e09244ad85f4b&=&format=webp"
 )
 
 # ─── Utility ───────────────────────────────────────────────────────────────

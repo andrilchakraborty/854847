@@ -7,7 +7,6 @@ from typing import Dict, List
 from urllib.parse import urlparse
 
 import requests
-# ← changed here:
 from jose import jwt
 from passlib.context import CryptContext
 
@@ -19,17 +18,19 @@ from pydantic import BaseModel
 
 # ─── Config ────────────────────────────────────────────────────────────────
 # Use a data directory (mount this as a persistent volume) so JSON files survive code updates
-DATA_DIR     = os.getenv("DATA_DIR", "data")
+DATA_DIR          = os.getenv("DATA_DIR", "data")
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
-SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
-ALGORITHM = "HS256"
+SECRET_KEY        = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
+ALGORITHM         = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-USERS_FILE   = os.path.join(DATA_DIR, "users.json")
-INVITES_FILE = os.path.join(DATA_DIR, "invites.json")
-POSTS_FILE   = os.path.join(DATA_DIR, "posts.json")
+USERS_FILE        = os.path.join(DATA_DIR, "users.json")
+INVITES_FILE      = os.path.join(DATA_DIR, "invites.json")
+POSTS_FILE        = os.path.join(DATA_DIR, "posts.json")
+SAVED_URLS_FILE   = os.path.join(DATA_DIR, "saved_urls.json")    # ← new
+# (we already persist users in users.json)
 
 # ─── Logging ──────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [DEBUG] %(message)s')
@@ -67,6 +68,13 @@ def load_posts() -> Dict[str, list]:
 def save_posts(posts: Dict[str, list]):
     save_json(POSTS_FILE, posts)
 
+# ─── Saved URLs Persistence ─────────────────────────────────────────────────
+def load_saved_urls() -> List[dict]:
+    return load_json(SAVED_URLS_FILE, [])
+
+def save_saved_urls(urls: List[dict]):
+    save_json(SAVED_URLS_FILE, urls)
+
 # ─── Password hashing ─────────────────────────────────────────────────────
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -82,6 +90,14 @@ class Token(BaseModel):
 
 class URLIn(BaseModel):
     url: str
+
+class SavedURL(BaseModel):       # ← new
+    aweme_id: str
+    play_url: str
+    hd_url:    str
+
+class UserIn(BaseModel):         # ← new
+    username: str
 
 # ─── Globals ───────────────────────────────────────────────────────────────
 HD_URLS: Dict[str, str] = {}
@@ -103,6 +119,7 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 # ─── Routes ────────────────────────────────────────────────────────────────
+
 @app.get("/", response_class=HTMLResponse)
 async def index(
     request: Request,
@@ -143,9 +160,9 @@ async def index(
             HD_URLS[vid] = f"https://www.tikwm.com/video/media/hdplay/{vid}.mp4"
             posts[q].append({
                 "aweme_id": vid,
-                "text": v.get("title", ""),
-                "cover": v.get("cover", ""),
-                "play_url": f"https://www.tikwm.com/video/media/play/{vid}.mp4",
+                "text":      v.get("title", ""),
+                "cover":     v.get("cover", ""),
+                "play_url":  f"https://www.tikwm.com/video/media/play/{vid}.mp4",
                 "play_count": 0
             })
         save_posts(posts)
@@ -164,12 +181,12 @@ async def index(
         videos = posts.get(q, [])
 
     return templates.TemplateResponse("index.html", {
-        "request": request,
-        "users": users,
+        "request":     request,
+        "users":       users,
         "user_videos": videos,
-        "hd_urls": HD_URLS,
-        "active_q": q or "",
-        "view_type": type or "",
+        "hd_urls":     HD_URLS,
+        "active_q":    q or "",
+        "view_type":   type or "",
     })
 
 @app.get("/download")
@@ -218,8 +235,8 @@ async def register(data: RegisterIn):
     if data.username in users and users[data.username].get("password"):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Username already registered")
     users[data.username] = {
-        "password": pwd_context.hash(data.password),
-        "avatar": DEFAULT_AVATAR,
+        "password":   pwd_context.hash(data.password),
+        "avatar":     DEFAULT_AVATAR,
         "fetched_at": now_iso()
     }
     save_users(users)
@@ -244,9 +261,21 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 async def api_users():
     users = load_users()
     return JSONResponse([
-        {"username": u, "avatar": users[u].get("avatar",""), "fetched_at": users[u].get("fetched_at","")}
+        {
+          "username":  u,
+          "avatar":    users[u].get("avatar",""),
+          "fetched_at": users[u].get("fetched_at","")
+        }
         for u in users
     ])
+
+@app.delete("/api/users/{username}", status_code=204)   # ← new
+async def delete_user(username: str):
+    users = load_users()
+    if username in users:
+        del users[username]
+        save_users(users)
+    return JSONResponse(status_code=204, content={})
 
 @app.get("/api/latest")
 async def api_latest():
@@ -256,7 +285,7 @@ async def api_latest():
         if ups:
             p = ups[0]
             result.append({
-                "aweme_id": p["aweme_id"],
+                "aweme_id":  p["aweme_id"],
                 "text":      p["text"],
                 "cover":     p["cover"],
                 "play_url":  p["play_url"],
@@ -276,14 +305,14 @@ async def api_top(limit: int = 20):
     top = sorted(top, key=lambda p: p.get("play_count",0), reverse=True)[:limit]
     return JSONResponse([
         {
-            "aweme_id": pc["aweme_id"],
-            "text":     pc["text"],
-            "cover":    pc["cover"],
-            "play_url": pc["play_url"],
-            "hd_url":   HD_URLS.get(pc["aweme_id"], ""),
-            "username": next(u for u,ups in posts.items() if pc in ups),
-            "avatar":   load_users()[next(u for u,ups in posts.items() if pc in ups)].get("avatar",""),
-            "play_count": pc.get("play_count",0)
+          "aweme_id":   pc["aweme_id"],
+          "text":       pc["text"],
+          "cover":      pc["cover"],
+          "play_url":   pc["play_url"],
+          "hd_url":     HD_URLS.get(pc["aweme_id"], ""),
+          "username":   next(u for u,ups in posts.items() if pc in ups),
+          "avatar":     load_users()[next(u for u,ups in posts.items() if pc in ups)].get("avatar",""),
+          "play_count": pc.get("play_count",0)
         } for pc in top
     ])
 
@@ -300,7 +329,6 @@ async def api_view(video_id: str):
 
 @app.post("/api/from-url")
 async def from_url(payload: URLIn):
-    # resolve redirects, extract final URL
     try:
         r = requests.get(payload.url, headers=HEADERS, timeout=10, allow_redirects=True)
         final = r.url
@@ -318,6 +346,52 @@ async def from_url(payload: URLIn):
     hd_url   = f"https://www.tikwm.com/video/media/hdplay/{aweme_id}.mp4"
     HD_URLS[aweme_id] = hd_url
     return JSONResponse({"aweme_id": aweme_id, "play_url": play_url, "hd_url": hd_url})
+
+# ─── Saved URLs API Endpoints ───────────────────────────────────────────────
+@app.get("/api/saved-urls")
+async def get_saved_urls():
+    return JSONResponse(load_saved_urls())
+
+@app.post("/api/saved-urls", status_code=201)
+async def post_saved_url(url_data: SavedURL):
+    saved = load_saved_urls()
+    # avoid duplicates
+    if not any(u["aweme_id"] == url_data.aweme_id for u in saved):
+        saved.insert(0, url_data.dict())
+        save_saved_urls(saved)
+    return JSONResponse(url_data.dict())
+
+@app.delete("/api/saved-urls/{aweme_id}", status_code=204)
+async def delete_saved_url(aweme_id: str):
+    saved = load_saved_urls()
+    saved = [u for u in saved if u["aweme_id"] != aweme_id]
+    save_saved_urls(saved)
+    return JSONResponse(status_code=204, content={})
+
+# ─── Saved Users API Endpoints (alias for users.json) ─────────────────────
+@app.get("/api/saved-users")
+async def get_saved_users():
+    users = load_users()
+    return JSONResponse([
+        {"username": u, "avatar": users[u].get("avatar",""), "fetched_at": users[u].get("fetched_at","")}
+        for u in users
+    ])
+
+@app.post("/api/saved-users", status_code=201)
+async def post_saved_user(u: UserIn):
+    users = load_users()
+    if u.username not in users:
+        users[u.username] = {"password": "", "avatar": DEFAULT_AVATAR, "fetched_at": now_iso()}
+        save_users(users)
+    return JSONResponse({"username": u.username})
+
+@app.delete("/api/saved-users/{username}", status_code=204)
+async def delete_saved_user(username: str):
+    users = load_users()
+    if username in users:
+        del users[username]
+        save_users(users)
+    return JSONResponse(status_code=204, content={})
 
 def start():
     import uvicorn

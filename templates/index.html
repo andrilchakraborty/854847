@@ -82,10 +82,10 @@
     }
     .form-error { color: #ff004f; font-size: 0.9rem; }
 
-    /* Main app content (hidden until logged in) */
+    /* Main app content */
     #app-content { display: none; }
 
-    /* Rest of your existing styles… */
+    /* Animations & Layout */
     @keyframes fadeInUp  { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     header { padding: 20px; display: flex; justify-content: space-between; align-items: center; opacity:0; animation:fadeInUp .6s ease-out forwards; animation-delay:.2s; }
     header h1 { font-size:1.8rem; background:linear-gradient(90deg,#8e2de2,#4a00e0);-webkit-background-clip:text;color:transparent; }
@@ -159,29 +159,33 @@
       <p>Search users, browse latest or top videos.</p>
     </section>
 
+    <!-- Search bar -->
     <form class="search-bar" method="get" action="/">
       <input name="q" type="text" placeholder="Search by username…" value="{{ active_q }}">
       <button type="submit">Go</button>
     </form>
 
+    <!-- Saved Users Section -->
     {% if users %}
-      <h3 style="text-align:center; animation:fadeInUp .6s ease-out forwards; animation-delay:1s;">
-        Saved Users
-      </h3>
+    <section id="saved-users" style="opacity:0; animation:fadeInUp .6s ease-out forwards; animation-delay:1s;">
+      <h3 style="text-align:center;">Saved Users</h3>
       <div class="users-grid">
-        {% for u in users %}
-          <a href="/?q={{ u.username }}" style="text-decoration:none;">
+        {% for username, data in users.items() %}
+          <a href="/?q={{ username }}" style="text-decoration:none;">
             <div class="user-card">
-              <img src="{{ u.avatar }}" alt="@{{ u.username }}’s avatar">
-              <span class="handle">@{{ u.username }}</span>
+              <img src="{{ data.avatar }}" alt="@{{ username }}'s avatar">
+              <span class="handle">@{{ username }}</span>
             </div>
           </a>
         {% endfor %}
       </div>
+    </section>
     {% endif %}
 
+    <!-- Videos Section -->
     {% if user_videos %}
-      <h3 style="text-align:center; animation:fadeInUp .6s ease-out forwards; animation-delay:1.4s;">
+    <section id="videos" style="opacity:0; animation:fadeInUp .6s ease-out forwards; animation-delay:1.4s;">
+      <h3 style="text-align:center;">
         {% if view_type=='latest' %}Latest Videos
         {% elif view_type=='top'    %}Top Videos
         {% else                   %}Videos for @{{ active_q }}{% endif %}
@@ -190,11 +194,7 @@
         {% for v in user_videos %}
           <div class="card">
             {% if v.play_url.endswith('.mp4') %}
-              <video
-                controls
-                poster="{{ v.cover }}"
-                data-aweme-id="{{ v.aweme_id }}"
-              >
+              <video controls poster="{{ v.cover }}" data-aweme-id="{{ v.aweme_id }}">
                 <source src="{{ v.play_url }}" type="video/mp4">
               </video>
             {% else %}
@@ -209,6 +209,7 @@
           </div>
         {% endfor %}
       </div>
+    </section>
     {% endif %}
   </div>
 
@@ -222,11 +223,11 @@
         if (token) {
           document.getElementById('auth-container').style.display = 'none';
           document.getElementById('app-content').style.display = 'block';
-          initApp();   // bind play listeners etc
+          initApp();
         } else {
           document.getElementById('app-content').style.display = 'none';
           document.getElementById('auth-container').style.display = 'flex';
-          initAuth();  // bind tab and form logic
+          initAuth();
         }
       }, 600);
     });

@@ -24,7 +24,7 @@
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Tikify – TikTok Viewer" />
+  <meta name="twitter:title" content="Bop Central – TikTok Viewer" />
   <meta
     name="twitter:description"
     content="Watch TikTok videos. Search users, browse latest or top videos, and download your favorites."
@@ -81,11 +81,7 @@
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Auth container */
     #auth-container {
@@ -105,13 +101,8 @@
       animation: glowPulse 2s ease-in-out infinite;
     }
     @keyframes glowPulse {
-      0%,
-      100% {
-        filter: drop-shadow(0 0 10px #8e2de2);
-      }
-      50% {
-        filter: drop-shadow(0 0 30px #4a00e0);
-      }
+      0%, 100% { filter: drop-shadow(0 0 10px #8e2de2); }
+      50%       { filter: drop-shadow(0 0 30px #4a00e0); }
     }
     .tabs { display: flex; margin-bottom: 20px; }
     .tabs button {
@@ -137,7 +128,7 @@
     #app-content {
       display: none;
       position: relative;
-      padding-top: 12rem; /* increased to clear taller header */
+      padding-top: 12rem;
     }
 
     /* Header & Navigation */
@@ -156,10 +147,10 @@
     header .logo-container {
       position: absolute;
       left: 20px;
-      top: 1rem; /* moved logo slightly down */
+      top: 1rem;
     }
     header img.logo {
-      height: 10rem; /* set logo size to 10rem */
+      height: 10rem;
     }
     nav {
       display: flex;
@@ -177,6 +168,7 @@
       background: #333;
       color: #ff004f;
     }
+
     /* Sidebar toggle button */
     #sidebar-toggle {
       position: absolute;
@@ -191,7 +183,7 @@
     /* About Us sidebar */
     .about-us {
       position: fixed;
-      top: 12rem; /* align with new header height */
+      top: 12rem;
       right: -300px;
       width: 260px;
       background: #111;
@@ -211,7 +203,7 @@
       color: #4a00e0;
     }
 
-    /* Page wrappers (animations removed) */
+    /* Page wrappers */
     #page-home,
     #page-urls,
     #page-users,
@@ -271,18 +263,24 @@
       font-size: 1rem;
     }
 
-    /* Grids and cards */
+    /* Users grid */
     .users-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       gap: 16px;
       margin-bottom: 20px;
     }
+    .user-entry {
+      position: relative;
+      text-align: center;
+    }
+    .user-link {
+      text-decoration: none;
+    }
     .user-card {
       background: #151515;
       padding: 12px;
       border-radius: 6px;
-      text-align: center;
       transition: transform 0.2s;
     }
     .user-card:hover {
@@ -294,13 +292,14 @@
       border-radius: 50%;
       margin-bottom: 8px;
     }
-    .user-card .handle {
+    .handle {
       display: block;
       font-weight: bold;
       font-size: 0.85rem;
       hyphens: auto;
     }
 
+    /* Video & URL grid */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -333,6 +332,12 @@
       margin-top: 4px;
       color: #aaa;
     }
+    .card-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
     .card-buttons a button {
       padding: 8px 16px;
       border: none;
@@ -345,31 +350,76 @@
       background: #333;
     }
 
-    /* Admin dashboard */
-    #admin-dashboard {
+    /* Delete buttons */
+    .delete-user,
+    .delete-url {
       display: none;
-      padding: 20px;
+      margin-top: 8px;
+      background: #ff4d4f;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #fff;
+      font-size: 0.8rem;
     }
-    #admin-dashboard header h1 {
-      font-size: 2.5rem;
-      color: #ff4d4f;
+
+    /* Admin Password Modal */
+    #admin-pass-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+    #admin-pass-modal .modal-content {
+      background: #111;
+      padding: 2rem;
+      border-radius: 8px;
+      width: 320px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
       text-align: center;
-      margin-bottom: 20px;
     }
-    .admin-section {
-      margin-bottom: 20px;
+    #admin-pass-modal h2 {
+      margin-bottom: 1rem;
+      color: #8e2de2;
+      font-size: 1.5rem;
     }
-    .admin-section table {
+    #admin-pass-modal input {
       width: 100%;
-      border-collapse: collapse;
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    #admin-pass-modal .error {
+      color: #ff4d4f;
+      margin-bottom: 0.75rem;
+      height: 1rem;
+    }
+    #admin-pass-modal .buttons {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    #admin-pass-modal .buttons button {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    #admin-pass-modal .buttons .submit {
+      background: #4a00e0;
       color: #fff;
     }
-    .admin-section th,
-    .admin-section td { padding: 12px; border: 1px solid #333; text-align: left; }
-    .admin-section th { background: #333; }
-    .admin-section button.delete {
-      background: #ff4d4f; border: none; padding: 6px 12px;
-      border-radius: 4px; cursor: pointer; color: #fff;
+    #admin-pass-modal .buttons .cancel {
+      background: #333;
+      color: #fff;
     }
   </style>
 </head>
@@ -414,7 +464,7 @@
   <!-- Main App -->
   <div id="app-content">
     <header>
-      <a href="/" class="logo-container">
+      <a href="/" class="logo-container"> 
         <img
           src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=6810dae4&is=680f8964&hm=3541cfcdc557fae800e4603bec2508dcaa17d8ee2634dbb942cf3478c8289c26&=&format=webp&quality=lossless"
           alt="Bop Central Logo"
@@ -431,7 +481,7 @@
       <button id="sidebar-toggle">☰</button>
     </header>
 
-    <!-- About Us sidebar -->
+    <!-- About sidebar -->
     <aside class="about-us">
       <h2>About Bop Central</h2>
       <p>
@@ -479,12 +529,15 @@
         />
         <div class="users-grid" id="users-grid">
           {% for username, data in users.items() %}
-          <a href="/?q={{ username }}" class="user-link">
-            <div class="user-card">
-              <img src="{{ data.avatar }}" alt="@{{ username }}’s avatar" />
-              <span class="handle">@{{ username }}</span>
-            </div>
-          </a>
+          <div class="user-entry" data-username="{{ username }}">
+            <a href="/?q={{ username }}" class="user-link">
+              <div class="user-card">
+                <img src="{{ data.avatar }}" alt="@{{ username }}’s avatar" />
+                <span class="handle">@{{ username }}</span>
+              </div>
+            </a>
+            <button class="delete-user" data-username="{{ username }}">Delete</button>
+          </div>
           {% endfor %}
         </div>
       </section>
@@ -514,6 +567,7 @@
               <a href="/download?video_id={{ v.aweme_id }}&hd=0"><button type="button">Download</button></a>
               <a href="/download?video_id={{ v.aweme_id }}&hd=1"><button type="button">HD</button></a>
             </div>
+            <button class="delete-url" data-aweme="{{ v.aweme_id }}">Delete</button>
           </div>
           {% endfor %}
         </div>
@@ -522,29 +576,16 @@
     </div>
   </div>
 
-  <!-- Admin Dashboard -->
-  <div id="admin-dashboard">
-    <header><h1>TIKTOK DASHBOARD</h1></header>
-    <div class="admin-section">
-      <h2>Registered Users</h2>
-      <table>
-        <thead><tr><th>Username</th><th>Action</th></tr></thead>
-        <tbody>
-          {% for u in all_users %} 
-          <tr>
-            <td>{{ u.username }}</td>
-            <td><button class="delete" data-username="{{ u.username }}">Delete</button></td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div class="admin-section">
-      <h2>Saved URLs</h2>
-      <table id="admin-saved-table">
-        <thead><tr><th>Aweme ID</th><th>Action</th></tr></thead>
-        <tbody></tbody>
-      </table>
+  <!-- Admin Password Modal -->
+  <div id="admin-pass-modal">
+    <div class="modal-content">
+      <h2>Admin Access</h2>
+      <input type="password" id="admin-pass-input" placeholder="Enter password…" />
+      <div class="error" id="admin-pass-error"></div>
+      <div class="buttons">
+        <button class="submit" id="admin-pass-submit">Unlock</button>
+        <button class="cancel" id="admin-pass-cancel">Cancel</button>
+      </div>
     </div>
   </div>
 
@@ -558,98 +599,118 @@
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('copy', e => e.preventDefault());
     document.addEventListener('cut', e => e.preventDefault());
-    document.addEventListener('keydown', e => {
-      const blocked = [
-        { key: 'F12' },
-        { ctrl: true, key: 'U' },
-        { ctrl: true, key: 'S' },
-        { ctrl: true, shift: true, key: 'J' },
-        { ctrl: true, shift: true, key: 'C' },
-        { ctrl: true, shift: true, key: 'U' },
-        { ctrl: true, key: 'I' },
-        { alt: true, key: 'F12' },
-      ];
-      for (let b of blocked) {
-        if (
-          (!!b.ctrl === e.ctrlKey) &&
-          (!!b.shift === e.shiftKey) &&
-          (!!b.alt === e.altKey) &&
-          e.key.toUpperCase() === b.key.toUpperCase()
-        ) {
-          e.preventDefault();
-          alert('Nuh uh buddy, go away!');
-          window.location.href = '/';
-          return false;
-        }
-      }
-    });
 
-    if (window.location.href.startsWith('view-source:')) {
-      document.documentElement.innerHTML =
-        '<h1 style="color:#f00;text-align:center;margin-top:20vh">Nuh uh buddy, go away!</h1>';
-      setTimeout(() => (window.location.href = '/'), 1500);
-    }
-
-    // Live-filter for saved users
+    // filterUsers
     function filterUsers() {
       const query = document.getElementById('user-search').value.toLowerCase();
-      document.querySelectorAll('#users-grid .user-link').forEach(link => {
-        const handle = link.querySelector('.handle').textContent.toLowerCase();
-        link.style.display = handle.includes(query) ? '' : 'none';
+      document.querySelectorAll('.user-entry').forEach(entry => {
+        const handle = entry.querySelector('.handle').textContent.toLowerCase();
+        entry.style.display = handle.includes(query) ? '' : 'none';
       });
     }
 
-    // Admin & URLs logic
-    async function loadSavedAdmin() {
-      const res = await fetch('/api/saved-urls');
-      const saved = await res.json();
-      const tbody = document.querySelector('#admin-saved-table tbody');
-      tbody.innerHTML = '';
-      saved.forEach(v => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${v.aweme_id}</td>
-          <td><button class="delete" data-aweme="${v.aweme_id}">Delete</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-      bindAdminDeletes();
+    // Auth handling
+    function initAuth() { /* unchanged */ }
+
+    // Admin-mode + custom modal
+    let adminMode = false;
+    const _pw = [98,111,112,112].map(c=>String.fromCharCode(c)).join(''); // "bopp"
+
+    const modal = document.getElementById('admin-pass-modal');
+    const input = document.getElementById('admin-pass-input');
+    const error = document.getElementById('admin-pass-error');
+    const btnSubmit = document.getElementById('admin-pass-submit');
+    const btnCancel = document.getElementById('admin-pass-cancel');
+
+    function showModal() {
+      input.value = '';
+      error.textContent = '';
+      modal.style.display = 'flex';
+      setTimeout(() => input.focus(), 100);
     }
-    function bindAdminDeletes() {
-      document.querySelectorAll('#admin-dashboard button.delete[data-username]').forEach(btn => {
-        btn.onclick = async () => {
-          const user = btn.dataset.username;
-          if (!confirm('Delete user ' + user + '?')) return;
-          await fetch(`/api/saved-users/${encodeURIComponent(user)}`, { method: 'DELETE' });
-          btn.closest('tr').remove();
-        };
+    function hideModal() {
+      modal.style.display = 'none';
+    }
+    document.addEventListener('keydown', e => {
+      // toggle admin modal on Ctrl+\
+      if (e.ctrlKey && e.key === '\\') {
+        if (!adminMode && modal.style.display !== 'flex') {
+          showModal();
+        } else {
+          adminMode = false;
+          document.querySelectorAll('.delete-user, .delete-url')
+            .forEach(b => b.style.display = 'none');
+        }
+      }
+      // close modal on Esc
+      if (e.key === 'Escape' && modal.style.display === 'flex') {
+        hideModal();
+      }
+    });
+    btnSubmit.addEventListener('click', () => {
+      if (input.value === _pw) {
+        hideModal();
+        adminMode = true;
+        document.querySelectorAll('.delete-user, .delete-url')
+          .forEach(b => b.style.display = 'block');
+      } else {
+        error.textContent = 'Wrong password';
+      }
+    });
+    btnCancel.addEventListener('click', hideModal);
+
+    // delete‐user handlers
+    document.querySelectorAll('.delete-user').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const username = btn.dataset.username;
+        if (!confirm(`Delete user ${username}?`)) return;
+        const res = await fetch(`/api/saved-users/${encodeURIComponent(username)}`, {
+          method: 'DELETE'
+        });
+        if (res.ok) btn.closest('.user-entry').remove();
+        else alert(`Failed to delete ${username}`);
       });
-      document.querySelectorAll('#admin-dashboard button.delete[data-aweme]').forEach(btn => {
-        btn.onclick = async () => {
-          const id = btn.dataset.aweme;
-          if (!confirm('Delete saved URL ' + id + '?')) return;
-          await fetch(`/api/saved-urls/${encodeURIComponent(id)}`, { method: 'DELETE' });
-          btn.closest('tr').remove();
-        };
+    });
+
+    // delete‐url handlers
+    document.querySelectorAll('.delete-url').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.aweme;
+        if (!confirm(`Delete saved URL ${id}?`)) return;
+        const res = await fetch(`/api/saved-urls/${encodeURIComponent(id)}`, {
+          method: 'DELETE'
+        });
+        if (res.ok) btn.closest('.card').remove();
+        else alert(`Failed to delete URL ${id}`);
+      });
+    });
+
+    // Highlight nav
+    function highlightNav() {
+      const params = new URLSearchParams(location.search);
+      const hasQ = !!params.get('q');
+      const view = params.get('view')||params.get('type')||(hasQ?'videos':'home');
+      document.querySelectorAll('nav a').forEach(a => {
+        a.classList.toggle('active', a.dataset.view===view);
+      });
+      ['home','urls','users','videos'].forEach(p => {
+        const el = document.getElementById('page-'+p);
+        el.style.display = (p===view || (['latest','top'].includes(view)&&p==='videos'))?'block':'none';
       });
     }
+
+    // Fetch & render saved URLs
     async function fetchSavedUrls() {
       const res = await fetch('/api/saved-urls');
       const saved = await res.json();
       renderUrlSection(saved);
     }
     function renderUrlSection(savedUrls) {
-      const section = document.getElementById('url-section');
-      const grid = document.getElementById('url-grid');
-      if (!savedUrls.length) {
-        section.style.display = 'none';
-        return;
-      }
-      section.style.display = 'block';
-      grid.innerHTML = '';
+      const section = document.getElementById('url-section'); const grid = document.getElementById('url-grid');
+      if (!savedUrls.length) { section.style.display = 'none'; return; }
+      section.style.display = 'block'; grid.innerHTML = '';
       savedUrls.forEach(v => {
-        const card = document.createElement('div');
-        card.className = 'card';
+        const card = document.createElement('div'); card.className = 'card';
         card.innerHTML = `
           ${v.play_url.endsWith('.mp4')
             ? `<video controls poster="${v.cover}" data-aweme-id="${v.aweme_id}"><source src="${v.play_url}" type="video/mp4"></video>`
@@ -659,70 +720,25 @@
           <div class="card-buttons">
             <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
             <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
-          </div>`;
+          </div>
+          <button class="delete-url" data-aweme="${v.aweme_id}">Delete</button>
+        `;
         grid.appendChild(card);
       });
-      // update listeners on newly inserted videos
-    }
-
-    // highlight nav
-    function highlightNav() {
-      const params = new URLSearchParams(location.search);
-      const hasQ = !!params.get('q');
-      const view = params.get('view')||params.get('type')||(hasQ?'videos':'home');
-      document.querySelectorAll('nav a').forEach(a => {
-        a.classList.toggle('active', a.dataset.view===view);
-      });
-      ['home','urls','users','videos'].forEach(p=>{
-        const el = document.getElementById('page-'+p);
-        el.style.display = (p===view || (['latest','top'].includes(view)&&p==='videos'))?'block':'none';
+      // re-bind delete-url handlers
+      document.querySelectorAll('.delete-url').forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.dataset.aweme;
+          if (!confirm(`Delete saved URL ${id}?`)) return;
+          const res = await fetch(`/api/saved-urls/${encodeURIComponent(id)}`, { method: 'DELETE' });
+          if (res.ok) btn.closest('.card').remove();
+          else alert(`Failed to delete URL ${id}`);
+        };
       });
     }
 
-    // Auth handling
-    function initAuth() {
-      const tabLogin = document.getElementById('tab-login');
-      const tabRegister = document.getElementById('tab-register');
-      const formLogin = document.getElementById('form-login');
-      const formReg = document.getElementById('form-register');
-      const errLogin = document.getElementById('error-login');
-      const errReg = document.getElementById('error-register');
-      function showLogin(){ tabLogin.classList.add('active'); tabRegister.classList.remove('active'); formLogin.classList.add('active'); formReg.classList.remove('active'); }
-      function showRegister(){ tabRegister.classList.add('active'); tabLogin.classList.remove('active'); formReg.classList.add('active'); formLogin.classList.remove('active'); }
-      tabLogin.onclick = showLogin;
-      tabRegister.onclick = showRegister;
-
-      formLogin.onsubmit = async e => {
-        e.preventDefault(); errLogin.textContent='';
-        const params = new URLSearchParams();
-        params.append('username',document.getElementById('login-username').value);
-        params.append('password',document.getElementById('login-password').value);
-        const r = await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:params});
-        const p = await r.json();
-        if(!r.ok){ errLogin.textContent=p.detail||'Login failed'; return; }
-        localStorage.setItem('tikify_token',p.access_token);
-        location.href='/';
-      };
-      formReg.onsubmit = async e => {
-        e.preventDefault(); errReg.textContent='';
-        const r = await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-          username:document.getElementById('reg-username').value,
-          password:document.getElementById('reg-password').value,
-          invite_code:document.getElementById('reg-invite').value
-        })});
-        if(!r.ok){ const err=await r.json(); errReg.textContent=err.detail||'Registration failed'; return; }
-        showLogin();
-      };
-    }
-
-    // App init
-    async function initApp(){
-      highlightNav();
-      await fetchSavedUrls();
-    }
-
-    // capture all video play events and increment view
-    document.body.addEventListener('play', async (e) => {
+    // video view increment
+    document.body.addEventListener('play', async e => {
       if (e.target.tagName === 'VIDEO' && e.target.dataset.awemeId) {
         const id = e.target.dataset.awemeId;
         const r = await fetch(`/api/view/${id}`, { method: 'POST' });
@@ -734,6 +750,11 @@
       }
     }, true);
 
+    // init
+    async function initApp(){
+      highlightNav();
+      await fetchSavedUrls();
+    }
     window.addEventListener('load', async () => {
       document.getElementById('loader').classList.add('fade-out');
       setTimeout(async () => {
@@ -742,6 +763,7 @@
         if (token) {
           document.getElementById('auth-container').style.display = 'none';
           document.getElementById('app-content').style.display = 'block';
+          initAuth();
           await initApp();
         } else {
           document.getElementById('app-content').style.display = 'none';

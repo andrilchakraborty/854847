@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>Tikify – Removed TikTok Viewer</title>
-  <style>
-   <!-- Open Graph / Facebook Embed -->
+
+  <!-- Open Graph / Facebook Embed -->
   <meta property="og:title" content="Tikify – TikTok Viewer" />
   <meta property="og:description" content="Watch  TikTok videos. Search users, browse latest or top videos, and download your favorites." />
-  <meta property="og:image" content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg?ex=68101890&is=680ec710&hm=af0c0b334d70dd00c729c91a43f706028689ed04fb6e64e0c32e09244ad85f4b&=&format=webp" />
+  <meta property="og:image" content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg?format=webp" />
   <meta property="og:url" content="https://tikify.up.railway.app/" />
   <meta property="og:type" content="website" />
 
@@ -15,8 +15,9 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Tikify – TikTok Viewer" />
   <meta name="twitter:description" content="Watch TikTok videos. Search users, browse latest or top videos, and download your favorites." />
-  <meta name="twitter:image" content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg?ex=68101890&is=680ec710&hm=af0c0b334d70dd00c729c91a43f706028689ed04fb6e64e0c32e09244ad85f4b&=&format=webp" />
+  <meta name="twitter:image" content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg?format=webp" />
 
+  <style>
     /* reset & base */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #000; color: #fff; font-family: sans-serif; overflow-x: hidden; }
@@ -35,14 +36,13 @@
       border-top-color: #fff; border-radius: 50%;
       animation: spin 1s linear infinite;
     }
-    @keyframes spin      { to { transform: rotate(360deg); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Auth container */
     #auth-container {
-      display: none;             /* shown if not logged in */
+      display: none; /* shown if not logged in */
       height: 100vh; width: 100%;
-      background: #000;
-      color: #fff;
+      background: #000; color: #fff;
       display: flex; flex-direction: column;
       justify-content: center; align-items: center;
     }
@@ -65,9 +65,7 @@
     .tabs button.active { background: #333; }
     .form-container { width: 300px; }
     .form-container form {
-      display: none;
-      flex-direction: column;
-      gap: 12px;
+      display: none; flex-direction: column; gap: 12px;
     }
     .form-container form.active { display: flex; }
     .form-container input {
@@ -84,39 +82,38 @@
 
     /* Rest of your existing styles… */
     @keyframes fadeInUp  { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    header { padding: 20px; display: flex; justify-content: space-between; align-items: center; opacity:0; animation:fadeInUp .6s ease-out forwards; animation-delay:.2s }
-    header h1 { font-size:1.8rem; background:linear-gradient(90deg,#8e2de2,#4a00e0);-webkit-background-clip:text;color:transparent }
-    nav a { margin-left:20px;color:#fff;text-decoration:none } nav a:hover{color:#ff004f}
-    .hero { border:2px solid;border-image:linear-gradient(90deg,#8e2de2,#00ff6a)1;padding:2rem;margin:20px auto;max-width:800px;border-radius:8px;text-align:center;opacity:0;animation:fadeInUp .6s ease-out forwards;animation-delay:.4s }
-    .search-bar { width:500px;margin:20px auto;display:flex;opacity:0;animation:fadeInUp .6s ease-out forwards;animation-delay:.6s }
-    .search-bar input{flex:1;padding:12px;border-radius:4px 0 0 4px;border:none}
-    .search-bar button{padding:12px 20px;border:none;border-radius:0 4px 4px 0;cursor:pointer;background:#151515;color:#fff}
-    .search-bar button:hover{background:#333}
-    .users-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:16px;max-width:800px;margin:20px auto;opacity:0;animation:fadeInUp .6s ease-out forwards;animation-delay:1s}
-    .user-card{background:#151515;padding:12px;border-radius:6px;text-align:center;transform:translateY(20px);opacity:0;animation:fadeInUp .5s ease-out forwards;animation-delay:1.2s;transition:transform .2s}
-    .user-card:hover{transform:scale(1.05)}
-    .user-card img{width:80px;height:80px;border-radius:50%;margin-bottom:8px}
-    .user-card .handle{display:block;font-weight:bold;font-size:.85rem;word-wrap:break-word;hyphens:auto}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;max-width:1000px;margin:30px auto;opacity:0;animation:fadeInUp .6s ease-out forwards;animation-delay:1.4s}
-    .card{background:#151515;padding:16px;border-radius:6px;text-align:center;transform:translateY(20px);opacity:0;animation:fadeInUp .5s ease-out forwards;animation-delay:1.6s}
-    .card img,.card video{width:100%;height:auto;margin-bottom:10px;border-radius:4px}
-    .card .title{font-size:1rem;margin-top:6px}
-    .card .views{font-size:.85rem;margin-top:4px;color:#aaa}
-    .card-buttons a button{padding:8px 16px;border:none;border-radius:4px;cursor:pointer;background:#151515;color:#fff}
-    .card-buttons a button:hover{background:#333}
-
+    header { padding: 20px; display: flex; justify-content: space-between; align-items: center; opacity:0; animation:fadeInUp .6s ease-out forwards; animation-delay:.2s; }
+    header h1 { font-size:1.8rem; background:linear-gradient(90deg,#8e2de2,#4a00e0);-webkit-background-clip:text;color:transparent; }
+    nav a { margin-left:20px;color:#fff;text-decoration:none; } nav a:hover{color:#ff004f;}
+    .hero { border:2px solid;border-image:linear-gradient(90deg,#8e2de2,#00ff6a)1;padding:2rem;margin:20px auto;max-width:800px;border-radius:8px;text-align:center;opacity:0;animation:fadeInUp .6s ease-out forwards;animation-delay:.4s; }
+    .search-bar { width:500px;margin:20px auto;display:flex;opacity:0;animation:fadeInUp .6s ease-out forwards;animation-delay:.6s; }
+    .search-bar input{flex:1;padding:12px;border-radius:4px 0 0 4px;border:none;}
+    .search-bar button{padding:12px 20px;border:none;border-radius:0 4px 4px 0;cursor:pointer;background:#151515;color:#fff;}
+    .search-bar button:hover{background:#333;}
+    .users-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:16px;max-width:800px;margin:20px auto;opacity:0;animation:fadeInUp .6s ease-out forwards;animation-delay:1s;}
+    .user-card{background:#151515;padding:12px;border-radius:6px;text-align:center;transform:translateY(20px);opacity:0;animation:fadeInUp .5s ease-out forwards;animation-delay:1.2s;transition:transform .2s;}
+    .user-card:hover{transform:scale(1.05);}
+    .user-card img{width:80px;height:80px;border-radius:50%;margin-bottom:8px;}
+    .user-card .handle{display:block;font-weight:bold;font-size:.85rem;word-wrap:break-word;hyphens:auto;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;max-width:1000px;margin:30px auto;opacity:0;animation:fadeInUp .6s ease-out forwards;animation-delay:1.4s;}
+    .card{background:#151515;padding:16px;border-radius:6px;text-align:center;transform:translateY(20px);opacity:0;animation:fadeInUp .5s ease-out forwards;animation-delay:1.6s;}
+    .card img,.card video{width:100%;height:auto;margin-bottom:10px;border-radius:4px;}
+    .card .title{font-size:1rem;margin-top:6px;}
+    .card .views{font-size:.85rem;margin-top:4px;color:#aaa;}
+    .card-buttons a button{padding:8px 16px;border:none;border-radius:4px;cursor:pointer;background:#151515;color:#fff;}
+    .card-buttons a button:hover{background:#333;}
   </style>
 </head>
 <body>
   <!-- Loader -->
   <div id="loader">
     <div class="spinner"></div>
-    <img id="loader-image" src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=68103224&is=680ee0a4&hm=1e2890020e65536830747150cf2b3af8fe9df9a91cd878f8fb3fea8b19070ac1&=&format=webp&quality=lossless" alt="Loading…">
+    <img id="loader-image" src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?format=webp" alt="Loading…">
   </div>
 
   <!-- Auth UI -->
   <div id="auth-container">
-    <img src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=68103224&is=680ee0a4&hm=1e2890020e65536830747150cf2b3af8fe9df9a91cd878f8fb3fea8b19070ac1&=&format=webp&quality=lossless" alt="Logo">
+    <img src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?format=webp" alt="Logo">
     <div class="tabs">
       <button id="tab-login" class="active">Login</button>
       <button id="tab-register">Register</button>
@@ -198,12 +195,8 @@
             <div class="title">{{ v.text }}</div>
             <div class="views" id="views-{{ v.aweme_id }}">{{ v.play_count }} views</div>
             <div class="card-buttons">
-              <a href="/download?video_id={{ v.aweme_id }}&hd=0">
-                <button type="button">Download</button>
-              </a>
-              <a href="/download?video_id={{ v.aweme_id }}&hd=1">
-                <button type="button">HD</button>
-              </a>
+              <a href="/download?video_id={{ v.aweme_id }}&hd=0"><button type="button">Download</button></a>
+              <a href="/download?video_id={{ v.aweme_id }}&hd=1"><button type="button">HD</button></a>
             </div>
           </div>
         {% endfor %}
@@ -220,10 +213,10 @@
         const token = localStorage.getItem('tikify_token');
         if (token) {
           document.getElementById('app-content').style.display = 'block';
-          initApp();   // bind play listeners etc
+          initApp();
         } else {
           document.getElementById('auth-container').style.display = 'flex';
-          initAuth();  // bind tab and form logic
+          initAuth();
         }
       }, 600);
     });
@@ -253,32 +246,38 @@
       tabLogin.onclick    = showLogin;
       tabRegister.onclick = showRegister;
 
+      // --- FIXED LOGIN ---
       formLogin.onsubmit = e => {
-        e.preventDefault(); errorLogin.textContent = '';
+        e.preventDefault();
+        errorLogin.textContent = '';
+
+        const params = new URLSearchParams();
+        params.append('username', document.getElementById('login-username').value);
+        params.append('password', document.getElementById('login-password').value);
+
         fetch('/api/login', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({
-            username: document.getElementById('login-username').value,
-            password: document.getElementById('login-password').value
-          })
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params
         })
-        .then(r => {
-          if (!r.ok) throw r;
-          return r.json();
+        .then(async r => {
+          const payload = await r.json();
+          if (!r.ok) throw new Error(payload.detail || 'Login failed');
+          return payload;
         })
         .then(data => {
           localStorage.setItem('tikify_token', data.access_token);
           location.reload();
         })
-        .catch(async err => {
-          const msg = err.json ? (await err.json()).detail : 'Login failed';
-          errorLogin.textContent = msg;
+        .catch(err => {
+          errorLogin.textContent = err.message;
         });
       };
 
+      // register remains JSON-based
       formReg.onsubmit = e => {
-        e.preventDefault(); errorReg.textContent = '';
+        e.preventDefault();
+        errorReg.textContent = '';
         fetch('/api/register', {
           method:'POST',
           headers:{ 'Content-Type':'application/json' },
@@ -293,7 +292,6 @@
           return r.json();
         })
         .then(() => {
-          // after registering, switch to login
           showLogin();
         })
         .catch(async err => {

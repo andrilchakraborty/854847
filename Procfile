@@ -1,1 +1,1 @@
-web: uvicorn tikify:app --host 0.0.0.0 --port $PORT
+web: uvicorn a:app --host 0.0.0.0 --port $PORT

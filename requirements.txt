@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+requests
+PyJWT
+passlib
+SQLAlchemy
+jinja2
+python-multipart

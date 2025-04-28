@@ -16,13 +16,18 @@ from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from pydantic import BaseModel
 
 # ─── Config ────────────────────────────────────────────────────────────────
+# Use a data directory (mount this as a persistent volume) so JSON files survive code updates
+DATA_DIR     = os.getenv("DATA_DIR", "data")
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
+
 SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-USERS_FILE   = "users.json"
-INVITES_FILE = "invites.json"
-POSTS_FILE   = "posts.json"
+USERS_FILE   = os.path.join(DATA_DIR, "users.json")
+INVITES_FILE = os.path.join(DATA_DIR, "invites.json")
+POSTS_FILE   = os.path.join(DATA_DIR, "posts.json")
 
 # ─── Logging ──────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [DEBUG] %(message)s')
@@ -81,7 +86,7 @@ HEADERS = {
 }
 DEFAULT_AVATAR = (
     "https://media.discordapp.net/attachments/1343576085098664020/"
-    "1366204471633510530/IMG_20250427_190832_902.jpg?ex=68101890&is=680ec710&hm=af0c0b334d70dd00c729c91a43f706028689ed04fb6e64e0c32e09244ad85f4b&=&format=webp"
+    "1366204471633510530/IMG_20250427_190832_902.jpg?format=webp"
 )
 
 # ─── Utility ───────────────────────────────────────────────────────────────
@@ -153,8 +158,7 @@ async def index(
         top_list = []
         for user, user_posts in posts.items():
             if user_posts:
-                top_post = max(user_posts, key=lambda p: p.get("play_count", 0))
-                top_list.append(top_post)
+                top_list.append(max(user_posts, key=lambda p: p.get("play_count", 0)))
         videos = sorted(top_list, key=lambda p: p.get("play_count", 0), reverse=True)[:50]
     else:
         if q:

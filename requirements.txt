@@ -1,8 +1,7 @@
 fastapi
-uvicorn
+uvicorn[standard]
 requests
+passlib[bcrypt]
 PyJWT
-passlib
-SQLAlchemy
-jinja2
+Jinja2
 python-multipart

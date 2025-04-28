@@ -511,7 +511,7 @@
         <button type="submit">Fetch Video</button>
       </form>
       <section id="url-section" style="display:none;">
-        <h3 style="text-align:center;">Saved URLs</h3>
+        <h3 style="text-align:center;">Result</h3>
         <div class="grid" id="url-grid"></div>
       </section>
     </div>
@@ -672,7 +672,7 @@
       });
     });
 
-    // delete‐url handlers
+    // delete‐url handlers for saved URLs
     document.querySelectorAll('.delete-url').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.aweme;
@@ -683,6 +683,43 @@
         if (res.ok) btn.closest('.card').remove();
         else alert(`Failed to delete URL ${id}`);
       });
+    });
+
+    // URL form handler using /api/from-url
+    document.getElementById('url-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const url = document.getElementById('url-input').value.trim();
+      try {
+        const res = await fetch('/api/from-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          alert(err.detail || 'Failed to resolve URL');
+          return;
+        }
+        const data = await res.json();
+        const grid = document.getElementById('url-grid');
+        grid.innerHTML = '';
+        document.getElementById('url-section').style.display = 'block';
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <video controls data-aweme-id="${data.aweme_id}">
+            <source src="${data.play_url}" type="video/mp4">
+          </video>
+          <div class="title">Video ${data.aweme_id}</div>
+          <div class="card-buttons">
+            <a href="${data.play_url}"><button type="button">Play</button></a>
+            <a href="${data.hd_url}"><button type="button">HD</button></a>
+          </div>
+        `;
+        grid.appendChild(card);
+      } catch {
+        alert('Error fetching video');
+      }
     });
 
     // Highlight nav
@@ -706,15 +743,21 @@
       renderUrlSection(saved);
     }
     function renderUrlSection(savedUrls) {
-      const section = document.getElementById('url-section'); const grid = document.getElementById('url-grid');
-      if (!savedUrls.length) { section.style.display = 'none'; return; }
-      section.style.display = 'block'; grid.innerHTML = '';
+      const section = document.getElementById('url-section');
+      const grid = document.getElementById('url-grid');
+      if (!savedUrls.length) {
+        section.style.display = 'none';
+        return;
+      }
+      section.style.display = 'block';
+      grid.innerHTML = '';
       savedUrls.forEach(v => {
-        const card = document.createElement('div'); card.className = 'card';
+        const card = document.createElement('div');
+        card.className = 'card';
         card.innerHTML = `
-          ${v.play_url.endsWith('.mp4')
-            ? `<video controls poster="${v.cover}" data-aweme-id="${v.aweme_id}"><source src="${v.play_url}" type="video/mp4"></video>`
-            : `<img src="${v.cover}" alt="Cover image">`}
+          <video controls data-aweme-id="${v.aweme_id}">
+            <source src="${v.play_url}" type="video/mp4">
+          </video>
           <div class="title">Video ${v.aweme_id}</div>
           <div class="views" id="views-${v.aweme_id}">${v.play_count} views</div>
           <div class="card-buttons">
@@ -725,7 +768,7 @@
         `;
         grid.appendChild(card);
       });
-      // re-bind delete-url handlers
+      // re-bind delete-url for new cards
       document.querySelectorAll('.delete-url').forEach(btn => {
         btn.onclick = async () => {
           const id = btn.dataset.aweme;

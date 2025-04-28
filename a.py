@@ -1,820 +1,401 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <link
-    rel="icon"
-    href="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png"
-    type="image/png"
-  />
-  <title>Bop Central</title>
+import os
+import json
+import secrets
+import logging
+from datetime import datetime, timedelta
+from typing import Dict, List
+from urllib.parse import urlparse
 
-  <!-- Open Graph / Facebook Embed -->
-  <meta property="og:title" content="Bop Central – TikTok Viewer" />
-  <meta
-    property="og:description"
-    content="Watch TikTok Bops or randoms. Search users, browse latest or top videos, and download your favorites."
-  />
-  <meta
-    property="og:image"
-    content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg"
-  />
-  <meta property="og:url" content="https://bop-central.onrender.com/" />
-  <meta property="og:type" content="website" />
+import requests
+from jose import jwt
+from passlib.context import CryptContext
 
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Bop Central – TikTok Viewer" />
-  <meta
-    name="twitter:description"
-    content="Watch TikTok videos. Search users, browse latest or top videos, and download your favorites."
-  />
-  <meta
-    name="twitter:image"
-    content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg"
-  />
+from fastapi import FastAPI, Request, Depends, HTTPException, Query, status
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
+from pydantic import BaseModel
 
-  <!-- Prevent indexing -->
-  <meta name="robots" content="noindex,nofollow" />
+# ─── Config ────────────────────────────────────────────────────────────────
+# Use a data directory (mount this as a persistent volume) so JSON files survive code updates
+DATA_DIR          = os.getenv("DATA_DIR", "data")
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
 
-  <style>
-    /* disable selection and copying */
-    * {
-      -webkit-user-select: none !important;
-      -moz-user-select: none !important;
-      -ms-user-select: none !important;
-      user-select: none !important;
-    }
-    /* reset & base */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      background: #000;
-      color: #fff;
-      font-family: sans-serif;
-      overflow-x: hidden;
-    }
+SECRET_KEY        = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
+ALGORITHM         = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-    /* Loader Screen */
-    #loader {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 20px;
-      z-index: 9999;
-    }
-    #loader .spinner {
-      width: 60px;
-      height: 60px;
-      border: 6px solid rgba(255, 255, 255, 0.2);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+USERS_FILE        = os.path.join(DATA_DIR, "users.json")
+INVITES_FILE      = os.path.join(DATA_DIR, "invites.json")
+POSTS_FILE        = os.path.join(DATA_DIR, "posts.json")
+SAVED_URLS_FILE   = os.path.join(DATA_DIR, "saved_urls.json")    # ← new
+# (we already persist users in users.json)
 
-    /* Auth container */
-    #auth-container {
-      display: none;
-      height: 100vh;
-      width: 100%;
-      background: #000;
-      color: #fff;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-    #auth-container img {
-      width: 150px;
-      margin-bottom: 20px;
-      filter: drop-shadow(0 0 10px #8e2de2);
-      animation: glowPulse 2s ease-in-out infinite;
-    }
-    @keyframes glowPulse {
-      0%, 100% { filter: drop-shadow(0 0 10px #8e2de2); }
-      50%       { filter: drop-shadow(0 0 30px #4a00e0); }
-    }
-    .tabs { display: flex; margin-bottom: 20px; }
-    .tabs button {
-      flex: 1; padding: 10px; background: #151515; border: none;
-      cursor: pointer; color: #fff; font-weight: bold;
-    }
-    .tabs button.active { background: #333; }
-    .form-container { width: 300px; }
-    .form-container form {
-      display: none; flex-direction: column; gap: 12px;
-    }
-    .form-container form.active { display: flex; }
-    .form-container input {
-      padding: 8px; border-radius: 4px; border: none;
-    }
-    .form-container button {
-      padding: 10px; border: none; border-radius: 4px;
-      cursor: pointer; background: #4a00e0; color: #fff;
-    }
-    .form-error { color: #ff004f; font-size: 0.9rem; }
+# ─── Logging ──────────────────────────────────────────────────────────────
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [DEBUG] %(message)s')
 
-    /* Main app container */
-    #app-content {
-      display: none;
-      position: relative;
-      padding-top: 12rem;
-    }
+# ─── Helpers ───────────────────────────────────────────────────────────────
+def load_json(path: str, default):
+    if not os.path.exists(path):
+        return default
+    try:
+        with open(path, "r") as f:
+            return json.load(f)
+    except:
+        return default
 
-    /* Header & Navigation */
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #000;
-      z-index: 1000;
-    }
-    header .logo-container {
-      position: absolute;
-      left: 20px;
-      top: 1rem;
-    }
-    header img.logo {
-      height: 10rem;
-    }
-    nav {
-      display: flex;
-      gap: 20px;
-    }
-    nav a {
-      color: #fff;
-      text-decoration: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-weight: bold;
-    }
-    nav a.active,
-    nav a:hover {
-      background: #333;
-      color: #ff004f;
-    }
+def save_json(path: str, data):
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
 
-    /* Sidebar toggle button */
-    #sidebar-toggle {
-      position: absolute;
-      right: 20px;
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
+# ─── Persistence ───────────────────────────────────────────────────────────
+def load_users() -> Dict[str, dict]:
+    return load_json(USERS_FILE, {})
 
-    /* About Us sidebar */
-    .about-us {
-      position: fixed;
-      top: 12rem;
-      right: -300px;
-      width: 260px;
-      background: #111;
-      padding: 20px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      line-height: 1.4;
-      transition: right 0.3s ease;
-      z-index: 999;
-    }
-    .about-us.open {
-      right: 20px;
-    }
-    .about-us h2 {
-      margin-bottom: 10px;
-      font-size: 1.2rem;
-      color: #4a00e0;
-    }
+def save_users(users: Dict[str, dict]):
+    save_json(USERS_FILE, users)
 
-    /* Page wrappers */
-    #page-home,
-    #page-urls,
-    #page-users,
-    #page-videos {
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 0 20px;
-    }
+def load_invites() -> dict:
+    return load_json(INVITES_FILE, {})
 
-    /* Hero */
-    .hero {
-      border: 2px solid;
-      border-image: linear-gradient(90deg, #8e2de2, #00ff6a) 1;
-      padding: 2rem;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      text-align: center;
-    }
+def save_invites(invites: dict):
+    save_json(INVITES_FILE, invites)
 
-    /* Search & URL forms */
-    .search-bar,
-    .url-bar {
-      width: 100%;
-      display: flex;
-      margin-bottom: 20px;
-    }
-    .search-bar input,
-    .url-bar input {
-      flex: 1;
-      padding: 12px;
-      border-radius: 4px 0 0 4px;
-      border: none;
-    }
-    .search-bar button,
-    .url-bar button {
-      padding: 12px 20px;
-      border: none;
-      border-radius: 0 4px 4px 0;
-      cursor: pointer;
-      background: #151515;
-      color: #fff;
-    }
-    .search-bar button:hover,
-    .url-bar button:hover {
-      background: #333;
-    }
+def load_posts() -> Dict[str, list]:
+    return load_json(POSTS_FILE, {})
 
-    /* Search bar for saved users */
-    #user-search {
-      width: 100%;
-      max-width: 400px;
-      padding: 10px;
-      margin: 20px auto;
-      display: block;
-      border: none;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
+def save_posts(posts: Dict[str, list]):
+    save_json(POSTS_FILE, posts)
 
-    /* Users grid */
-    .users-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-    .user-entry {
-      position: relative;
-      text-align: center;
-    }
-    .user-link {
-      text-decoration: none;
-    }
-    .user-card {
-      background: #151515;
-      padding: 12px;
-      border-radius: 6px;
-      transition: transform 0.2s;
-    }
-    .user-card:hover {
-      transform: scale(1.05);
-    }
-    .user-card img {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      margin-bottom: 8px;
-    }
-    .handle {
-      display: block;
-      font-weight: bold;
-      font-size: 0.85rem;
-      hyphens: auto;
-    }
+# ─── Saved URLs Persistence ─────────────────────────────────────────────────
+def load_saved_urls() -> List[dict]:
+    return load_json(SAVED_URLS_FILE, [])
 
-    /* Video & URL grid */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-    .card {
-      background: #151515;
-      padding: 16px;
-      border-radius: 6px;
-      text-align: center;
-      transition: transform 0.2s;
-    }
-    .card:hover {
-      transform: translateY(-4px);
-    }
-    .card img,
-    .card video {
-      width: 100%;
-      height: auto;
-      margin-bottom: 10px;
-      border-radius: 4px;
-    }
-    .card .title {
-      font-size: 1rem;
-      margin-top: 6px;
-    }
-    .card .views {
-      font-size: 0.85rem;
-      margin-top: 4px;
-      color: #aaa;
-    }
-    .card-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .card-buttons a button {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      background: #151515;
-      color: #fff;
-    }
-    .card-buttons a button:hover {
-      background: #333;
-    }
+def save_saved_urls(urls: List[dict]):
+    save_json(SAVED_URLS_FILE, urls)
 
-    /* Delete buttons */
-    .delete-user,
-    .delete-url {
-      display: none;
-      margin-top: 8px;
-      background: #ff4d4f;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      color: #fff;
-      font-size: 0.8rem;
+# ─── Password hashing ─────────────────────────────────────────────────────
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# ─── Pydantic Models ───────────────────────────────────────────────────────
+class RegisterIn(BaseModel):
+    username:    str
+    password:    str
+    invite_code: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type:   str
+
+class URLIn(BaseModel):
+    url: str
+
+class SavedURL(BaseModel):       # ← new
+    aweme_id: str
+    play_url: str
+    hd_url:    str
+
+class UserIn(BaseModel):         # ← new
+    username: str
+
+# ─── Globals ───────────────────────────────────────────────────────────────
+HD_URLS: Dict[str, str] = {}
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 ...",
+    "Accept-Encoding": "identity"
+}
+DEFAULT_AVATAR = (
+    "https://media.discordapp.net/attachments/1343576085098664020/"
+    "1366204471633510530/IMG_20250427_190832_902.jpg?ex=68101890&is=680ec710&hm=af0c0b334d70dd00c729c91a43f706028689ed04fb6e64e0c32e09244ad85f4b&=&format=webp"
+)
+
+# ─── Utility ───────────────────────────────────────────────────────────────
+def now_iso():
+    return datetime.utcnow().isoformat()
+
+# ─── FastAPI app ──────────────────────────────────────────────────────────
+app = FastAPI()
+templates = Jinja2Templates(directory="templates")
+
+# ─── Routes ────────────────────────────────────────────────────────────────
+
+@app.get("/", response_class=HTMLResponse)
+async def index(
+    request: Request,
+    q: str = None,
+    type: str = Query(None, regex="^(latest|top)?$")
+):
+    users = load_users()
+    posts = load_posts()
+
+    # fetch posts by username when searching
+    if q:
+        if q not in users:
+            users[q] = {"password": "", "avatar": DEFAULT_AVATAR, "fetched_at": now_iso()}
+        else:
+            users[q]["fetched_at"] = now_iso()
+        posts[q] = []
+
+        all_posts = []
+        cursor = 0
+        while len(all_posts) < 100:
+            resp = requests.get(
+                "https://www.tikwm.com/api/user/posts",
+                params={"unique_id": q, "count": 50, "cursor": cursor},
+                headers=HEADERS, timeout=10
+            ).json()
+            if resp.get("msg") != "success":
+                break
+            vids = resp.get("data", {}).get("videos", [])
+            if not vids:
+                break
+            all_posts.extend(vids)
+            if not resp["data"].get("has_more", False):
+                break
+            cursor = resp["data"].get("cursor", cursor)
+
+        for v in all_posts[:100]:
+            vid = v["video_id"]
+            HD_URLS[vid] = f"https://www.tikwm.com/video/media/hdplay/{vid}.mp4"
+            posts[q].append({
+                "aweme_id": vid,
+                "text":      v.get("title", ""),
+                "cover":     v.get("cover", ""),
+                "play_url":  f"https://www.tikwm.com/video/media/play/{vid}.mp4",
+                "play_count": 0
+            })
+        save_posts(posts)
+        save_users(users)
+
+    # pick videos to render
+    videos = []
+    if type == "latest":
+        for ups in posts.values():
+            if ups:
+                videos.append(ups[0])
+    elif type == "top":
+        top_list = [max(ups, key=lambda p: p.get("play_count",0)) for ups in posts.values() if ups]
+        videos = sorted(top_list, key=lambda p: p.get("play_count",0), reverse=True)[:50]
+    elif q:
+        videos = posts.get(q, [])
+
+    return templates.TemplateResponse("index.html", {
+        "request":     request,
+        "users":       users,
+        "user_videos": videos,
+        "hd_urls":     HD_URLS,
+        "active_q":    q or "",
+        "view_type":   type or "",
+    })
+
+@app.get("/download")
+async def download(video_id: str, hd: int = 0):
+    posts = load_posts()
+    found = None
+    for ups in posts.values():
+        for p in ups:
+            if p["aweme_id"] == video_id:
+                found = p
+                break
+        if found:
+            break
+    if not found:
+        raise HTTPException(404, "Video not found")
+
+    url = HD_URLS.get(video_id) if hd else found["play_url"]
+    r = requests.get(url, headers=HEADERS, timeout=10, stream=True)
+    if r.status_code != 200:
+        raise HTTPException(r.status_code, "Failed to fetch video")
+
+    found["play_count"] = found.get("play_count", 0) + 1
+    save_posts(posts)
+
+    fname = f"{video_id}{'_HD' if hd else ''}.mp4"
+    return StreamingResponse(r.raw, media_type="video/mp4",
+                             headers={"Content-Disposition": f'attachment; filename="{fname}"'})
+
+@app.post("/api/invite-code", status_code=201)
+async def generate_invite_code():
+    invites = load_invites()
+    code = secrets.token_urlsafe(8)
+    invites[code] = False
+    save_invites(invites)
+    return {"invite_code": code}
+
+@app.post("/api/register", status_code=201)
+async def register(data: RegisterIn):
+    invites = load_invites()
+    if data.invite_code not in invites or invites[data.invite_code]:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or used invite code")
+    invites[data.invite_code] = True
+    save_invites(invites)
+
+    users = load_users()
+    if data.username in users and users[data.username].get("password"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Username already registered")
+    users[data.username] = {
+        "password":   pwd_context.hash(data.password),
+        "avatar":     DEFAULT_AVATAR,
+        "fetched_at": now_iso()
     }
+    save_users(users)
+    return {"msg": "Registered"}
 
-    /* Admin Password Modal */
-    #admin-pass-modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.75);
-      z-index: 2000;
-      align-items: center;
-      justify-content: center;
-    }
-    #admin-pass-modal .modal-content {
-      background: #111;
-      padding: 2rem;
-      border-radius: 8px;
-      width: 320px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-      text-align: center;
-    }
-    #admin-pass-modal h2 {
-      margin-bottom: 1rem;
-      color: #8e2de2;
-      font-size: 1.5rem;
-    }
-    #admin-pass-modal input {
-      width: 100%;
-      padding: 0.75rem;
-      margin-bottom: 0.75rem;
-      border: none;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
-    #admin-pass-modal .error {
-      color: #ff4d4f;
-      margin-bottom: 0.75rem;
-      height: 1rem;
-    }
-    #admin-pass-modal .buttons {
-      display: flex;
-      gap: 0.5rem;
-      justify-content: center;
-    }
-    #admin-pass-modal .buttons button {
-      flex: 1;
-      padding: 0.75rem;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    #admin-pass-modal .buttons .submit {
-      background: #4a00e0;
-      color: #fff;
-    }
-    #admin-pass-modal .buttons .cancel {
-      background: #333;
-      color: #fff;
-    }
-  </style>
-</head>
-<body>
-  <!-- Loader -->
-  <div id="loader">
-    <div class="spinner"></div>
-    <img
-      id="loader-image"
-      src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png"
-      alt="Loading…"
-    />
-  </div>
+@app.post("/api/login", response_model=Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    users = load_users()
+    user = users.get(form_data.username)
+    if not user or not pwd_context.verify(form_data.password, user.get("password","")):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED,
+                            "Incorrect username or password",
+                            headers={"WWW-Authenticate":"Bearer"})
+    token = jwt.encode(
+        {"sub": form_data.username,
+         "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)},
+         SECRET_KEY, algorithm=ALGORITHM
+    )
+    return {"access_token": token, "token_type": "bearer"}
 
-  <!-- Auth UI -->
-  <div id="auth-container">
-    <img
-      src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png"
-      alt="Logo"
-    />
-    <div class="tabs">
-      <button id="tab-login" class="active">Login</button>
-      <button id="tab-register">Register</button>
-    </div>
-    <div class="form-container">
-      <form id="form-login" class="active">
-        <input type="text" id="login-username" placeholder="Username" required />
-        <input type="password" id="login-password" placeholder="Password" required />
-        <button type="submit">Login</button>
-        <div class="form-error" id="error-login"></div>
-      </form>
-      <form id="form-register">
-        <input type="text" id="reg-username" placeholder="Username" required />
-        <input type="password" id="reg-password" placeholder="Password" required />
-        <input type="text" id="reg-invite" placeholder="Invite Code" required />
-        <button type="submit">Register</button>
-        <div class="form-error" id="error-register"></div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Main App -->
-  <div id="app-content">
-    <header>
-      <a href="/" class="logo-container"> 
-        <img
-          src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png"
-          alt="Bop Central Logo"
-          class="logo"
-        />
-      </a>
-      <nav>
-        <a href="/" data-view="home">Home</a>
-        <a href="/?type=latest" data-view="latest">Latest</a>
-        <a href="/?type=top" data-view="top">Top</a>
-        <a href="/?view=urls" data-view="urls">Saved URLs</a>
-        <a href="/?view=users" data-view="users">Saved Users</a>
-      </nav>
-      <button id="sidebar-toggle">☰</button>
-    </header>
-
-    <!-- About sidebar -->
-    <aside class="about-us">
-      <h2>About Bop Central</h2>
-      <p>
-        Bop Central is your go-to TikTok downloader and viewer. Dive into the latest and greatest TikTok “bops” and explore what others
-        are sharing. Whether you want to search by username, browse the top trending videos, or fetch and download content via URL,
-        Bop Central makes it easy and seamless. Keep up with your favorite creators, discover new interests, and save videos for offline
-        viewing—all in one place.
-      </p>
-    </aside>
-
-    <!-- HOME PAGE -->
-    <div id="page-home">
-      <section class="hero">
-        <h2>Bop Central – Watch & Download TikTok Videos</h2>
-        <p>Search users, browse latest or top videos, or fetch by URL.</p>
-      </section>
-      <form class="search-bar" method="get" action="/">
-        <input name="q" type="text" placeholder="Input username…" value="{{ active_q }}" />
-        <button type="submit">Go</button>
-      </form>
-    </div>
-
-    <!-- URLS PAGE -->
-    <div id="page-urls" style="display:none;">
-      <form class="url-bar" id="url-form">
-        <input type="url" id="url-input" placeholder="Enter TikTok video URL…" required />
-        <button type="submit">Fetch Video</button>
-      </form>
-      <section id="url-section" style="display:none;">
-        <h3 style="text-align:center;">Result</h3>
-        <div class="grid" id="url-grid"></div>
-      </section>
-    </div>
-
-    <!-- USERS PAGE -->
-    <div id="page-users" style="display:none;">
-      {% if users %}
-      <section id="saved-users">
-        <h3 style="text-align:center;">Saved Users</h3>
-        <input
-          type="text"
-          id="user-search"
-          placeholder="Search saved users..."
-          oninput="filterUsers()"
-        />
-        <div class="users-grid" id="users-grid">
-          {% for username, data in users.items() %}
-          <div class="user-entry" data-username="{{ username }}">
-            <a href="/?q={{ username }}" class="user-link">
-              <div class="user-card">
-                <img src="{{ data.avatar }}" alt="@{{ username }}’s avatar" />
-                <span class="handle">@{{ username }}</span>
-              </div>
-            </a>
-            <button class="delete-user" data-username="{{ username }}">Delete</button>
-          </div>
-          {% endfor %}
-        </div>
-      </section>
-      {% endif %}
-    </div>
-
-    <!-- VIDEOS PAGE -->
-    <div id="page-videos" style="display:none;">
-      {% if user_videos %}
-      <section id="videos">
-        <h3 style="text-align:center;">
-          {% if view_type=='latest' %}Latest Videos{% elif view_type=='top' %}Top Videos{% else %}Videos for @{{ active_q }}{% endif %}
-        </h3>
-        <div class="grid">
-          {% for v in user_videos %}
-          <div class="card">
-            {% if v.play_url.endswith('.mp4') %}
-            <video controls poster="{{ v.cover }}" data-aweme-id="{{ v.aweme_id }}">
-              <source src="{{ v.play_url }}" type="video/mp4" />
-            </video>
-            {% else %}
-            <img src="{{ v.cover }}" alt="Cover image" />
-            {% endif %}
-            <div class="title">{{ v.text }}</div>
-            <div class="views" id="views-{{ v.aweme_id }}">{{ v.play_count }} views</div>
-            <div class="card-buttons">
-              <a href="/download?video_id={{ v.aweme_id }}&hd=0"><button type="button">Download</button></a>
-              <a href="/download?video_id={{ v.aweme_id }}&hd=1"><button type="button">HD</button></a>
-            </div>
-            <button class="delete-url" data-aweme="{{ v.aweme_id }}">Delete</button>
-          </div>
-          {% endfor %}
-        </div>
-      </section>
-      {% endif %}
-    </div>
-  </div>
-
-  <!-- Admin Password Modal -->
-  <div id="admin-pass-modal">
-    <div class="modal-content">
-      <h2>Admin Access</h2>
-      <input type="password" id="admin-pass-input" placeholder="Enter password…" />
-      <div class="error" id="admin-pass-error"></div>
-      <div class="buttons">
-        <button class="submit" id="admin-pass-submit">Unlock</button>
-        <button class="cancel" id="admin-pass-cancel">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Sidebar toggle
-    document.getElementById('sidebar-toggle').addEventListener('click', () => {
-      document.querySelector('.about-us').classList.toggle('open');
-    });
-
-    // Anti-Inspect & Anti-Copy
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('copy', e => e.preventDefault());
-    document.addEventListener('cut', e => e.preventDefault());
-
-    // filterUsers
-    function filterUsers() {
-      const query = document.getElementById('user-search').value.toLowerCase();
-      document.querySelectorAll('.user-entry').forEach(entry => {
-        const handle = entry.querySelector('.handle').textContent.toLowerCase();
-        entry.style.display = handle.includes(query) ? '' : 'none';
-      });
-    }
-
-    // Auth handling
-    function initAuth() { /* unchanged */ }
-
-    // Admin-mode + custom modal
-    let adminMode = false;
-    const _pw = [98,111,112,112].map(c=>String.fromCharCode(c)).join(''); // "bopp"
-
-    const modal = document.getElementById('admin-pass-modal');
-    const input = document.getElementById('admin-pass-input');
-    const error = document.getElementById('admin-pass-error');
-    const btnSubmit = document.getElementById('admin-pass-submit');
-    const btnCancel = document.getElementById('admin-pass-cancel');
-
-    function showModal() {
-      input.value = '';
-      error.textContent = '';
-      modal.style.display = 'flex';
-      setTimeout(() => input.focus(), 100);
-    }
-    function hideModal() {
-      modal.style.display = 'none';
-    }
-    document.addEventListener('keydown', e => {
-      // toggle admin modal on Ctrl+\
-      if (e.ctrlKey && e.key === '\\') {
-        if (!adminMode && modal.style.display !== 'flex') {
-          showModal();
-        } else {
-          adminMode = false;
-          document.querySelectorAll('.delete-user, .delete-url')
-            .forEach(b => b.style.display = 'none');
+@app.get("/api/users")
+async def api_users():
+    users = load_users()
+    return JSONResponse([
+        {
+          "username":  u,
+          "avatar":    users[u].get("avatar",""),
+          "fetched_at": users[u].get("fetched_at","")
         }
-      }
-      // close modal on Esc
-      if (e.key === 'Escape' && modal.style.display === 'flex') {
-        hideModal();
-      }
-    });
-    btnSubmit.addEventListener('click', () => {
-      if (input.value === _pw) {
-        hideModal();
-        adminMode = true;
-        document.querySelectorAll('.delete-user, .delete-url')
-          .forEach(b => b.style.display = 'block');
-      } else {
-        error.textContent = 'Wrong password';
-      }
-    });
-    btnCancel.addEventListener('click', hideModal);
+        for u in users
+    ])
 
-    // delete‐user handlers
-    document.querySelectorAll('.delete-user').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const username = btn.dataset.username;
-        if (!confirm(`Delete user ${username}?`)) return;
-        const res = await fetch(`/api/saved-users/${encodeURIComponent(username)}`, {
-          method: 'DELETE'
-        });
-        if (res.ok) btn.closest('.user-entry').remove();
-        else alert(`Failed to delete ${username}`);
-      });
-    });
+@app.delete("/api/users/{username}", status_code=204)   # ← new
+async def delete_user(username: str):
+    users = load_users()
+    if username in users:
+        del users[username]
+        save_users(users)
+    return JSONResponse(status_code=204, content={})
 
-    // delete‐url handlers for saved URLs
-    document.querySelectorAll('.delete-url').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const id = btn.dataset.aweme;
-        if (!confirm(`Delete saved URL ${id}?`)) return;
-        const res = await fetch(`/api/saved-urls/${encodeURIComponent(id)}`, {
-          method: 'DELETE'
-        });
-        if (res.ok) btn.closest('.card').remove();
-        else alert(`Failed to delete URL ${id}`);
-      });
-    });
+@app.get("/api/latest")
+async def api_latest():
+    posts = load_posts()
+    result = []
+    for user, ups in posts.items():
+        if ups:
+            p = ups[0]
+            result.append({
+                "aweme_id":  p["aweme_id"],
+                "text":      p["text"],
+                "cover":     p["cover"],
+                "play_url":  p["play_url"],
+                "hd_url":    HD_URLS.get(p["aweme_id"], ""),
+                "username":  user,
+                "avatar":    load_users()[user].get("avatar","")
+            })
+    return JSONResponse(result)
 
-    // URL form handler using /api/from-url
-    document.getElementById('url-form').addEventListener('submit', async e => {
-      e.preventDefault();
-      const url = document.getElementById('url-input').value.trim();
-      try {
-        const res = await fetch('/api/from-url', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          alert(err.detail || 'Failed to resolve URL');
-          return;
-        }
-        const data = await res.json();
-        const grid = document.getElementById('url-grid');
-        grid.innerHTML = '';
-        document.getElementById('url-section').style.display = 'block';
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <video controls data-aweme-id="${data.aweme_id}">
-            <source src="${data.play_url}" type="video/mp4">
-          </video>
-          <div class="title">Video ${data.aweme_id}</div>
-          <div class="card-buttons">
-            <a href="${data.play_url}"><button type="button">Play</button></a>
-            <a href="${data.hd_url}"><button type="button">HD</button></a>
-          </div>
-        `;
-        grid.appendChild(card);
-      } catch {
-        alert('Error fetching video');
-      }
-    });
+@app.get("/api/top")
+async def api_top(limit: int = 20):
+    posts = load_posts()
+    top = []
+    for ups in posts.values():
+        if ups:
+            top.append(max(ups, key=lambda p: p.get("play_count",0)))
+    top = sorted(top, key=lambda p: p.get("play_count",0), reverse=True)[:limit]
+    return JSONResponse([
+        {
+          "aweme_id":   pc["aweme_id"],
+          "text":       pc["text"],
+          "cover":      pc["cover"],
+          "play_url":   pc["play_url"],
+          "hd_url":     HD_URLS.get(pc["aweme_id"], ""),
+          "username":   next(u for u,ups in posts.items() if pc in ups),
+          "avatar":     load_users()[next(u for u,ups in posts.items() if pc in ups)].get("avatar",""),
+          "play_count": pc.get("play_count",0)
+        } for pc in top
+    ])
 
-    // Highlight nav
-    function highlightNav() {
-      const params = new URLSearchParams(location.search);
-      const hasQ = !!params.get('q');
-      const view = params.get('view')||params.get('type')||(hasQ?'videos':'home');
-      document.querySelectorAll('nav a').forEach(a => {
-        a.classList.toggle('active', a.dataset.view===view);
-      });
-      ['home','urls','users','videos'].forEach(p => {
-        const el = document.getElementById('page-'+p);
-        el.style.display = (p===view || (['latest','top'].includes(view)&&p==='videos'))?'block':'none';
-      });
-    }
+@app.post("/api/view/{video_id}")
+async def api_view(video_id: str):
+    posts = load_posts()
+    for ups in posts.values():
+        for p in ups:
+            if p["aweme_id"] == video_id:
+                p["play_count"] = p.get("play_count",0) + 1
+                save_posts(posts)
+                return {"play_count": p["play_count"]}
+    raise HTTPException(404, "Video not found")
 
-    // Fetch & render saved URLs
-    async function fetchSavedUrls() {
-      const res = await fetch('/api/saved-urls');
-      const saved = await res.json();
-      renderUrlSection(saved);
-    }
-    function renderUrlSection(savedUrls) {
-      const section = document.getElementById('url-section');
-      const grid = document.getElementById('url-grid');
-      if (!savedUrls.length) {
-        section.style.display = 'none';
-        return;
-      }
-      section.style.display = 'block';
-      grid.innerHTML = '';
-      savedUrls.forEach(v => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <video controls data-aweme-id="${v.aweme_id}">
-            <source src="${v.play_url}" type="video/mp4">
-          </video>
-          <div class="title">Video ${v.aweme_id}</div>
-          <div class="views" id="views-${v.aweme_id}">${v.play_count} views</div>
-          <div class="card-buttons">
-            <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
-            <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
-          </div>
-          <button class="delete-url" data-aweme="${v.aweme_id}">Delete</button>
-        `;
-        grid.appendChild(card);
-      });
-      // re-bind delete-url for new cards
-      document.querySelectorAll('.delete-url').forEach(btn => {
-        btn.onclick = async () => {
-          const id = btn.dataset.aweme;
-          if (!confirm(`Delete saved URL ${id}?`)) return;
-          const res = await fetch(`/api/saved-urls/${encodeURIComponent(id)}`, { method: 'DELETE' });
-          if (res.ok) btn.closest('.card').remove();
-          else alert(`Failed to delete URL ${id}`);
-        };
-      });
-    }
+@app.post("/api/from-url")
+async def from_url(payload: URLIn):
+    try:
+        r = requests.get(payload.url, headers=HEADERS, timeout=10, allow_redirects=True)
+        final = r.url
+    except:
+        raise HTTPException(400, "Failed to resolve URL")
+    parts = [p for p in urlparse(final).path.split("/") if p]
+    aweme_id = None
+    for i,p in enumerate(parts):
+        if p == "video" and i+1 < len(parts):
+            aweme_id = parts[i+1]
+            break
+    if not aweme_id:
+        raise HTTPException(400, "Could not extract video ID from URL")
+    play_url = f"https://www.tikwm.com/video/media/play/{aweme_id}.mp4"
+    hd_url   = f"https://www.tikwm.com/video/media/hdplay/{aweme_id}.mp4"
+    HD_URLS[aweme_id] = hd_url
+    return JSONResponse({"aweme_id": aweme_id, "play_url": play_url, "hd_url": hd_url})
 
-    // video view increment
-    document.body.addEventListener('play', async e => {
-      if (e.target.tagName === 'VIDEO' && e.target.dataset.awemeId) {
-        const id = e.target.dataset.awemeId;
-        const r = await fetch(`/api/view/${id}`, { method: 'POST' });
-        if (r.ok) {
-          const { play_count } = await r.json();
-          const el = document.getElementById(`views-${id}`);
-          if (el) el.textContent = `${play_count} views`;
-        }
-      }
-    }, true);
+# ─── Saved URLs API Endpoints ───────────────────────────────────────────────
+@app.get("/api/saved-urls")
+async def get_saved_urls():
+    return JSONResponse(load_saved_urls())
 
-    // init
-    async function initApp(){
-      highlightNav();
-      await fetchSavedUrls();
-    }
-    window.addEventListener('load', async () => {
-      document.getElementById('loader').classList.add('fade-out');
-      setTimeout(async () => {
-        document.getElementById('loader').style.display = 'none';
-        const token = localStorage.getItem('tikify_token');
-        if (token) {
-          document.getElementById('auth-container').style.display = 'none';
-          document.getElementById('app-content').style.display = 'block';
-          initAuth();
-          await initApp();
-        } else {
-          document.getElementById('app-content').style.display = 'none';
-          document.getElementById('auth-container').style.display = 'flex';
-          initAuth();
-        }
-      }, 600);
-    });
-  </script>
-</body>
-</html>
+@app.post("/api/saved-urls", status_code=201)
+async def post_saved_url(url_data: SavedURL):
+    saved = load_saved_urls()
+    # avoid duplicates
+    if not any(u["aweme_id"] == url_data.aweme_id for u in saved):
+        saved.insert(0, url_data.dict())
+        save_saved_urls(saved)
+    return JSONResponse(url_data.dict())
+
+@app.delete("/api/saved-urls/{aweme_id}", status_code=204)
+async def delete_saved_url(aweme_id: str):
+    saved = load_saved_urls()
+    saved = [u for u in saved if u["aweme_id"] != aweme_id]
+    save_saved_urls(saved)
+    return JSONResponse(status_code=204, content={})
+
+# ─── Saved Users API Endpoints (alias for users.json) ─────────────────────
+@app.get("/api/saved-users")
+async def get_saved_users():
+    users = load_users()
+    return JSONResponse([
+        {"username": u, "avatar": users[u].get("avatar",""), "fetched_at": users[u].get("fetched_at","")}
+        for u in users
+    ])
+
+@app.post("/api/saved-users", status_code=201)
+async def post_saved_user(u: UserIn):
+    users = load_users()
+    if u.username not in users:
+        users[u.username] = {"password": "", "avatar": DEFAULT_AVATAR, "fetched_at": now_iso()}
+        save_users(users)
+    return JSONResponse({"username": u.username})
+
+@app.delete("/api/saved-users/{username}", status_code=204)
+async def delete_saved_user(username: str):
+    users = load_users()
+    if username in users:
+        del users[username]
+        save_users(users)
+    return JSONResponse(status_code=204, content={})
+
+def start():
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT",8000)))
+
+if __name__ == "__main__":
+    start()

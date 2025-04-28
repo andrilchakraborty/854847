@@ -5,6 +5,7 @@ import secrets
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List
+import uvicorn
 
 import requests
 import jwt
@@ -327,8 +328,8 @@ async def api_view(video_id: str, db=Depends(get_db)):
     db.commit()
     return {"play_count": post.play_count}
 
+# ---- Run ----
 def start():
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
 
 if __name__ == "__main__":

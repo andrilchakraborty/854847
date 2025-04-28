@@ -1,165 +1,401 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <link rel="icon"
-        href="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=68103224&is=680ee0a4&hm=1e2890020e65536830747150cf2b3af8fe9df9a91cd878f8fb3fea8b19070ac1&=&format=webp&quality=lossless" />
-  <title>Tikify – Removed TikTok Viewer</title>
+  <meta charset="UTF-8" />
+  <link
+    rel="icon"
+    href="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=68103224&is=680ee0a4&hm=1e2890020e65536830747150cf2b3af8fe9df9a91cd878f8fb3fea8b19070ac1&=&format=webp&quality=lossless"
+    type="image/png"
+  />
+  <title>Bop Central</title>
 
   <!-- Open Graph / Facebook Embed -->
-  <meta property="og:title" content="Tikify – TikTok Viewer" />
-  <meta property="og:description" content="Watch  TikTok videos. Search users, browse latest or top videos, and download your favorites." />
-  <meta property="og:image"
-        content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg?ex=68101890&is=680ec710&hm=af0c0b334d70dd00c729c91a43f706028689ed04fb6e64e0c32e09244ad85f4b&=&format=webp" />
+  <meta property="og:title" content="Bop Central – TikTok Viewer" />
+  <meta
+    property="og:description"
+    content="Watch TikTok Bops or randoms. Search users, browse latest or top videos, and download your favorites."
+  />
+  <meta
+    property="og:image"
+    content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg?ex=6810c150&is=680f6fd0&hm=7d128535b31463dfba1e9fd139a7ad7ae51b1ec7f08b7a54c09e2bcc5dac131e&=&format=webp"
+  />
   <meta property="og:url" content="https://tikify.onrender.com/" />
   <meta property="og:type" content="website" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Tikify – TikTok Viewer" />
-  <meta name="twitter:description" content="Watch TikTok videos. Search users, browse latest or top videos, and download your favorites." />
-  <meta name="twitter:image"
-        content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg?ex=68101890&is=680ec710&hm=af0c0b334d70dd00c729c91a43f706028689ed04fb6e64e0c32e09244ad85f4b&=&format=webp" />
+  <meta
+    name="twitter:description"
+    content="Watch TikTok videos. Search users, browse latest or top videos, and download your favorites."
+  />
+  <meta
+    name="twitter:image"
+    content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg?ex=6810c150&is=680f6fd0&hm=7d128535b31463dfba1e9fd139a7ad7ae51b1ec7f08b7a54c09e2bcc5dac131e&=&format=webp"
+  />
+
+  <!-- Prevent indexing -->
+  <meta name="robots" content="noindex,nofollow" />
 
   <style>
+    /* disable selection and copying */
+    * {
+      -webkit-user-select: none !important;
+      -moz-user-select: none !important;
+      -ms-user-select: none !important;
+      user-select: none !important;
+    }
     /* reset & base */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000; color: #fff; font-family: sans-serif; overflow-x: hidden; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #000;
+      color: #fff;
+      font-family: sans-serif;
+      overflow-x: hidden;
+    }
 
     /* Loader Screen */
     #loader {
-      position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%; background: #000;
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
-      gap: 20px; z-index: 9999;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      z-index: 9999;
     }
     #loader .spinner {
-      width: 60px; height: 60px;
-      border: 6px solid rgba(255,255,255,0.2);
-      border-top-color: #fff; border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      border: 6px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
       animation: spin 1s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
     /* Auth container */
     #auth-container {
       display: none;
-      height: 100vh; width: 100%;
-      background: #000; color: #fff;
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
+      height: 100vh;
+      width: 100%;
+      background: #000;
+      color: #fff;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
     #auth-container img {
-      width: 150px; margin-bottom: 20px;
+      width: 150px;
+      margin-bottom: 20px;
       filter: drop-shadow(0 0 10px #8e2de2);
       animation: glowPulse 2s ease-in-out infinite;
     }
     @keyframes glowPulse {
-      0%,100% { filter: drop-shadow(0 0 10px #8e2de2); }
-      50%     { filter: drop-shadow(0 0 30px #4a00e0); }
+      0%,
+      100% {
+        filter: drop-shadow(0 0 10px #8e2de2);
+      }
+      50% {
+        filter: drop-shadow(0 0 30px #4a00e0);
+      }
     }
-    .tabs { display: flex; margin-bottom: 20px; }
-    .tabs button {
-      flex: 1; padding: 10px; background: #151515; border: none;
-      cursor: pointer; color: #fff; font-weight: bold;
-    }
-    .tabs button.active { background: #333; }
-    .form-container { width: 300px; }
-    .form-container form {
-      display: none; flex-direction: column; gap: 12px;
-    }
-    .form-container form.active { display: flex; }
-    .form-container input {
-      padding: 8px; border-radius: 4px; border: none;
-    }
-    .form-container button {
-      padding: 10px; border: none; border-radius: 4px;
-      cursor: pointer; background: #4a00e0; color: #fff;
-    }
-    .form-error { color: #ff004f; font-size: 0.9rem; }
 
-    /* Main app content */
-    #app-content { display: none; }
+    /* Main app container */
+    #app-content {
+      display: none;
+      position: relative;
+      padding-top: 12rem; /* increased to clear taller header */
+    }
 
     /* Header & Navigation */
-    header { padding: 20px; display: flex; justify-content: space-between; align-items: center; opacity:0; animation:fadeInUp .6s ease-out forwards; animation-delay:.2s; }
-    header h1 { font-size:1.8rem; background:linear-gradient(90deg,#8e2de2,#4a00e0); -webkit-background-clip:text; color:transparent; }
-    nav a {
-      margin-left:20px; color:#fff; text-decoration:none; padding:6px 12px; border-radius:4px;
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      z-index: 1000;
     }
-    nav a.active, nav a:hover { background:#333; color:#ff004f; }
+    header .logo-container {
+      position: absolute;
+      left: 20px;
+      top: 1rem; /* moved logo slightly down */
+    }
+    header img.logo {
+      height: 10rem; /* set logo size to 10rem */
+    }
+    nav {
+      display: flex;
+      gap: 20px;
+    }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    nav a.active,
+    nav a:hover {
+      background: #333;
+      color: #ff004f;
+    }
+    /* Sidebar toggle button */
+    #sidebar-toggle {
+      position: absolute;
+      right: 20px;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
 
-    /* Shared animations */
-    @keyframes fadeInUp  { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    /* About Us sidebar */
+    .about-us {
+      position: fixed;
+      top: 12rem; /* align with new header height */
+      right: -300px;
+      width: 260px;
+      background: #111;
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      transition: right 0.3s ease;
+      z-index: 999;
+    }
+    .about-us.open {
+      right: 20px;
+    }
+    .about-us h2 {
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+      color: #4a00e0;
+    }
 
-    /* Layout wrappers */
-    #page-home, #page-urls, #page-users, #page-videos { opacity:0; animation:fadeInUp .6s ease-out forwards; }
-    #page-home { animation-delay:.4s; }
-    #page-urls { animation-delay:.4s; }
-    #page-users { animation-delay:.4s; }
-    #page-videos { animation-delay:.4s; }
+    /* Page wrappers (animations removed) */
+    #page-home,
+    #page-urls,
+    #page-users,
+    #page-videos {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
 
     /* Hero */
-    .hero { border:2px solid; border-image:linear-gradient(90deg,#8e2de2,#00ff6a)1; padding:2rem; margin:20px auto; max-width:800px; border-radius:8px; text-align:center; }
+    .hero {
+      border: 2px solid;
+      border-image: linear-gradient(90deg, #8e2de2, #00ff6a) 1;
+      padding: 2rem;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
 
     /* Search & URL forms */
-    .search-bar, .url-bar {
-      width:500px; margin:20px auto; display:flex;
+    .search-bar,
+    .url-bar {
+      width: 100%;
+      display: flex;
+      margin-bottom: 20px;
     }
-    .search-bar input, .url-bar input {
-      flex:1; padding:12px; border-radius:4px 0 0 4px; border:none;
+    .search-bar input,
+    .url-bar input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 4px 0 0 4px;
+      border: none;
     }
-    .search-bar button, .url-bar button {
-      padding:12px 20px; border:none; border-radius:0 4px 4px 0;
-      cursor:pointer; background:#151515; color:#fff;
+    .search-bar button,
+    .url-bar button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 0 4px 4px 0;
+      cursor: pointer;
+      background: #151515;
+      color: #fff;
     }
-    .search-bar button:hover, .url-bar button:hover { background:#333; }
+    .search-bar button:hover,
+    .url-bar button:hover {
+      background: #333;
+    }
 
     /* Grids and cards */
-    .users-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:16px; max-width:800px; margin:20px auto;}
-    .user-card{background:#151515; padding:12px; border-radius:6px; text-align:center; transition:transform .2s;}
-    .user-card:hover{transform:scale(1.05);}
-    .user-card img{width:80px; height:80px; border-radius:50%; margin-bottom:8px;}
-    .user-card .handle{display:block; font-weight:bold; font-size:.85rem; hyphens:auto;}
+    .users-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .user-card {
+      background: #151515;
+      padding: 12px;
+      border-radius: 6px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .user-card:hover {
+      transform: scale(1.05);
+    }
+    .user-card img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin-bottom: 8px;
+    }
+    .user-card .handle {
+      display: block;
+      font-weight: bold;
+      font-size: 0.85rem;
+      hyphens: auto;
+    }
 
-    .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:20px; max-width:1000px; margin:30px auto;}
-    .card{background:#151515; padding:16px; border-radius:6px; text-align:center; transition:transform .2s;}
-    .card img, .card video{width:100%; height:auto; margin-bottom:10px; border-radius:4px;}
-    .card .title{font-size:1rem; margin-top:6px;}
-    .card .views{font-size:.85rem; margin-top:4px; color:#aaa;}
-    .card-buttons a button{padding:8px 16px; border:none; border-radius:4px; cursor:pointer; background:#151515; color:#fff;}
-    .card-buttons a button:hover{background:#333;}
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: #151515;
+      padding: 16px;
+      border-radius: 6px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+    }
+    .card img,
+    .card video {
+      width: 100%;
+      height: auto;
+      margin-bottom: 10px;
+      border-radius: 4px;
+    }
+    .card .title {
+      font-size: 1rem;
+      margin-top: 6px;
+    }
+    .card .views {
+      font-size: 0.85rem;
+      margin-top: 4px;
+      color: #aaa;
+    }
+    .card-buttons a button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #151515;
+      color: #fff;
+    }
+    .card-buttons a button:hover {
+      background: #333;
+    }
+
+    /* Search bar for saved users */
+    #user-search {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px;
+      margin: 20px auto;
+      display: block;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    /* Admin dashboard */
+    #admin-dashboard {
+      display: none;
+      padding: 20px;
+    }
+    #admin-dashboard header h1 {
+      font-size: 2.5rem;
+      color: #ff4d4f;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .admin-section {
+      margin-bottom: 20px;
+    }
+    .admin-section table {
+      width: 100%;
+      border-collapse: collapse;
+      color: #fff;
+    }
+    .admin-section th,
+    .admin-section td {
+      padding: 12px;
+      border: 1px solid #333;
+      text-align: left;
+    }
+    .admin-section th {
+      background: #333;
+    }
+    .admin-section button.delete {
+      background: #ff4d4f;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
   <!-- Loader -->
   <div id="loader">
     <div class="spinner"></div>
-    <img id="loader-image"
-         src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=68103224&is=680ee0a4&hm=1e2890020e65536830747150cf2b3af8fe9df9a91cd878f8fb3fea8b19070ac1&=&format=webp&quality=lossless"
-         alt="Loading…">
+    <img
+      id="loader-image"
+      src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=6810dae4&is=680f8964&hm=3541cfcdc557fae800e4603bec2508dcaa17d8ee2634dbb942cf3478c8289c26&=&format=webp&quality=lossless"
+      alt="Loading…"
+    />
   </div>
 
   <!-- Auth UI -->
   <div id="auth-container">
-    <img src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=68103224&is=680ee0a4&hm=1e2890020e65536830747150cf2b3af8fe9df9a91cd878f8fb3fea8b19070ac1&=&format=webp&quality=lossless"
-         alt="Logo">
+    <img
+      src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=6810dae4&is=680f8964&hm=3541cfcdc557fae800e4603bec2508dcaa17d8ee2634dbb942cf3478c8289c26&=&format=webp&quality=lossless"
+      alt="Logo"
+    />
     <div class="tabs">
       <button id="tab-login" class="active">Login</button>
       <button id="tab-register">Register</button>
     </div>
     <div class="form-container">
       <form id="form-login" class="active">
-        <input type="text" id="login-username" placeholder="Username" required>
-        <input type="password" id="login-password" placeholder="Password" required>
+        <input type="text" id="login-username" placeholder="Username" required />
+        <input type="password" id="login-password" placeholder="Password" required />
         <button type="submit">Login</button>
         <div class="form-error" id="error-login"></div>
       </form>
       <form id="form-register">
-        <input type="text" id="reg-username" placeholder="Username" required>
-        <input type="password" id="reg-password" placeholder="Password" required>
-        <input type="text" id="reg-invite" placeholder="Invite Code" required>
+        <input type="text" id="reg-username" placeholder="Username" required />
+        <input type="password" id="reg-password" placeholder="Password" required />
+        <input type="text" id="reg-invite" placeholder="Invite Code" required />
         <button type="submit">Register</button>
         <div class="form-error" id="error-register"></div>
       </form>
@@ -169,37 +405,55 @@
   <!-- Main App -->
   <div id="app-content">
     <header>
-      <h1>Tikify</h1>
+      <!-- logo at left -->
+      <a href="/" class="logo-container">
+        <img
+          src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=6810dae4&is=680f8964&hm=3541cfcdc557fae800e4603bec2508dcaa17d8ee2634dbb942cf3478c8289c26&=&format=webp&quality=lossless"
+          alt="Bop Central Logo"
+          class="logo"
+        />
+      </a>
+      <!-- centered navigation -->
       <nav>
         <a href="/" data-view="home">Home</a>
         <a href="/?type=latest" data-view="latest">Latest</a>
         <a href="/?type=top" data-view="top">Top</a>
-        <a href="/?view=urls"    data-view="urls">Saved URLs</a>
-        <a href="/?view=users"   data-view="users">Saved Users</a>
+        <a href="/?view=urls" data-view="urls">Saved URLs</a>
+        <a href="/?view=users" data-view="users">Saved Users</a>
       </nav>
+      <!-- sidebar toggle -->
+      <button id="sidebar-toggle">☰</button>
     </header>
+
+    <!-- About Us sidebar -->
+    <aside class="about-us">
+      <h2>About Bop Central</h2>
+      <p>
+        Bop Central is your go-to TikTok downloader and viewer. Dive into the latest and greatest TikTok “bops” and explore what others
+        are sharing. Whether you want to search by username, browse the top trending videos, or fetch and download content via URL,
+        Bop Central makes it easy and seamless. Keep up with your favorite creators, discover new interests, and save videos for offline
+        viewing—all in one place.
+      </p>
+    </aside>
 
     <!-- HOME PAGE -->
     <div id="page-home">
       <section class="hero">
-        <h2>Tikify – Watch & Download TikTok Videos</h2>
+        <h2>Bop Central – Watch & Download TikTok Videos</h2>
         <p>Search users, browse latest or top videos, or fetch by URL.</p>
       </section>
-      <!-- Username search only -->
       <form class="search-bar" method="get" action="/">
-        <input name="q" type="text" placeholder="Search by username…" value="{{ active_q }}">
+        <input name="q" type="text" placeholder="Input username…" value="{{ active_q }}" />
         <button type="submit">Go</button>
       </form>
     </div>
 
     <!-- URLS PAGE -->
     <div id="page-urls" style="display:none;">
-      <!-- URL fetch form -->
       <form class="url-bar" id="url-form">
-        <input type="url" id="url-input" placeholder="Enter TikTok video URL…" required>
+        <input type="url" id="url-input" placeholder="Enter TikTok video URL…" required />
         <button type="submit">Fetch Video</button>
       </form>
-      <!-- Saved URLs -->
       <section id="url-section" style="display:none;">
         <h3 style="text-align:center;">Saved URLs</h3>
         <div class="grid" id="url-grid"></div>
@@ -211,14 +465,21 @@
       {% if users %}
       <section id="saved-users">
         <h3 style="text-align:center;">Saved Users</h3>
-        <div class="users-grid">
+        <!-- Search bar for filtering saved users -->
+        <input
+          type="text"
+          id="user-search"
+          placeholder="Search saved users..."
+          oninput="filterUsers()"
+        />
+        <div class="users-grid" id="users-grid">
           {% for username, data in users.items() %}
-            <a href="/?q={{ username }}" style="text-decoration:none;">
-              <div class="user-card">
-                <img src="{{ data.avatar }}" alt="@{{ username }}’s avatar">
-                <span class="handle">@{{ username }}</span>
-              </div>
-            </a>
+          <a href="/?q={{ username }}" class="user-link" style="text-decoration:none;">
+            <div class="user-card">
+              <img src="{{ data.avatar }}" alt="@{{ username }}’s avatar" />
+              <span class="handle">@{{ username }}</span>
+            </div>
+          </a>
           {% endfor %}
         </div>
       </section>
@@ -234,21 +495,25 @@
         </h3>
         <div class="grid">
           {% for v in user_videos %}
-            <div class="card">
-              {% if v.play_url.endswith('.mp4') %}
-                <video controls poster="{{ v.cover }}" data-aweme-id="{{ v.aweme_id }}">
-                  <source src="{{ v.play_url }}" type="video/mp4">
-                </video>
-              {% else %}
-                <img src="{{ v.cover }}" alt="Cover image">
-              {% endif %}
-              <div class="title">{{ v.text }}</div>
-              <div class="views" id="views-{{ v.aweme_id }}">{{ v.play_count }} views</div>
-              <div class="card-buttons">
-                <a href="/download?video_id={{ v.aweme_id }}&hd=0"><button type="button">Download</button></a>
-                <a href="/download?video_id={{ v.aweme_id }}&hd=1"><button type="button">HD</button></a>
-              </div>
+          <div class="card">
+            {% if v.play_url.endswith('.mp4') %}
+            <video controls poster="{{ v.cover }}" data-aweme-id="{{ v.aweme_id }}">
+              <source src="{{ v.play_url }}" type="video/mp4" />
+            </video>
+            {% else %}
+            <img src="{{ v.cover }}" alt="Cover image" />
+            {% endif %}
+            <div class="title">{{ v.text }}</div>
+            <div class="views" id="views-{{ v.aweme_id }}">{{ v.play_count }} views</div>
+            <div class="card-buttons">
+              <a href="/download?video_id={{ v.aweme_id }}&hd=0">
+                <button type="button">Download</button>
+              </a>
+              <a href="/download?video_id={{ v.aweme_id }}&hd=1">
+                <button type="button">HD</button>
+              </a>
             </div>
+          </div>
           {% endfor %}
         </div>
       </section>
@@ -256,52 +521,136 @@
     </div>
   </div>
 
+  <!-- Admin Dashboard -->
+  <div id="admin-dashboard">
+    <header><h1>TIKTOK DASHBOARD</h1></header>
+    <div class="admin-section">
+      <h2>Registered Users</h2>
+      <table>
+        <thead><tr><th>Username</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for u in all_users %}
+          <tr>
+            <td>{{ u.username }}</td>
+            <td><button class="delete" data-username="{{ u.username }}">Delete</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="admin-section">
+      <h2>Saved URLs</h2>
+      <table id="admin-saved-table">
+        <thead><tr><th>Aweme ID</th><th>Action</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
   <script>
-    // On load: hide loader, show auth or app
-    window.addEventListener('load', () => {
-      document.getElementById('loader').classList.add('fade-out');
-      setTimeout(() => {
-        document.getElementById('loader').style.display = 'none';
-        const token = localStorage.getItem('tikify_token');
-        if (token) {
-          document.getElementById('auth-container').style.display = 'none';
-          document.getElementById('app-content').style.display   = 'block';
-          initApp();
-        } else {
-          document.getElementById('app-content').style.display   = 'none';
-          document.getElementById('auth-container').style.display = 'flex';
-          initAuth();
-        }
-      }, 600);
+    // ========== Sidebar toggle ==========
+    document.getElementById('sidebar-toggle').addEventListener('click', () => {
+      document.querySelector('.about-us').classList.toggle('open');
     });
 
-    function highlightNav() {
-      const params = new URLSearchParams(window.location.search);
-      const hasQ = !!params.get('q');
-      // if there's a username query, treat it as the "videos" view
-      const viewType = params.get('view') || params.get('type') || (hasQ ? 'videos' : 'home');
-      document.querySelectorAll('nav a').forEach(a => {
-        a.classList.remove('active');
-        if (a.dataset.view === viewType) a.classList.add('active');
-      });
-      document.getElementById('page-home').style.display   = viewType === 'home'   ? 'block' : 'none';
-      document.getElementById('page-urls').style.display   = viewType === 'urls'   ? 'block' : 'none';
-      document.getElementById('page-users').style.display  = viewType === 'users'  ? 'block' : 'none';
-      document.getElementById('page-videos').style.display = ['latest','top','videos'].includes(viewType) ? 'block' : 'none';
+    // ========== Anti-Inspect & Anti-Copy ==========
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
+    document.addEventListener('cut', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      const blocked = [
+        { key: 'F12' },
+        { ctrl: true, key: 'U' },
+        { ctrl: true, key: 'S' },
+        { ctrl: true, shift: true, key: 'J' },
+        { ctrl: true, shift: true, key: 'C' },
+        { ctrl: true, shift: true, key: 'U' },
+        { ctrl: true, key: 'I' },
+        { alt: true, key: 'F12' },
+      ];
+      for (let b of blocked) {
+        if (
+          (!!b.ctrl === e.ctrlKey) &&
+          (!!b.shift === e.shiftKey) &&
+          (!!b.alt === e.altKey) &&
+          e.key.toUpperCase() === b.key.toUpperCase()
+        ) {
+          e.preventDefault();
+          alert('Nuh uh buddy, go away!');
+          window.location.href = '/';
+          return false;
+        }
+      }
+    });
+
+    if (window.location.href.startsWith('view-source:')) {
+      document.documentElement.innerHTML =
+        '<h1 style="color:#f00;text-align:center;margin-top:20vh">Nuh uh buddy, go away!</h1>';
+      setTimeout(() => (window.location.href = '/'), 1500);
+    }
+    // ==============================================
+
+    // ========== Your existing app & auth scripts ==========
+    function showAdmin() {
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('auth-container').style.display = 'none';
+      document.getElementById('app-content').style.display = 'none';
+      document.getElementById('admin-dashboard').style.display = 'block';
+      loadSavedAdmin();
+      bindAdminDeletes();
     }
 
-    // Render saved URLs section
+    async function loadSavedAdmin() {
+      const res = await fetch('/api/saved-urls');
+      const saved = await res.json();
+      const tbody = document.querySelector('#admin-saved-table tbody');
+      tbody.innerHTML = '';
+      saved.forEach(v => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${v.aweme_id}</td>
+          <td><button class="delete" data-aweme="${v.aweme_id}">Delete</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function bindAdminDeletes() {
+      document.querySelectorAll('#admin-dashboard button.delete[data-username]').forEach(btn => {
+        btn.onclick = async () => {
+          const user = btn.dataset.username;
+          if (!confirm('Delete user ' + user + '?')) return;
+          await fetch(`/api/saved-users/${encodeURIComponent(user)}`, { method: 'DELETE' });
+          btn.closest('tr').remove();
+        };
+      });
+      document.querySelectorAll('#admin-dashboard button.delete[data-aweme]').forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.dataset.aweme;
+          if (!confirm('Delete saved URL ' + id + '?')) return;
+          await fetch(`/api/saved-urls/${encodeURIComponent(id)}`, { method: 'DELETE' });
+          btn.closest('tr').remove();
+        };
+      });
+    }
+
+    let savedUrls = [];
+    async function fetchSavedUrls() {
+      const res = await fetch('/api/saved-urls');
+      savedUrls = await res.json();
+      renderUrlSection();
+    }
+
     function renderUrlSection() {
-      const saved = JSON.parse(localStorage.getItem('tikify_saved_urls') || '[]');
       const section = document.getElementById('url-section');
-      const grid    = document.getElementById('url-grid');
-      if (!saved.length) {
+      const grid = document.getElementById('url-grid');
+      if (!savedUrls.length) {
         section.style.display = 'none';
         return;
       }
       section.style.display = 'block';
       grid.innerHTML = '';
-      saved.forEach(v => {
+      savedUrls.forEach(v => {
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
@@ -318,94 +667,169 @@
       });
     }
 
-    // Authentication UI
+    async function addSavedUrl(data) {
+      await fetch('/api/saved-urls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          aweme_id: data.aweme_id,
+          play_url: data.play_url,
+          hd_url: data.hd_url
+        })
+      });
+    }
+
     function initAuth() {
-      const tabLogin    = document.getElementById('tab-login');
+      const tabLogin = document.getElementById('tab-login');
       const tabRegister = document.getElementById('tab-register');
-      const formLogin   = document.getElementById('form-login');
-      const formReg     = document.getElementById('form-register');
-      const errorLogin  = document.getElementById('error-login');
-      const errorReg    = document.getElementById('error-register');
-      function showLogin()    { tabLogin.classList.add('active'); tabRegister.classList.remove('active'); formLogin.classList.add('active'); formReg.classList.remove('active'); }
-      function showRegister() { tabRegister.classList.add('active'); tabLogin.classList.remove('active'); formReg.classList.add('active'); formLogin.classList.remove('active'); }
-      tabLogin.onclick    = showLogin;
+      const formLogin = document.getElementById('form-login');
+      const formReg = document.getElementById('form-register');
+      const errorLogin = document.getElementById('error-login');
+      const errorReg = document.getElementById('error-register');
+      function showLogin() {
+        tabLogin.classList.add('active');
+        tabRegister.classList.remove('active');
+        formLogin.classList.add('active');
+        formReg.classList.remove('active');
+      }
+      function showRegister() {
+        tabRegister.classList.add('active');
+        tabLogin.classList.remove('active');
+        formReg.classList.add('active');
+        formLogin.classList.remove('active');
+      }
+      tabLogin.onclick = showLogin;
       tabRegister.onclick = showRegister;
 
-      formLogin.onsubmit = e => {
-        e.preventDefault(); errorLogin.textContent = '';
+      formLogin.onsubmit = async e => {
+        e.preventDefault();
+        errorLogin.textContent = '';
         const params = new URLSearchParams();
         params.append('username', document.getElementById('login-username').value);
         params.append('password', document.getElementById('login-password').value);
-        fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:params })
-          .then(async r => { const payload=await r.json(); if(!r.ok) throw new Error(payload.detail||'Login failed'); return payload; })
-          .then(data => { localStorage.setItem('tikify_token', data.access_token); window.location.href='/'; })
-          .catch(err => { errorLogin.textContent = err.message; });
+        const r = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params
+        });
+        const payload = await r.json();
+        if (!r.ok) {
+          errorLogin.textContent = payload.detail || 'Login failed';
+          return;
+        }
+        localStorage.setItem('tikify_token', payload.access_token);
+        window.location.href = '/';
       };
 
-      formReg.onsubmit = e => {
-        e.preventDefault(); errorReg.textContent = '';
-        fetch('/api/register', {
-          method:'POST', headers:{'Content-Type':'application/json'},
+      formReg.onsubmit = async e => {
+        e.preventDefault();
+        errorReg.textContent = '';
+        const r = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             username: document.getElementById('reg-username').value,
             password: document.getElementById('reg-password').value,
             invite_code: document.getElementById('reg-invite').value
           })
-        })
-        .then(r => { if(!r.ok) throw r; return r.json(); })
-        .then(() => { showLogin(); })
-        .catch(async err => {
-          const msg = err.json ? (await err.json()).detail : 'Registration failed';
-          errorReg.textContent = msg;
         });
+        if (!r.ok) {
+          const err = await r.json();
+          errorReg.textContent = err.detail || 'Registration failed';
+          return;
+        }
+        showLogin();
       };
     }
 
-    // After login: bind view-count, URL form, render URL section, highlight nav
-    function initApp() {
+    async function initApp() {
       highlightNav();
-      renderUrlSection();
+      await fetchSavedUrls();
 
-      const urlForm = document.getElementById('url-form');
-      if (urlForm) urlForm.onsubmit = e => {
+      document.getElementById('url-form').onsubmit = async e => {
         e.preventDefault();
         const url = document.getElementById('url-input').value.trim();
         if (!url) return;
-        fetch('/api/from-url', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({url})
-        })
-        .then(async r => {
-          if (!r.ok) throw new Error((await r.json()).detail||'Failed to fetch');
-          return r.json();
-        })
-        .then(data => {
-          const saved = JSON.parse(localStorage.getItem('tikify_saved_urls')||'[]');
-          saved.unshift(data);
-          localStorage.setItem('tikify_saved_urls', JSON.stringify(saved));
-          renderUrlSection();
-          document.getElementById('url-input').value = '';
-        })
-        .catch(err => console.error(err));
+        const r = await fetch('/api/from-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        if (!r.ok) return console.error(await r.json());
+        const data = await r.json();
+        await addSavedUrl({
+          aweme_id: data.aweme_id,
+          play_url: data.play_url,
+          hd_url: data.hd_url
+        });
+        await fetchSavedUrls();
+        document.getElementById('url-input').value = '';
       };
-
       document.querySelectorAll('video[data-aweme-id]').forEach(video => {
-        video.addEventListener('play', () => {
-          const id = video.dataset.awemeId;
-          fetch(`/api/view/${id}`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('tikify_token')}` }
-          })
-          .then(r => r.json())
-          .then(data => {
+        video.addEventListener(
+          'play',
+          async () => {
+            const id = video.dataset.awemeId;
+            const r = await fetch(`/api/view/${id}`, {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('tikify_token')}`
+              }
+            });
+            if (!r.ok) return;
+            const data = await r.json();
             const el = document.getElementById(`views-${id}`);
             if (el) el.textContent = `${data.play_count} views`;
-          })
-          .catch(console.error);
-        }, { once: true });
+          },
+          { once: true }
+        );
       });
     }
+
+    function highlightNav() {
+      const params = new URLSearchParams(window.location.search);
+      const hasQ = !!params.get('q');
+      const viewType =
+        params.get('view') || params.get('type') || (hasQ ? 'videos' : 'home');
+      document.querySelectorAll('nav a').forEach(a => {
+        a.classList.remove('active');
+        if (a.dataset.view === viewType) a.classList.add('active');
+      });
+      document.getElementById('page-home').style.display =
+        viewType === 'home' ? 'block' : 'none';
+      document.getElementById('page-urls').style.display =
+        viewType === 'urls' ? 'block' : 'none';
+      document.getElementById('page-users').style.display =
+        viewType === 'users' ? 'block' : 'none';
+      document.getElementById('page-videos').style.display =
+        ['latest','top','videos'].includes(viewType) ? 'block' : 'none';
+    }
+
+    // Live-filter for saved users
+    function filterUsers() {
+      const query = document.getElementById('user-search').value.toLowerCase();
+      document.querySelectorAll('#users-grid .user-link').forEach(link => {
+        const handle = link.querySelector('.handle').textContent.toLowerCase();
+        link.style.display = handle.includes(query) ? '' : 'none';
+      });
+    }
+
+    window.addEventListener('load', async () => {
+      document.getElementById('loader').classList.add('fade-out');
+      setTimeout(async () => {
+        document.getElementById('loader').style.display = 'none';
+        const token = localStorage.getItem('tikify_token');
+        if (token) {
+          document.getElementById('auth-container').style.display = 'none';
+          document.getElementById('app-content').style.display = 'block';
+          await initApp();
+        } else {
+          document.getElementById('app-content').style.display = 'none';
+          document.getElementById('auth-container').style.display = 'flex';
+          initAuth();
+        }
+      }, 600);
+    });
   </script>
 </body>
 </html>

@@ -5,7 +5,9 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List
 from urllib.parse import urlparse
-
+import asyncio
+import httpx
+from datetime import datetime
 import requests
 from jose import jwt
 from passlib.context import CryptContext
@@ -392,6 +394,30 @@ async def delete_saved_user(username: str):
         del users[username]
         save_users(users)
     return JSONResponse(status_code=204, content={})
+
+
+# ─── Scheduled external ping ─────────────────────────────────────────────────
+@app.on_event("startup")
+async def schedule_ping_task():
+    async def ping_loop():
+        async with httpx.AsyncClient(timeout=5) as client:
+            while True:
+                try:
+                    resp = await client.get(f"{SERVICE_URL}/ping")
+                    # optionally log if non-200:
+                    if resp.status_code != 200:
+                        print(f"Health ping returned {resp.status_code}")
+                except Exception as e:
+                    print(f"External ping failed: {e!r}")
+                await asyncio.sleep(10)  # wait 10 seconds
+
+    asyncio.create_task(ping_loop())
+
+
+# ─── HEALTHCHECK ───────────────────────────────────────────────────────────────
+@app.get("/ping")
+async def ping():
+    return {"status": "alive"}
 
 def start():
     import uvicorn

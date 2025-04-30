@@ -6,4 +6,4 @@ PyJWT
 Jinja2
 python-multipart
 python-jose
-htpx
+httpx

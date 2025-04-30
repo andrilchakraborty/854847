@@ -21,7 +21,7 @@ from pydantic import BaseModel
 # ─── Config ────────────────────────────────────────────────────────────────
 
 # Your Render service URL
-SERVICE_URL = "https://bop-central.onrender.com/"
+SERVICE_URL = "https://bop-central.onrender.com"
 
 DATA_DIR          = os.getenv("DATA_DIR", "data")
 if not os.path.exists(DATA_DIR):

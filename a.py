@@ -19,7 +19,10 @@ from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from pydantic import BaseModel
 
 # ─── Config ────────────────────────────────────────────────────────────────
-# Use a data directory (mount this as a persistent volume) so JSON files survive code updates
+
+# Your Render service URL
+SERVICE_URL = "https://bop-central.onrender.com/"
+
 DATA_DIR          = os.getenv("DATA_DIR", "data")
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)

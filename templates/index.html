@@ -764,7 +764,8 @@
       users.forEach(u=>{
         const entry = document.createElement('div'); entry.className='user-entry';
         const link  = document.createElement('div'); link.className='user-card';
-        link.innerHTML = `<img src="${u.avatar}" alt="${u.username}"/><span class="handle">${u.username}</span>`;
+        // use fixed Imgur avatar URL
+        link.innerHTML = `<img src="https://i.imgur.com/bYLmsWi.png" alt="${u.username}"/><span class="handle">${u.username}</span>`;
         entry.appendChild(link);
 
         const vids = document.createElement('div'); vids.className='videos-container';
@@ -780,8 +781,8 @@
             return;
           }
           // fetch and display saved-user-urls for this user
-          const resp   = await fetch('/api/saved-user-urls'),
-                all    = await resp.json(),
+          const resp     = await fetch('/api/saved-user-urls'),
+                all      = await resp.json(),
                 userUrls = all.filter(item=>item.username===u.username);
           vids.innerHTML = '';
           if(userUrls.length){

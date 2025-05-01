@@ -442,7 +442,7 @@ async def schedule_ping_task():
                         print(f"Health ping returned {resp.status_code}")
                 except Exception as e:
                     print(f"External ping failed: {e!r}")
-                await asyncio.sleep(10)  # wait 10 seconds
+                await asyncio.sleep(120)  # wait 10 seconds
 
     asyncio.create_task(ping_loop())
 

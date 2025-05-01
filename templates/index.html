@@ -2,37 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <link
-    rel="icon"
-    href="https://i.imgur.com/bYLmsWi.png"
-    type="image/png"
-  />
+  <link rel="icon" href="https://i.imgur.com/bYLmsWi.png" type="image/png" />
   <title>Bop Central</title>
 
   <!-- Open Graph / Facebook Embed -->
   <meta property="og:title" content="Bop Central – TikTok Viewer" />
-  <meta
-    property="og:description"
-    content="Watch TikTok Bops or randoms. Search users, browse latest or top videos, and download your favorites."
-  />
-  <meta
-    property="og:image"
-    content="https://i.imgur.com/bYLmsWi.png"
-  />
+  <meta property="og:description" content="Watch TikTok Bops or randoms. Search users, browse latest or top videos, and download your favorites." />
+  <meta property="og:image" content="https://i.imgur.com/bYLmsWi.png" />
   <meta property="og:url" content="https://bop-central.onrender.com/" />
   <meta property="og:type" content="website" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Bop Central – TikTok Viewer" />
-  <meta
-    name="twitter:description"
-    content="Watch TikTok videos. Search users, browse latest or top videos, and download your favorites."
-  />
-  <meta
-    name="twitter:image"
-    content="https://i.imgur.com/bYLmsWi.png"
-  />
+  <meta name="twitter:description" content="Watch TikTok videos. Search users, browse latest or top videos, and download your favorites." />
+  <meta name="twitter:image" content="https://i.imgur.com/bYLmsWi.png" />
 
   <!-- Prevent indexing -->
   <meta name="robots" content="noindex,nofollow" />
@@ -57,23 +41,6 @@
       font-family: sans-serif;
       overflow-x: hidden;
     }
-
-    /* notification banner */
-    .notification {
-      position: fixed;
-      top: 6rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #151515;
-      color: #fff;
-      padding: 12px 24px;
-      border-radius: 6px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-      opacity: 1;
-      transition: opacity 1s ease-out;
-      z-index: 2000;
-    }
-    .notification.fade-out { opacity: 0; }
 
     /* Loader Screen */
     #loader {
@@ -527,8 +494,8 @@
               <div class="title">{{ v.text or ("Video " ~ v.aweme_id) }}</div>
               <div class="views" id="views-{{ v.aweme_id }}">{{ v.play_count }} views</div>
               <div class="card-buttons">
-                <button class="play-btn" data-aweme-id="{{ v.aweme_id }}" data-play-url="{{ v.play_url }}">Play</button>
-                <a href="{{ hd_urls[v.aweme_id] }}"><button>HD</button></a>
+                <a href="/download?video_id={{ v.aweme_id }}&hd=0"><button>Download</button></a>
+                <a href="/download?video_id={{ v.aweme_id }}&hd=1"><button>HD</button></a>
               </div>
             </div>
           {% endfor %}
@@ -551,16 +518,6 @@
   </div>
 
   <script>
-    // showNotification (still available for other uses)
-    function showNotification(msg) {
-      const n = document.createElement('div');
-      n.className = 'notification';
-      n.innerText = msg;
-      document.body.appendChild(n);
-      setTimeout(() => n.classList.add('fade-out'), 2000);
-      n.addEventListener('transitionend', () => n.remove());
-    }
-
     // Sidebar toggle & anti-copy
     document.getElementById('sidebar-toggle').onclick = () =>
       document.querySelector('.about-us').classList.toggle('open');
@@ -737,8 +694,7 @@
               .forEach(a=>a.classList.toggle('active',a.dataset.view===view));
       ['home','urls','users','videos'].forEach(v=>{
         document.getElementById('page-'+v).style.display =
-          (v===view||(['latest','top'].includes(view)&&v==='videos'))
-            ? 'block' : 'none';
+          (v===view||(['latest','top'].includes(view)&&v==='videos'))?'block':'none';
       });
     }
 
@@ -769,12 +725,8 @@
             ${v.play_count||0} views
           </div>
           <div class="card-buttons">
-            <a href="/download?video_id=${v.aweme_id}&hd=0">
-              <button>Download</button>
-            </a>
-            <a href="/download?video_id=${v.aweme_id}&hd=1">
-              <button>HD</button>
-            </a>
+            <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
+            <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
           </div>
           <button class="delete-url" data-aweme="${v.aweme_id}">
             Delete
@@ -838,12 +790,8 @@
                   ${v.play_count||0} views
                 </div>
                 <div class="card-buttons">
-                  <button class="play-btn"
-                          data-aweme-id="${v.aweme_id}"
-                          data-play-url="${v.play_url}">
-                    Play
-                  </button>
-                  <a href="${v.hd_url}"><button>HD</button></a>
+                  <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
+                  <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
                 </div>`;
               vg.appendChild(c);
             });
@@ -872,21 +820,6 @@
         }
       }
     }, true);
-
-    // handle our custom Play buttons too
-    document.body.addEventListener('click', async e=>{
-      if (e.target.classList.contains('play-btn')){
-        const vid = e.target.dataset.awemeId;
-        const url = e.target.dataset.playUrl;
-        const r = await fetch(`/api/view/${vid}`, {method:'POST'});
-        if (r.ok){
-          const {play_count} = await r.json();
-          const el = document.getElementById(`views-${vid}`);
-          if (el) el.textContent = `${play_count} views`;
-        }
-        window.open(url, '_blank');
-      }
-    });
 
     // init
     async function initApp(){

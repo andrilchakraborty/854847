@@ -330,14 +330,13 @@
       hyphens: auto;
     }
 
-    /* Videos container: now lets the inner .grid rule handle the layout */
+    /* Videos container now delegates layout to itself */
     .videos-container {
       display: none;
       margin-top: 16px;
     }
-    /* when shown, the child <div class="grid"> will layout its cards as expected */
-    .videos-container .grid {
-      /* inherits your existing .grid styles */
+    .videos-container.grid {
+      /* uses the same .grid rules above */
     }
 
     /* Admin Password Modal */
@@ -750,6 +749,7 @@
           <span class="handle">${u.username}</span>`;
         entry.appendChild(link);
 
+        // THIS container becomes the GRID
         const vids = document.createElement('div');
         vids.className='videos-container';
         entry.appendChild(vids);
@@ -761,8 +761,9 @@
         entry.appendChild(del);
 
         link.onclick = async ()=>{
-          if (vids.style.display==='block'){
+          if (vids.style.display==='grid'){
             vids.style.display='none';
+            vids.classList.remove('grid');
             return;
           }
           const resp     = await fetch('/api/saved-user-urls'),
@@ -770,9 +771,7 @@
                 userUrls = all.filter(item=>item.username===u.username);
           vids.innerHTML='';
           if (userUrls.length){
-            // wrap cards in a grid container
-            const vg = document.createElement('div');
-            vg.className = 'grid';
+            // DIRECTLY append each <div class="card"> into vids
             userUrls.forEach(v=>{
               const c = document.createElement('div');
               c.className='card';
@@ -788,14 +787,15 @@
                   <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
                   <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
                 </div>`;
-              vg.appendChild(c);
+              vids.appendChild(c);
             });
-            vids.appendChild(vg);
+            // turn vids into the grid container
+            vids.classList.add('grid');
+            vids.style.display='grid';
           } else {
             vids.innerHTML = '<p>No videos saved for this user.</p>';
+            vids.style.display='block';
           }
-          // ← **reverted** from 'grid' back to 'block' so the inner .grid takes over :contentReference[oaicite:2]{index=2}
-          vids.style.display='block';
           bindDeleteUsers();
         };
 

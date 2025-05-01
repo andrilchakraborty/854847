@@ -12,37 +12,40 @@ import requests
 from jose import jwt
 from passlib.context import CryptContext
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import HTMLResponse
-from pydantic import HttpUrl
-from fastapi import FastAPI, Request, Depends, HTTPException, Query, status
+from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
+from pydantic import HttpUrl, BaseModel
+from fastapi import FastAPI, Request, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
-from pydantic import BaseModel
 
 # ─── Config ────────────────────────────────────────────────────────────────
 
-# Your Render service URL
 SERVICE_URL = "https://bop-central.onrender.com"
 
-DATA_DIR          = os.getenv("DATA_DIR", "data")
+DATA_DIR        = os.getenv("DATA_DIR", "data")
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
-SECRET_KEY        = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
-ALGORITHM         = "HS256"
+SECRET_KEY      = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
+ALGORITHM       = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-USERS_FILE        = os.path.join(DATA_DIR, "users.json")
-INVITES_FILE      = os.path.join(DATA_DIR, "invites.json")
-POSTS_FILE        = os.path.join(DATA_DIR, "posts.json")
-SAVED_URLS_FILE   = os.path.join(DATA_DIR, "saved_urls.json")    # ← new
-# (we already persist users in users.json)
+USERS_FILE      = os.path.join(DATA_DIR, "users.json")
+INVITES_FILE    = os.path.join(DATA_DIR, "invites.json")
+POSTS_FILE      = os.path.join(DATA_DIR, "posts.json")
+SAVED_URLS_FILE = os.path.join(DATA_DIR, "saved_urls.json")
+
+# ← NEW
+SAVED_USER_URLS_FILE = os.path.join(DATA_DIR, "saved_user_urls.json")
+
 router = APIRouter()
-# ─── Logging ──────────────────────────────────────────────────────────────
+
+# ─── Logging ────────────────────────────────────────────────────────────────
+
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [DEBUG] %(message)s')
 
-# ─── Helpers ───────────────────────────────────────────────────────────────
+# ─── Helpers ────────────────────────────────────────────────────────────────
+
 def load_json(path: str, default):
     if not os.path.exists(path):
         return default
@@ -56,7 +59,8 @@ def save_json(path: str, data):
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
 
-# ─── Persistence ───────────────────────────────────────────────────────────
+# ─── Persistence ────────────────────────────────────────────────────────────
+
 def load_users() -> Dict[str, dict]:
     return load_json(USERS_FILE, {})
 
@@ -76,16 +80,27 @@ def save_posts(posts: Dict[str, list]):
     save_json(POSTS_FILE, posts)
 
 # ─── Saved URLs Persistence ─────────────────────────────────────────────────
+
 def load_saved_urls() -> List[dict]:
     return load_json(SAVED_URLS_FILE, [])
 
 def save_saved_urls(urls: List[dict]):
     save_json(SAVED_URLS_FILE, urls)
 
-# ─── Password hashing ─────────────────────────────────────────────────────
+# ← NEW: Saved User-URLs Persistence
+
+def load_saved_user_urls() -> List[dict]:
+    return load_json(SAVED_USER_URLS_FILE, [])
+
+def save_saved_user_urls(urls: List[dict]):
+    save_json(SAVED_USER_URLS_FILE, urls)
+
+# ─── Password hashing ───────────────────────────────────────────────────────
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# ─── Pydantic Models ───────────────────────────────────────────────────────
+# ─── Pydantic Models ────────────────────────────────────────────────────────
+
 class RegisterIn(BaseModel):
     username:    str
     password:    str
@@ -98,13 +113,21 @@ class Token(BaseModel):
 class URLIn(BaseModel):
     url: str
 
-class SavedURL(BaseModel):       # ← new
+class SavedURL(BaseModel):
     aweme_id: str
     play_url: str
     hd_url:    str
 
-class UserIn(BaseModel):         # ← new
+class UserIn(BaseModel):
     username: str
+
+# ← NEW: model for saving username+URL together
+
+class SavedUserURL(BaseModel):
+    username: str
+    aweme_id: str
+    play_url: str
+    hd_url:    str
 
 # ─── Globals ───────────────────────────────────────────────────────────────
 HD_URLS: Dict[str, str] = {}
@@ -196,35 +219,32 @@ async def index(
         "view_type":   type or "",
     })
 
-@router.get("/api/embed", response_class=HTMLResponse)
-async def api_embed(url: HttpUrl = Query(..., description="Full TikTok video URL or short link")):
-    """
-    Resolve a TikTok URL (or short link) into an HTML5 <video> snippet.
-    """
-    try:
-        data = await from_url(URLIn(url=str(url)))
-    except HTTPException:
-        # pass through 400/404 with the same message
-        raise
-    except Exception as exc:
-        # catch-all so we return a clean 500
-        logger.error(f"Error resolving {url}: {exc}")
-        raise HTTPException(500, detail="Failed to resolve TikTok URL")
 
-    # Prefer HD first
-    sources = [
-        f'<source src="{data["hd_url"]}" type="video/mp4">',
-        f'<source src="{data["play_url"]}" type="video/mp4">'
+
+
+
+@app.get("/api/saved-user-urls")
+async def get_saved_user_urls():
+    return JSONResponse(load_saved_user_urls())
+
+@app.post("/api/saved-user-urls", status_code=201)
+async def post_saved_user_url(data: SavedUserURL):
+    saved = load_saved_user_urls()
+    if not any(u["username"] == data.username and u["aweme_id"] == data.aweme_id for u in saved):
+        saved.insert(0, data.dict())
+        save_saved_user_urls(saved)
+    return JSONResponse(data.dict())
+
+@app.delete("/api/saved-user-urls/{username}/{aweme_id}", status_code=204)
+async def delete_saved_user_url(username: str, aweme_id: str):
+    saved = load_saved_user_urls()
+    filtered = [
+        u for u in saved
+        if not (u["username"] == username and u["aweme_id"] == aweme_id)
     ]
-    html = f"""
-    <video controls preload="metadata" style="max-width:100%;height:auto;">
-      {''.join(sources)}
-      Your browser does not support the video tag.
-    </video>
-    """
+    save_saved_user_urls(filtered)
+    return JSONResponse(status_code=204, content={})
 
-    # You could also set caching headers here if desired
-    return HTMLResponse(content=html, status_code=200)
 
 @app.get("/download")
 async def download(video_id: str, hd: int = 0):

@@ -517,14 +517,10 @@
     </div>
 
     <!-- USERS PAGE -->
-    <div id="page-users" style="display:none;">
-      <!-- will be populated by JS -->
-    </div>
+    <div id="page-users" style="display:none;"></div>
 
     <!-- VIDEOS PAGE -->
-    <div id="page-videos" style="display:none;">
-      <!-- will be populated by JS -->
-    </div>
+    <div id="page-videos" style="display:none;"></div>
   </div>
 
   <!-- Admin Password Modal -->
@@ -583,7 +579,6 @@
       modal.style.display = 'none';
     }
     document.addEventListener('keydown', e => {
-      // toggle admin modal on Ctrl+\
       if (e.ctrlKey && e.key === '\\') {
         if (!adminMode && modal.style.display !== 'flex') {
           showModal();
@@ -593,7 +588,6 @@
             .forEach(b => b.style.display = 'none');
         }
       }
-      // close modal on Esc
       if (e.key === 'Escape' && modal.style.display === 'flex') {
         hideModal();
       }
@@ -610,31 +604,31 @@
     });
     btnCancel.addEventListener('click', hideModal);
 
-    // delete‐user handlers
-    document.querySelectorAll('.delete-user').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const username = btn.dataset.username;
-        if (!confirm(`Delete user ${username}?`)) return;
-        const res = await fetch(`/api/saved-users/${encodeURIComponent(username)}`, {
-          method: 'DELETE'
-        });
-        if (res.ok) btn.closest('.user-entry').remove();
-        else alert(`Failed to delete ${username}`);
+    // delete‐user handlers (will be rebound after rendering)
+    async function bindDeleteUsers() {
+      document.querySelectorAll('.delete-user').forEach(btn => {
+        btn.onclick = async () => {
+          const username = btn.dataset.username;
+          if (!confirm(`Delete user ${username}?`)) return;
+          const res = await fetch(`/api/saved-users/${encodeURIComponent(username)}`, { method: 'DELETE' });
+          if (res.ok) btn.closest('.user-entry').remove();
+          else alert(`Failed to delete ${username}`);
+        };
       });
-    });
+    }
 
     // delete‐url handlers for saved URLs
-    document.querySelectorAll('.delete-url').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const id = btn.dataset.aweme;
-        if (!confirm(`Delete saved URL ${id}?`)) return;
-        const res = await fetch(`/api/saved-urls/${encodeURIComponent(id)}`, {
-          method: 'DELETE'
-        });
-        if (res.ok) btn.closest('.card').remove();
-        else alert(`Failed to delete URL ${id}`);
+    function bindDeleteUrls() {
+      document.querySelectorAll('.delete-url').forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.dataset.aweme;
+          if (!confirm(`Delete saved URL ${id}?`)) return;
+          const res = await fetch(`/api/saved-urls/${encodeURIComponent(id)}`, { method: 'DELETE' });
+          if (res.ok) btn.closest('.card').remove();
+          else alert(`Failed to delete URL ${id}`);
+        };
       });
-    });
+    }
 
     // URL form handler using /api/from-url
     document.getElementById('url-form').addEventListener('submit', async e => {
@@ -652,22 +646,13 @@
           return;
         }
         const data = await res.json();
-        const grid = document.getElementById('url-grid');
-        grid.innerHTML = '';
-        document.getElementById('url-section').style.display = 'block';
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <video controls data-aweme-id="${data.aweme_id}">
-            <source src="${data.play_url}" type="video/mp4">
-          </video>
-          <div class="title">Video ${data.aweme_id}</div>
-          <div class="card-buttons">
-            <a href="${data.play_url}"><button type="button">Play</button></a>
-            <a href="${data.hd_url}"><button type="button">HD</button></a>
-          </div>
-        `;
-        grid.appendChild(card);
+        // save to saved-urls
+        await fetch('/api/saved-urls', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        fetchSavedUrls();
       } catch {
         alert('Error fetching video');
       }
@@ -710,7 +695,7 @@
             <source src="${v.play_url}" type="video/mp4">
           </video>
           <div class="title">Video ${v.aweme_id}</div>
-          <div class="views" id="views-${v.aweme_id}">${v.play_count} views</div>
+          <div class="views" id="views-${v.aweme_id}">${v.play_count || 0} views</div>
           <div class="card-buttons">
             <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
             <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
@@ -719,30 +704,24 @@
         `;
         grid.appendChild(card);
       });
-      // re-bind delete-url for new cards
-      document.querySelectorAll('.delete-url').forEach(btn => {
-        btn.onclick = async () => {
-          const id = btn.dataset.aweme;
-          if (!confirm(`Delete saved URL ${id}?`)) return;
-          const res = await fetch(`/api/saved-urls/${encodeURIComponent(id)}`, { method: 'DELETE' });
-          if (res.ok) btn.closest('.card').remove();
-          else alert(`Failed to delete URL ${id}`);
-        };
-      });
+      bindDeleteUrls();
     }
 
-    // Fetch & render saved users
+    // Fetch & render saved users + embed their latest video once
     async function fetchSavedUsers() {
-      const res = await fetch('/api/saved-users');
-      const savedUsers = await res.json();
-      // fetch each user's videos once, embed into HTML
-      const usersWithVideos = await Promise.all(savedUsers.map(async user => {
-        const resV = await fetch(`/api/user-videos/${encodeURIComponent(user.username)}`);
-        const vids = await resV.json();
-        return { ...user, videos: vids };
+      const [usersRes, latestRes] = await Promise.all([
+        fetch('/api/saved-users'),
+        fetch('/api/latest')
+      ]);
+      const users = await usersRes.json();
+      const latestVideos = await latestRes.json();
+      const usersWithVideos = users.map(u => ({
+        ...u,
+        videos: latestVideos.filter(v => v.username === u.username)
       }));
       renderUserSection(usersWithVideos);
     }
+
     function renderUserSection(users) {
       const pageUsers = document.getElementById('page-users');
       pageUsers.innerHTML = `
@@ -756,7 +735,7 @@
         entry.innerHTML = `
           <a href="#" class="user-link" data-username="${u.username}" data-videos='${JSON.stringify(u.videos)}'>
             <div class="user-card">
-              <img src="${u.avatar_url}" alt="${u.username}" />
+              <img src="${u.avatar}" alt="${u.username}" />
               <span class="handle">${u.username}</span>
             </div>
           </a>
@@ -765,31 +744,26 @@
         grid.appendChild(entry);
       });
       document.getElementById('user-search').addEventListener('input', filterUsers);
+      bindDeleteUsers();
       document.querySelectorAll('.user-link').forEach(link => {
         link.addEventListener('click', e => {
           e.preventDefault();
           const vids = JSON.parse(link.getAttribute('data-videos'));
           renderVideoGrid(vids);
-          // show videos page and hide users page
           document.getElementById('page-users').style.display = 'none';
           document.getElementById('page-videos').style.display = 'block';
         });
       });
-      // re-bind delete-user for new entries
-      document.querySelectorAll('.delete-user').forEach(btn => {
-        btn.onclick = async () => {
-          const username = btn.dataset.username;
-          if (!confirm(`Delete user ${username}?`)) return;
-          const res = await fetch(`/api/saved-users/${encodeURIComponent(username)}`, { method: 'DELETE' });
-          if (res.ok) btn.closest('.user-entry').remove();
-          else alert(`Failed to delete ${username}`);
-        };
-      });
     }
+
     function renderVideoGrid(videos) {
       const pageVideos = document.getElementById('page-videos');
       pageVideos.innerHTML = `<div class="grid" id="video-grid"></div>`;
       const grid = document.getElementById('video-grid');
+      if (!videos.length) {
+        grid.innerHTML = '<p style="text-align:center;">No videos found.</p>';
+        return;
+      }
       videos.forEach(v => {
         const card = document.createElement('div');
         card.className = 'card';
@@ -798,7 +772,7 @@
             <source src="${v.play_url}" type="video/mp4">
           </video>
           <div class="title">Video ${v.aweme_id}</div>
-          <div class="views" id="views-${v.aweme_id}">${v.play_count} views</div>
+          <div class="views" id="views-${v.aweme_id}">${v.play_count || 0} views</div>
           <div class="card-buttons">
             <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
             <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
@@ -845,12 +819,10 @@
       }, 600);
     });
 
-    // ─── Keep-alive ping every 5 minutes ───────────────────────────────
+    // keep-alive ping
     setInterval(() => {
       fetch('/ping').catch(() => {});
-    }, 10 * 1000);
-    // ────────────────────────────────────────────────────────────────────    
-    
+    }, 300_000);
   </script>
 </body>
 </html>

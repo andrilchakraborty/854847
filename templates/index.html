@@ -530,7 +530,7 @@
           {% elif view_type == 'top' %} Top Videos
           {% endif %}
         </h3>
-        <div class="grid">  
+        <div class="grid">
           {% for v in user_videos %}
             <div class="card">
               <video controls data-aweme-id="{{ v.aweme_id }}">
@@ -758,8 +758,9 @@
           const vg=document.createElement('div'); vg.className='grid';
           u.videos.forEach(v=>{
             const c=document.createElement('div'); c.className='card';
+            // placeholder for embed
             c.innerHTML=`
-              <video controls data-aweme-id="${v.aweme_id}"><source src="${v.play_url}" type="video/mp4"></video>
+              <div class="embed-container" id="embed-${v.aweme_id}">Loading video…</div>
               <div class="title">${v.text||('Video '+v.aweme_id)}</div>
               <div class="views" id="views-${v.aweme_id}">${v.play_count||0} views</div>
               <div class="card-buttons">
@@ -776,14 +777,24 @@
         del.dataset.username=u.username; del.textContent='Delete';
         entry.appendChild(del);
 
-        grid.appendChild(entry);
-
-        // TOGGLE VIDEOS ON CLICK & show correct notification
         link.onclick = ()=> {
           vids.style.display = vids.style.display==='block'?'none':'block';
-          const userVideoCount = vids.querySelectorAll('.card').length;
-          showNotification(`${userVideoCount} videos embedded`);
         };
+
+        grid.appendChild(entry);
+
+        // call embed API for each video now that the card is in the DOM
+        if(Array.isArray(u.videos)){
+          u.videos.forEach(v=>{
+            fetch(`/api/embed?url=${encodeURIComponent(v.play_url)}`)
+              .then(res => res.text())
+              .then(html => {
+                const container = document.getElementById(`embed-${v.aweme_id}`);
+                if(container) container.innerHTML = html;
+              })
+              .catch(err => console.error('Embed fetch error', err));
+          });
+        }
       });
       bindDeleteUsers();
     }
@@ -804,7 +815,6 @@
       highlightNav();
       await fetchSavedUrls();
       await fetchSavedUsers();
-      // Notification after saved user embed (this stays unchanged)
       const count = document.querySelectorAll('#page-videos .card').length;
       showNotification(`${count} videos embedded`);
     }

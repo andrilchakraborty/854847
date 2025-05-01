@@ -251,6 +251,51 @@
       background: #333;
     }
 
+    /* Search bar for saved users */
+    #user-search {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px;
+      margin: 20px auto;
+      display: block;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    /* Users grid */
+    .users-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .user-entry {
+      position: relative;
+      text-align: center;
+    }
+    .user-card {
+      background: #151515;
+      padding: 12px;
+      border-radius: 6px;
+      transition: transform 0.2s;
+    }
+    .user-card:hover {
+      transform: scale(1.05);
+    }
+    .user-card img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin-bottom: 8px;
+    }
+    .handle {
+      display: block;
+      font-weight: bold;
+      font-size: 0.85rem;
+      hyphens: auto;
+    }
+
     /* Video & URL grid */
     .grid {
       display: grid;
@@ -416,7 +461,7 @@
   <!-- Main App -->
   <div id="app-content">
     <header>
-      <a href="/" class="logo-container">
+      <a href="/" class="logo-container"> 
         <img
           src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=68122c64&is=6810dae4&hm=7691e81e9030ea803ed9efdadfc643f871fa9cb78b9352005319e186e491796f&=&format=webp&quality=lossless"
           alt="Bop Central Logo"
@@ -451,7 +496,7 @@
         <p>Search users, browse latest or top videos, or fetch by URL.</p>
       </section>
       <form class="search-bar" method="get" action="/">
-        <input name="q" type="text" placeholder="Input username…" value="{{ active_q }}" />
+        <input name="q" type="text" placeholder="Input username…" value="" />
         <button type="submit">Go</button>
       </form>
     </div>
@@ -469,39 +514,10 @@
     </div>
 
     <!-- USERS PAGE -->
-    <div id="page-users" style="display:none;">
-      <!-- populated by client JS -->
-    </div>
+    <div id="page-users" style="display:none;"></div>
 
     <!-- VIDEOS PAGE -->
-    <div id="page-videos" style="display:none;">
-      <section id="videos-section">
-        <h3 style="text-align:center;">
-          {% if active_q %}
-            Results for "{{ active_q }}"
-          {% elif view_type == 'latest' %}
-            Latest Videos
-          {% elif view_type == 'top' %}
-            Top Videos
-          {% endif %}
-        </h3>
-        <div class="grid">
-          {% for v in user_videos %}
-            <div class="card">
-              <video controls data-aweme-id="{{ v.aweme_id }}">
-                <source src="{{ v.play_url }}" type="video/mp4">
-              </video>
-              <div class="title">{{ v.text or ("Video " ~ v.aweme_id) }}</div>
-              <div class="views" id="views-{{ v.aweme_id }}">{{ v.play_count }} views</div>
-              <div class="card-buttons">
-                <a href="{{ v.play_url }}"><button type="button">Play</button></a>
-                <a href="{{ hd_urls[v.aweme_id] }}"><button type="button">HD</button></a>
-              </div>
-            </div>
-          {% endfor %}
-        </div>
-      </section>
-    </div>
+    <div id="page-videos" style="display:none;"></div>
   </div>
 
   <!-- Admin Password Modal -->
@@ -530,17 +546,17 @@
 
     // filterUsers
     function filterUsers() {
-      const query = document.getElementById('user-search').value.toLowerCase();
-      document.querySelectorAll('.user-entry').forEach(entry => {
-        const handle = entry.querySelector('.handle').textContent.toLowerCase();
-        entry.style.display = handle.includes(query) ? '' : 'none';
+      const q = document.getElementById('user-search').value.toLowerCase();
+      document.querySelectorAll('.user-entry').forEach(el => {
+        const name = el.querySelector('.handle').textContent.toLowerCase();
+        el.style.display = name.includes(q) ? '' : 'none';
       });
     }
 
     // Auth handling (unchanged)
-    function initAuth() { /* ... */ }
+    function initAuth() { /* ... your existing auth code ... */ }
 
-    // Admin-mode + custom modal
+    // Admin-mode & Delete handlers
     let adminMode = false;
     const _pw = [98,111,112,112].map(c=>String.fromCharCode(c)).join('');
     const modal = document.getElementById('admin-pass-modal');
@@ -548,108 +564,102 @@
     const error = document.getElementById('admin-pass-error');
     const btnSubmit = document.getElementById('admin-pass-submit');
     const btnCancel = document.getElementById('admin-pass-cancel');
-    function showModal() { input.value=''; error.textContent=''; modal.style.display='flex'; setTimeout(()=>input.focus(),100); }
+    function showModal(){ input.value=''; error.textContent=''; modal.style.display='flex'; setTimeout(()=>input.focus(),100); }
     function hideModal(){ modal.style.display='none'; }
     document.addEventListener('keydown', e=>{
-      if(e.ctrlKey&&e.key==='\\'){
-        if(!adminMode&&modal.style.display!=='flex') showModal();
-        else{
+      if(e.ctrlKey && e.key==='\\'){
+        if(!adminMode && modal.style.display!=='flex') showModal();
+        else {
           adminMode=false;
           document.querySelectorAll('.delete-user, .delete-url').forEach(b=>b.style.display='none');
         }
       }
-      if(e.key==='Escape'&&modal.style.display==='flex') hideModal();
+      if(e.key==='Escape' && modal.style.display==='flex') hideModal();
     });
-    btnSubmit.addEventListener('click',()=>{
+    btnSubmit.addEventListener('click', ()=>{
       if(input.value===_pw){
         hideModal();
         adminMode=true;
         document.querySelectorAll('.delete-user, .delete-url').forEach(b=>b.style.display='block');
-      } else error.textContent='Wrong password';
+      } else {
+        error.textContent='Wrong password';
+      }
     });
     btnCancel.addEventListener('click', hideModal);
 
-    // delete‐user
     function bindDeleteUsers(){
       document.querySelectorAll('.delete-user').forEach(btn=>{
-        btn.onclick=async()=>{
-          const u=btn.dataset.username;
-          if(!confirm(`Delete user ${u}?`))return;
-          const r=await fetch(`/api/saved-users/${encodeURIComponent(u)}`,{method:'DELETE'});
-          if(r.ok)btn.closest('.user-entry').remove();
+        btn.onclick = async ()=>{
+          const u = btn.dataset.username;
+          if(!confirm(`Delete user ${u}?`)) return;
+          const r = await fetch(`/api/saved-users/${encodeURIComponent(u)}`,{method:'DELETE'});
+          if(r.ok) btn.closest('.user-entry').remove();
           else alert(`Failed to delete ${u}`);
-        }
+        };
       });
     }
-    // delete‐url
     function bindDeleteUrls(){
       document.querySelectorAll('.delete-url').forEach(btn=>{
-        btn.onclick=async()=>{
-          const id=btn.dataset.aweme;
-          if(!confirm(`Delete saved URL ${id}?`))return;
-          const r=await fetch(`/api/saved-urls/${encodeURIComponent(id)}`,{method:'DELETE'});
-          if(r.ok)btn.closest('.card').remove();
+        btn.onclick = async ()=>{
+          const id = btn.dataset.aweme;
+          if(!confirm(`Delete saved URL ${id}?`)) return;
+          const r = await fetch(`/api/saved-urls/${encodeURIComponent(id)}`,{method:'DELETE'});
+          if(r.ok) btn.closest('.card').remove();
           else alert(`Failed to delete URL ${id}`);
-        }
+        };
       });
     }
 
-    // URL form handler
-    document.getElementById('url-form').addEventListener('submit',async e=>{
+    // URL form & Saved URLs
+    document.getElementById('url-form').addEventListener('submit', async e=>{
       e.preventDefault();
-      const url=document.getElementById('url-input').value.trim();
-      try{
-        const res=await fetch('/api/from-url',{
-          method:'POST',
+      const url = document.getElementById('url-input').value.trim();
+      try {
+        const res = await fetch('/api/from-url',{method:'POST',
           headers:{'Content-Type':'application/json'},
           body:JSON.stringify({url})
         });
         if(!res.ok){
-          const err=await res.json().catch(()=>({}));
+          const err = await res.json().catch(()=>({}));
           alert(err.detail||'Failed to resolve URL');
           return;
         }
-        const data=await res.json();
-        // save then refresh
-        await fetch('/api/saved-urls',{
-          method:'POST',
+        const data = await res.json();
+        await fetch('/api/saved-urls',{method:'POST',
           headers:{'Content-Type':'application/json'},
           body:JSON.stringify(data)
         });
         fetchSavedUrls();
-      }catch{
+      } catch {
         alert('Error fetching video');
       }
     });
 
-    // Highlight nav & view switching
     function highlightNav(){
-      const p=new URLSearchParams(location.search);
-      const hasQ=!!p.get('q');
-      const view=p.get('view')||p.get('type')||(hasQ?'videos':'home');
+      const p = new URLSearchParams(location.search);
+      const hasQ = !!p.get('q');
+      const view = p.get('view')||p.get('type')||(hasQ?'videos':'home');
       document.querySelectorAll('nav a').forEach(a=>{
         a.classList.toggle('active', a.dataset.view===view);
       });
-      ['home','urls','users','videos'].forEach(p=>{
-        const el=document.getElementById('page-'+p);
-        el.style.display=(p===view||( ['latest','top'].includes(view)&&p==='videos'))?'block':'none';
+      ['home','urls','users','videos'].forEach(v=>{
+        const el = document.getElementById('page-'+v);
+        el.style.display = (v===view || (['latest','top'].includes(view)&&v==='videos'))?'block':'none';
       });
     }
 
-    // Fetch & render saved URLs
     async function fetchSavedUrls(){
-      const res=await fetch('/api/saved-urls');
-      const saved=await res.json();
+      const r = await fetch('/api/saved-urls');
+      const saved = await r.json();
       renderUrlSection(saved);
     }
-    function renderUrlSection(savedUrls){
-      const sec=document.getElementById('url-section');
-      const g=document.getElementById('url-grid');
-      if(!savedUrls.length){ sec.style.display='none'; return; }
-      sec.style.display='block';
-      g.innerHTML='';
-      savedUrls.forEach(v=>{
-        const card=document.createElement('div');
+    function renderUrlSection(list){
+      const sec = document.getElementById('url-section');
+      const grid = document.getElementById('url-grid');
+      if(!list.length){ sec.style.display='none'; return; }
+      sec.style.display='block'; grid.innerHTML='';
+      list.forEach(v=>{
+        const card = document.createElement('div');
         card.className='card';
         card.innerHTML=`
           <video controls data-aweme-id="${v.aweme_id}">
@@ -663,30 +673,39 @@
           </div>
           <button class="delete-url" data-aweme="${v.aweme_id}">Delete</button>
         `;
-        g.appendChild(card);
+        grid.appendChild(card);
       });
       bindDeleteUrls();
     }
 
-    // Fetch & render saved users
+    // Saved Users + embed their videos (from our server) so no TikWM calls on click
     async function fetchSavedUsers(){
-      const res=await fetch('/api/saved-users');
-      const users=await res.json();
-      renderUserSection(users);
+      const [uRes, lRes] = await Promise.all([
+        fetch('/api/saved-users'),
+        fetch('/api/latest')
+      ]);
+      const users = await uRes.json();
+      const latest = await lRes.json();
+      const usersWithVideos = users.map(u=>({
+        ...u,
+        videos: latest.filter(v=>v.username===u.username)
+      }));
+      renderUserSection(usersWithVideos);
     }
     function renderUserSection(users){
-      const pu=document.getElementById('page-users');
+      const pu = document.getElementById('page-users');
       pu.innerHTML=`
-        <input type="text" id="user-search" placeholder="Search saved users…"/>
+        <input type="text" id="user-search" placeholder="Search saved users…" />
         <div class="users-grid"></div>
       `;
-      const grid=pu.querySelector('.users-grid');
+      const grid = pu.querySelector('.users-grid');
       users.forEach(u=>{
-        const e=document.createElement('div'); e.className='user-entry';
+        const e = document.createElement('div');
+        e.className='user-entry';
         e.innerHTML=`
-          <a href="#" class="user-link" data-username="${u.username}">
+          <a href="#" class="user-link" data-videos='${JSON.stringify(u.videos)}'>
             <div class="user-card">
-              <img src="${u.avatar}" alt="${u.username}"/>
+              <img src="${u.avatar}" alt="${u.username}" />
               <span class="handle">${u.username}</span>
             </div>
           </a>
@@ -694,30 +713,56 @@
         `;
         grid.appendChild(e);
       });
-      document.getElementById('user-search').addEventListener('input',filterUsers);
+      document.getElementById('user-search').addEventListener('input', filterUsers);
       bindDeleteUsers();
       document.querySelectorAll('.user-link').forEach(link=>{
-        link.addEventListener('click',e=>{
+        link.addEventListener('click', e=>{
           e.preventDefault();
-          // redirect to server-side search
-          const u=link.dataset.username;
-          location.href='/?q='+encodeURIComponent(u);
+          const vids = JSON.parse(link.getAttribute('data-videos'));
+          renderVideoGrid(vids);
+          document.getElementById('page-users').style.display='none';
+          document.getElementById('page-videos').style.display='block';
         });
       });
     }
+    function renderVideoGrid(videos){
+      const pv = document.getElementById('page-videos');
+      pv.innerHTML=`<div class="grid" id="video-grid"></div>`;
+      const grid = document.getElementById('video-grid');
+      if(!videos.length){
+        grid.innerHTML='<p style="text-align:center;">No videos found.</p>';
+        return;
+      }
+      videos.forEach(v=>{
+        const card = document.createElement('div');
+        card.className='card';
+        card.innerHTML=`
+          <video controls data-aweme-id="${v.aweme_id}">
+            <source src="${v.play_url}" type="video/mp4">
+          </video>
+          <div class="title">Video ${v.aweme_id}</div>
+          <div class="views" id="views-${v.aweme_id}">${v.play_count||0} views</div>
+          <div class="card-buttons">
+            <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
+            <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
 
-    // video view increment
-    document.body.addEventListener('play',async e=>{
-      if(e.target.tagName==='VIDEO'&&e.target.dataset.awemeId){
-        const id=e.target.dataset.awemeId;
-        const r=await fetch(`/api/view/${id}`,{method:'POST'});
+    // increment view count
+    document.body.addEventListener('play', async e=>{
+      if(e.target.tagName==='VIDEO' && e.target.dataset.awemeId){
+        const id = e.target.dataset.awemeId;
+        const r = await fetch(`/api/view/${id}`,{method:'POST'});
         if(r.ok){
-          const {play_count}=await r.json();
-          const el=document.getElementById(`views-${id}`);
+          const { play_count } = await r.json();
+          const el = document.getElementById(`views-${id}`);
           if(el) el.textContent=`${play_count} views`;
         }
       }
-    },true);
+    }, true);
 
     // init
     async function initApp(){
@@ -725,11 +770,11 @@
       await fetchSavedUrls();
       await fetchSavedUsers();
     }
-    window.addEventListener('load',async()=>{
+    window.addEventListener('load', async ()=>{
       document.getElementById('loader').classList.add('fade-out');
-      setTimeout(async()=>{
+      setTimeout(async ()=>{
         document.getElementById('loader').style.display='none';
-        const token=localStorage.getItem('tikify_token');
+        const token = localStorage.getItem('tikify_token');
         if(token){
           document.getElementById('auth-container').style.display='none';
           document.getElementById('app-content').style.display='block';
@@ -740,10 +785,10 @@
           document.getElementById('auth-container').style.display='flex';
           initAuth();
         }
-      },600);
+      }, 600);
     });
 
-    // keep-alive ping
+    // keep-alive ping every 5m
     setInterval(()=>fetch('/ping').catch(()=>{}), 300000);
   </script>
 </body>

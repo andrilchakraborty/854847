@@ -530,7 +530,7 @@
           {% elif view_type == 'top' %} Top Videos
           {% endif %}
         </h3>
-        <div class="grid">
+        <div class="grid">  
           {% for v in user_videos %}
             <div class="card">
               <video controls data-aweme-id="{{ v.aweme_id }}">
@@ -778,9 +778,11 @@
 
         grid.appendChild(entry);
 
-        // TOGGLE VIDEOS ON CLICK
+        // TOGGLE VIDEOS ON CLICK & show correct notification
         link.onclick = ()=> {
           vids.style.display = vids.style.display==='block'?'none':'block';
+          const userVideoCount = vids.querySelectorAll('.card').length;
+          showNotification(`${userVideoCount} videos embedded`);
         };
       });
       bindDeleteUsers();
@@ -802,7 +804,7 @@
       highlightNav();
       await fetchSavedUrls();
       await fetchSavedUsers();
-      // NOTIFICATION AFTER SAVED USER EMBED
+      // Notification after saved user embed (this stays unchanged)
       const count = document.querySelectorAll('#page-videos .card').length;
       showNotification(`${count} videos embedded`);
     }

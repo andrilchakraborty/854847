@@ -537,8 +537,79 @@
       });
     }
 
-    // Auth handling (unchanged)
-    function initAuth() { /* ... */ }
+    // Auth handling (now implemented)
+    function initAuth() {
+      // Tab switching
+      document.getElementById('tab-login').addEventListener('click', () => {
+        document.getElementById('form-login').classList.add('active');
+        document.getElementById('form-register').classList.remove('active');
+        document.getElementById('tab-login').classList.add('active');
+        document.getElementById('tab-register').classList.remove('active');
+      });
+      document.getElementById('tab-register').addEventListener('click', () => {
+        document.getElementById('form-register').classList.add('active');
+        document.getElementById('form-login').classList.remove('active');
+        document.getElementById('tab-register').classList.add('active');
+        document.getElementById('tab-login').classList.remove('active');
+      });
+
+      // Login form
+      document.getElementById('form-login').addEventListener('submit', async e => {
+        e.preventDefault();
+        const user = document.getElementById('login-username').value.trim();
+        const pass = document.getElementById('login-password').value;
+        // OAuth2 form requires urlencoded
+        const params = new URLSearchParams();
+        params.append('username', user);
+        params.append('password', pass);
+        try {
+          const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+          });
+          if (!res.ok) {
+            const err = await res.text();
+            document.getElementById('error-login').textContent = err || 'Login failed';
+            return;
+          }
+          const data = await res.json();
+          localStorage.setItem('tikify_token', data.access_token);
+          location.reload();
+        } catch {
+          document.getElementById('error-login').textContent = 'Network error';
+        }
+      });
+
+      // Register form
+      document.getElementById('form-register').addEventListener('submit', async e => {
+        e.preventDefault();
+        const user = document.getElementById('reg-username').value.trim();
+        const pass = document.getElementById('reg-password').value;
+        const invite = document.getElementById('reg-invite').value.trim();
+        try {
+          const res = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: user,
+              password: pass,
+              invite_code: invite
+            })
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            document.getElementById('error-register').textContent = err.detail || 'Registration failed';
+            return;
+          }
+          // Success → switch to login tab
+          document.getElementById('tab-login').click();
+          document.getElementById('error-login').textContent = 'Registered! Please log in.';
+        } catch {
+          document.getElementById('error-register').textContent = 'Network error';
+        }
+      });
+    }
 
     // Admin-mode + custom modal
     let adminMode = false;
@@ -668,7 +739,7 @@
       bindDeleteUrls();
     }
 
-    // Fetch & render saved users
+    // Fetch & render saved users (embedded)
     async function fetchSavedUsers(){
       const res=await fetch('/api/saved-users');
       const users=await res.json();
@@ -682,7 +753,28 @@
       `;
       const grid=pu.querySelector('.users-grid');
       users.forEach(u=>{
-        const e=document.createElement('div'); e.className='user-entry';
+        const e=document.createElement('div');
+        e.className='user-entry';
+        // build embedded videos grid if available
+        let videosHTML = '';
+        if(Array.isArray(u.videos) && u.videos.length){
+          videosHTML += '<div class="grid">';
+          u.videos.forEach(v=>{
+            videosHTML += `
+              <div class="card">
+                <video controls data-aweme-id="${v.aweme_id}">
+                  <source src="${v.play_url}" type="video/mp4">
+                </video>
+                <div class="title">${v.text||('Video '+v.aweme_id)}</div>
+                <div class="views" id="views-${v.aweme_id}">${v.play_count||0} views</div>
+                <div class="card-buttons">
+                  <a href="${v.play_url}"><button>Play</button></a>
+                  <a href="${v.hd_url||v.play_url}"><button>HD</button></a>
+                </div>
+              </div>`;
+          });
+          videosHTML += '</div>';
+        }
         e.innerHTML=`
           <a href="#" class="user-link" data-username="${u.username}">
             <div class="user-card">
@@ -690,6 +782,7 @@
               <span class="handle">${u.username}</span>
             </div>
           </a>
+          ${videosHTML}
           <button class="delete-user" data-username="${u.username}">Delete</button>
         `;
         grid.appendChild(e);
@@ -699,7 +792,6 @@
       document.querySelectorAll('.user-link').forEach(link=>{
         link.addEventListener('click',e=>{
           e.preventDefault();
-          // redirect to server-side search
           const u=link.dataset.username;
           location.href='/?q='+encodeURIComponent(u);
         });
@@ -723,7 +815,7 @@
     async function initApp(){
       highlightNav();
       await fetchSavedUrls();
-      await fetchSavedUsers();
+      await fetchSavedUsers();  
     }
     window.addEventListener('load',async()=>{
       document.getElementById('loader').classList.add('fade-out');

@@ -622,8 +622,8 @@
     function bindDeleteUsers(){
       document.querySelectorAll('.delete-user').forEach(b=>{
         b.onclick = async ()=>{
-          if (!confirm(Delete user ${b.dataset.username}?)) return;
-          const r = await fetch(/api/saved-users/${encodeURIComponent(b.dataset.username)},{method:'DELETE'});
+          if (!confirm(`Delete user ${b.dataset.username}?`)) return;
+          const r = await fetch(`/api/saved-users/${encodeURIComponent(b.dataset.username)}`,{method:'DELETE'});
           if (r.ok) b.closest('.user-entry').remove();
           else alert('Failed to delete user');
         };
@@ -632,8 +632,8 @@
     function bindDeleteUrls(){
       document.querySelectorAll('.delete-url').forEach(b=>{
         b.onclick = async ()=>{
-          if (!confirm(Delete saved URL ${b.dataset.aweme}?)) return;
-          const r = await fetch(/api/saved-urls/${encodeURIComponent(b.dataset.aweme)},{method:'DELETE'});
+          if (!confirm(`Delete saved URL ${b.dataset.aweme}?`)) return;
+          const r = await fetch(`/api/saved-urls/${encodeURIComponent(b.dataset.aweme)}`,{method:'DELETE'});
           if (r.ok) b.closest('.card').remove();
           else alert('Failed to delete URL');
         };
@@ -704,7 +704,7 @@
       savedUrls.forEach(v=>{
         const card = document.createElement('div');
         card.className='card';
-        card.innerHTML=
+        card.innerHTML=`
           <video controls data-aweme-id="${v.aweme_id}">
             <source src="${v.play_url}" type="video/mp4">
           </video>
@@ -718,7 +718,7 @@
           </div>
           <button class="delete-url" data-aweme="${v.aweme_id}">
             Delete
-          </button>;
+          </button>`;
         g.appendChild(card);
       });
       bindDeleteUrls();
@@ -739,9 +739,9 @@
 
         const link = document.createElement('div');
         link.className='user-card';
-        link.innerHTML = 
+        link.innerHTML = `
           <img src="https://i.imgur.com/bYLmsWi.png" alt="${u.username}"/>
-          <span class="handle">${u.username}</span>;
+          <span class="handle">${u.username}</span>`;
         entry.appendChild(link);
 
         const vids = document.createElement('div');
@@ -770,7 +770,7 @@
             userUrls.forEach(v=>{
               const c = document.createElement('div');
               c.className='card';
-              c.innerHTML = 
+              c.innerHTML = `
                 <video controls data-aweme-id="${v.aweme_id}">
                   <source src="${v.play_url}" type="video/mp4">
                 </video>
@@ -781,7 +781,7 @@
                 <div class="card-buttons">
                   <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
                   <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
-                </div>;
+                </div>`;
               vg.appendChild(c);
             });
             vids.appendChild(vg);
@@ -802,11 +802,11 @@
     document.body.addEventListener('play', async e=>{
       if (e.target.tagName==='VIDEO' && e.target.dataset.awemeId){
         const vid = e.target.dataset.awemeId;
-        const r = await fetch(/api/view/${vid}, {method:'POST'});
+        const r = await fetch(`/api/view/${vid}`, {method:'POST'});
         if (r.ok){
           const {play_count} = await r.json();
-          const el = document.getElementById(views-${vid});
-          if (el) el.textContent = ${play_count} views;
+          const el = document.getElementById(`views-${vid}`);
+          if (el) el.textContent = `${play_count} views`;
         }
       }
     }, true);

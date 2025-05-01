@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -519,12 +518,12 @@
 
     <!-- USERS PAGE -->
     <div id="page-users" style="display:none;">
-      
+      <!-- will be populated by JS -->
     </div>
 
     <!-- VIDEOS PAGE -->
     <div id="page-videos" style="display:none;">
-      
+      <!-- will be populated by JS -->
     </div>
   </div>
 
@@ -732,6 +731,83 @@
       });
     }
 
+    // Fetch & render saved users
+    async function fetchSavedUsers() {
+      const res = await fetch('/api/saved-users');
+      const savedUsers = await res.json();
+      // fetch each user's videos once, embed into HTML
+      const usersWithVideos = await Promise.all(savedUsers.map(async user => {
+        const resV = await fetch(`/api/user-videos/${encodeURIComponent(user.username)}`);
+        const vids = await resV.json();
+        return { ...user, videos: vids };
+      }));
+      renderUserSection(usersWithVideos);
+    }
+    function renderUserSection(users) {
+      const pageUsers = document.getElementById('page-users');
+      pageUsers.innerHTML = `
+        <input type="text" id="user-search" placeholder="Search saved users…" />
+        <div class="users-grid"></div>
+      `;
+      const grid = pageUsers.querySelector('.users-grid');
+      users.forEach(u => {
+        const entry = document.createElement('div');
+        entry.className = 'user-entry';
+        entry.innerHTML = `
+          <a href="#" class="user-link" data-username="${u.username}" data-videos='${JSON.stringify(u.videos)}'>
+            <div class="user-card">
+              <img src="${u.avatar_url}" alt="${u.username}" />
+              <span class="handle">${u.username}</span>
+            </div>
+          </a>
+          <button class="delete-user" data-username="${u.username}">Delete</button>
+        `;
+        grid.appendChild(entry);
+      });
+      document.getElementById('user-search').addEventListener('input', filterUsers);
+      document.querySelectorAll('.user-link').forEach(link => {
+        link.addEventListener('click', e => {
+          e.preventDefault();
+          const vids = JSON.parse(link.getAttribute('data-videos'));
+          renderVideoGrid(vids);
+          // show videos page and hide users page
+          document.getElementById('page-users').style.display = 'none';
+          document.getElementById('page-videos').style.display = 'block';
+        });
+      });
+      // re-bind delete-user for new entries
+      document.querySelectorAll('.delete-user').forEach(btn => {
+        btn.onclick = async () => {
+          const username = btn.dataset.username;
+          if (!confirm(`Delete user ${username}?`)) return;
+          const res = await fetch(`/api/saved-users/${encodeURIComponent(username)}`, { method: 'DELETE' });
+          if (res.ok) btn.closest('.user-entry').remove();
+          else alert(`Failed to delete ${username}`);
+        };
+      });
+    }
+    function renderVideoGrid(videos) {
+      const pageVideos = document.getElementById('page-videos');
+      pageVideos.innerHTML = `<div class="grid" id="video-grid"></div>`;
+      const grid = document.getElementById('video-grid');
+      videos.forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <video controls data-aweme-id="${v.aweme_id}">
+            <source src="${v.play_url}" type="video/mp4">
+          </video>
+          <div class="title">Video ${v.aweme_id}</div>
+          <div class="views" id="views-${v.aweme_id}">${v.play_count} views</div>
+          <div class="card-buttons">
+            <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
+            <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
     // video view increment
     document.body.addEventListener('play', async e => {
       if (e.target.tagName === 'VIDEO' && e.target.dataset.awemeId) {
@@ -749,6 +825,7 @@
     async function initApp(){
       highlightNav();
       await fetchSavedUrls();
+      await fetchSavedUsers();
     }
     window.addEventListener('load', async () => {
       document.getElementById('loader').classList.add('fade-out');
@@ -768,11 +845,11 @@
       }, 600);
     });
 
-      // ─── Keep-alive ping every 5 minutes ───────────────────────────────
-      setInterval(() => {
-        fetch('/ping').catch(() => {});
-      }, 10 * 1000);
-      // ────────────────────────────────────────────────────────────────────    
+    // ─── Keep-alive ping every 5 minutes ───────────────────────────────
+    setInterval(() => {
+      fetch('/ping').catch(() => {});
+    }, 10 * 1000);
+    // ────────────────────────────────────────────────────────────────────    
     
   </script>
 </body>

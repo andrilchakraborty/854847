@@ -677,10 +677,9 @@
         const play_url = videoEl.querySelector('source').src;
         const buttons  = card.querySelectorAll('.card-buttons a');
         const hd_url   = buttons[1]?.href || play_url;
-        await fetch('/api/saved-user-urls', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ username: q, aweme_id, play_url, hd_url })
+        await fetch('/api/saved-user-urls', { method: 'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ username: q, aweme_id, play_url, hd_url })
         });
       });
     }
@@ -769,6 +768,7 @@
         link.onclick = async ()=>{
           if (vids.style.display==='block'){
             vids.style.display='none';
+            vids.classList.remove('grid');
             return;
           }
           const resp     = await fetch('/api/saved-user-urls'),
@@ -776,8 +776,7 @@
                 userUrls = all.filter(item=>item.username===u.username);
           vids.innerHTML='';
           if (userUrls.length){
-            const vg = document.createElement('div');
-            vg.className='grid';
+            vids.classList.add('grid');
             userUrls.forEach(v=>{
               const c = document.createElement('div');
               c.className='card';
@@ -793,9 +792,8 @@
                   <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
                   <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
                 </div>`;
-              vg.appendChild(c);
+              vids.appendChild(c);
             });
-            vids.appendChild(vg);
           } else {
             vids.innerHTML = '<p>No videos saved for this user.</p>';
           }

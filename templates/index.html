@@ -329,14 +329,9 @@
       font-size: 0.85rem;
       hyphens: auto;
     }
-
-    /* Videos container now delegates layout to itself */
     .videos-container {
       display: none;
       margin-top: 16px;
-    }
-    .videos-container.grid {
-      /* uses the same .grid rules above */
     }
 
     /* Admin Password Modal */
@@ -578,11 +573,7 @@
         const u = document.getElementById('reg-username').value.trim();
         const p = document.getElementById('reg-password').value;
         const i = document.getElementById('reg-invite').value.trim();
-        const res = await fetch('/api/register',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({username:u,password:p,invite_code:i})
-        });
+        const res = await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({username:u,password:p,invite_code:i})});
         if (!res.ok) {
           const err = await res.json().catch(()=>({}));
           document.getElementById('error-register').textContent = err.detail || 'Registration failed';
@@ -607,8 +598,7 @@
           setTimeout(()=>inp.focus(),100);
         } else {
           adminMode = false;
-          document.querySelectorAll('.delete-user,.delete-url')
-                  .forEach(b=>b.style.display='none');
+          document.querySelectorAll('.delete-user,.delete-url').forEach(b=>b.style.display='none');
         }
       }
       if (e.key==='Escape') modal.style.display='none';
@@ -617,8 +607,7 @@
       if (inp.value===pw){
         adminMode=true;
         modal.style.display='none';
-        document.querySelectorAll('.delete-user,.delete-url')
-                .forEach(b=>b.style.display='block');
+        document.querySelectorAll('.delete-user,.delete-url').forEach(b=>b.style.display='block');
       } else errEl.textContent='Wrong password';
     };
     document.getElementById('admin-pass-cancel').onclick = () => modal.style.display='none';
@@ -671,11 +660,7 @@
         const play_url = videoEl.querySelector('source').src;
         const buttons  = card.querySelectorAll('.card-buttons a');
         const hd_url   = buttons[1]?.href || play_url;
-        await fetch('/api/saved-user-urls', {
-          method: 'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ username: q, aweme_id, play_url, hd_url })
-        });
+        await fetch('/api/saved-user-urls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ username: q, aweme_id, play_url, hd_url })});
       });
     }
 
@@ -749,7 +734,6 @@
           <span class="handle">${u.username}</span>`;
         entry.appendChild(link);
 
-        // THIS container becomes the GRID
         const vids = document.createElement('div');
         vids.className='videos-container';
         entry.appendChild(vids);
@@ -763,7 +747,7 @@
         link.onclick = async ()=>{
           if (vids.style.display==='grid'){
             vids.style.display='none';
-            vids.classList.remove('grid');
+            vids.innerHTML = '';
             return;
           }
           const resp     = await fetch('/api/saved-user-urls'),
@@ -771,7 +755,6 @@
                 userUrls = all.filter(item=>item.username===u.username);
           vids.innerHTML='';
           if (userUrls.length){
-            // DIRECTLY append each <div class="card"> into vids
             userUrls.forEach(v=>{
               const c = document.createElement('div');
               c.className='card';
@@ -789,9 +772,11 @@
                 </div>`;
               vids.appendChild(c);
             });
-            // turn vids into the grid container
-            vids.classList.add('grid');
-            vids.style.display='grid';
+            // **HERE** we force vids into the same grid style you use everywhere:
+            vids.style.display = 'grid';
+            vids.style.gridTemplateColumns = 'repeat(auto-fill, minmax(220px, 1fr))';
+            vids.style.gap = '20px';
+            vids.style.marginBottom = '20px';
           } else {
             vids.innerHTML = '<p>No videos saved for this user.</p>';
             vids.style.display='block';

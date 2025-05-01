@@ -253,7 +253,7 @@
       width: 100%;
       height: auto;
       margin-bottom: 10px;
-      border-radius: 4px;  
+      border-radius: 4px;
     }
     .card .title {
       font-size: 1rem;
@@ -448,7 +448,7 @@
         <h2>Bop Central – Watch & Download TikTok Videos</h2>
         <p>Search users, browse latest or top videos, or fetch by URL.</p>
       </section>
-      <form class="search-bar" method="get" action="/">  
+      <form class="search-bar" method="get" action="/">
         <input name="q" type="text" placeholder="Input username…" value="{{ active_q }}" />
         <button type="submit">Go</button>
       </form>
@@ -622,8 +622,8 @@
     function bindDeleteUsers(){
       document.querySelectorAll('.delete-user').forEach(b=>{
         b.onclick = async ()=>{
-          if (!confirm(`Delete user ${b.dataset.username}?`)) return;
-          const r = await fetch(`/api/saved-users/${encodeURIComponent(b.dataset.username)}`,{method:'DELETE'});
+          if (!confirm(Delete user ${b.dataset.username}?)) return;
+          const r = await fetch(/api/saved-users/${encodeURIComponent(b.dataset.username)},{method:'DELETE'});
           if (r.ok) b.closest('.user-entry').remove();
           else alert('Failed to delete user');
         };
@@ -632,8 +632,8 @@
     function bindDeleteUrls(){
       document.querySelectorAll('.delete-url').forEach(b=>{
         b.onclick = async ()=>{
-          if (!confirm(`Delete saved URL ${b.dataset.aweme}?`)) return;
-          const r = await fetch(`/api/saved-urls/${encodeURIComponent(b.dataset.aweme)}`,{method:'DELETE'});
+          if (!confirm(Delete saved URL ${b.dataset.aweme}?)) return;
+          const r = await fetch(/api/saved-urls/${encodeURIComponent(b.dataset.aweme)},{method:'DELETE'});
           if (r.ok) b.closest('.card').remove();
           else alert('Failed to delete URL');
         };
@@ -704,7 +704,7 @@
       savedUrls.forEach(v=>{
         const card = document.createElement('div');
         card.className='card';
-        card.innerHTML=`
+        card.innerHTML=
           <video controls data-aweme-id="${v.aweme_id}">
             <source src="${v.play_url}" type="video/mp4">
           </video>
@@ -718,7 +718,7 @@
           </div>
           <button class="delete-url" data-aweme="${v.aweme_id}">
             Delete
-          </button>`;  
+          </button>;
         g.appendChild(card);
       });
       bindDeleteUrls();
@@ -726,25 +726,87 @@
 
     // Fetch & render saved users
     async function fetchSavedUsers(){
-      // ← now pull down the already-wrapped grid HTML instead of JSON
-      const res  = await fetch('/api/saved-user-urls?format=html');
-      const html = await res.text();
+      const res   = await fetch('/api/saved-users'),
+            users = await res.json();
+      renderUserSection(users);
+    }
+    function renderUserSection(users){
       const grid = document.querySelector('.users-grid');
-      // inject it directly
-      grid.innerHTML = html;
-      // re-bind delete-buttons inside that HTML
-      bindDeleteUsers();
+      grid.innerHTML='';
+      users.forEach(u=>{
+        const entry = document.createElement('div');
+        entry.className='user-entry';
+
+        const link = document.createElement('div');
+        link.className='user-card';
+        link.innerHTML = 
+          <img src="https://i.imgur.com/bYLmsWi.png" alt="${u.username}"/>
+          <span class="handle">${u.username}</span>;
+        entry.appendChild(link);
+
+        const vids = document.createElement('div');
+        vids.className='videos-container';
+        entry.appendChild(vids);
+
+        const del = document.createElement('button');
+        del.className='delete-user';
+        del.dataset.username = u.username;
+        del.textContent = 'Delete';
+        entry.appendChild(del);
+
+        link.onclick = async ()=>{
+          if (vids.style.display==='block'){
+            vids.style.display='none';
+            return;
+          }
+          const resp     = await fetch('/api/saved-user-urls'),
+                all      = await resp.json(),
+                userUrls = all.filter(item=>item.username===u.username);
+          vids.innerHTML='';
+          if (userUrls.length){
+            // wrap cards in a grid container
+            const vg = document.createElement('div');
+            vg.className = 'grid';
+            userUrls.forEach(v=>{
+              const c = document.createElement('div');
+              c.className='card';
+              c.innerHTML = 
+                <video controls data-aweme-id="${v.aweme_id}">
+                  <source src="${v.play_url}" type="video/mp4">
+                </video>
+                <div class="title">Video ${v.aweme_id}</div>
+                <div class="views" id="views-${v.aweme_id}">
+                  ${v.play_count||0} views
+                </div>
+                <div class="card-buttons">
+                  <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
+                  <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
+                </div>;
+              vg.appendChild(c);
+            });
+            vids.appendChild(vg);
+          } else {
+            vids.innerHTML = '<p>No videos saved for this user.</p>';
+          }
+          // ← changed this line from 'block' to 'grid' so that the container itself lays out as a CSS grid
+          vids.style.display='grid';
+          bindDeleteUsers();
+        };
+
+        grid.appendChild(entry);
+        bindDeleteUsers();
+      });
     }
 
     // increment views on native <video> play
     document.body.addEventListener('play', async e=>{
       if (e.target.tagName==='VIDEO' && e.target.dataset.awemeId){
         const vid = e.target.dataset.awemeId;
-        const r = await fetch(`/api/view/${vid}`, {method:'POST'});
+        const r = await fetch(/api/view/${vid}, {method:'POST'});
         if (r.ok){
           const {play_count} = await r.json();
-          const el = document.getElementById(`views-${vid}`);
-          if (el) el.textContent = `${play_count} views`;
+          const el = document.getElementById(views-${vid});
+          if (el) el.textContent = ${play_count} views;
         }
       }
     }, true);

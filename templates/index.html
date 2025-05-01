@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>  
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -616,7 +616,7 @@
         const u = document.getElementById('reg-username').value.trim();
         const p = document.getElementById('reg-password').value;
         const i = document.getElementById('reg-invite').value.trim();
-        const res = await fetch('/api/register',{
+        const res = await fetch('/api/register', {
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify({username:u,password:p,invite_code:i})
@@ -662,8 +662,9 @@
       document.querySelectorAll('.delete-user').forEach(b=>{
         b.onclick = async ()=>{
           if(!confirm(`Delete user ${b.dataset.username}?`)) return;
-          const r=await fetch(`/api/saved-users/${encodeURIComponent(b.dataset.username)}`,{method:'DELETE'});
-          if(r.ok) b.closest('.user-entry').remove(); else alert('Failed to delete user');
+          const r = await fetch(`/api/saved-users/${encodeURIComponent(b.dataset.username)}`,{method:'DELETE'});
+          if(r.ok) b.closest('.user-entry').remove();
+          else alert('Failed to delete user');
         };
       });
     }
@@ -671,8 +672,9 @@
       document.querySelectorAll('.delete-url').forEach(b=>{
         b.onclick = async ()=>{
           if(!confirm(`Delete saved URL ${b.dataset.aweme}?`)) return;
-          const r=await fetch(`/api/saved-urls/${encodeURIComponent(b.dataset.aweme)}`,{method:'DELETE'});
-          if(r.ok) b.closest('.card').remove(); else alert('Failed to delete URL');
+          const r = await fetch(`/api/saved-urls/${encodeURIComponent(b.dataset.aweme)}`,{method:'DELETE'});
+          if(r.ok) b.closest('.card').remove();
+          else alert('Failed to delete URL');
         };
       });
     }
@@ -692,28 +694,50 @@
       }
     };
 
+    // add: saveFetchedUserUrls
+    async function saveFetchedUserUrls() {
+      const params = new URLSearchParams(location.search);
+      const q = params.get('q');
+      if (!q) return;
+      document.querySelectorAll('#page-videos .card').forEach(async card => {
+        const videoEl = card.querySelector('video');
+        const aweme_id = videoEl.dataset.awemeId;
+        const play_url = videoEl.querySelector('source').src;
+        const buttons  = card.querySelectorAll('.card-buttons a');
+        const hd_url   = buttons[1]?.href || play_url;
+        await fetch('/api/saved-user-urls', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ username: q, aweme_id, play_url, hd_url })
+        });
+      });
+    }
+
     // nav & view switching
     function highlightNav(){
-      const p=new URLSearchParams(location.search),
-            hasQ=!!p.get('q'),
-            view=p.get('view')||p.get('type')||(hasQ?'videos':'home');
+      const p    = new URLSearchParams(location.search),
+            hasQ = !!p.get('q'),
+            view = p.get('view')||p.get('type')||(hasQ?'videos':'home');
       document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.dataset.view===view));
       ['home','urls','users','videos'].forEach(v=>{
-        document.getElementById('page-'+v).style.display = (v===view||(['latest','top'].includes(view)&&v==='videos'))?'block':'none';
+        document.getElementById('page-'+v).style.display =
+          (v===view||(['latest','top'].includes(view)&&v==='videos'))?'block':'none';
       });
     }
 
     // Fetch & render saved URLs
     async function fetchSavedUrls(){
-      const res=await fetch('/api/saved-urls'), saved=await res.json();
+      const res   = await fetch('/api/saved-urls'),
+            saved = await res.json();
       renderUrlSection(saved);
     }
     function renderUrlSection(savedUrls){
-      const sec=document.getElementById('url-section'), g=document.getElementById('url-grid');
+      const sec = document.getElementById('url-section'),
+            g   = document.getElementById('url-grid');
       if(!savedUrls.length){ sec.style.display='none'; return; }
       sec.style.display='block'; g.innerHTML='';
       savedUrls.forEach(v=>{
-        const card=document.createElement('div'); card.className='card';
+        const card = document.createElement('div'); card.className='card';
         card.innerHTML=`
           <video controls data-aweme-id="${v.aweme_id}"><source src="${v.play_url}" type="video/mp4"></video>
           <div class="title">Video ${v.aweme_id}</div>
@@ -728,47 +752,60 @@
       bindDeleteUrls();
     }
 
-    // Fetch & render saved users
+    // Fetch & render saved users (NEW: no inline .videos, we fetch on click)
     async function fetchSavedUsers(){
-      const res=await fetch('/api/saved-users'), users=await res.json();
+      const res   = await fetch('/api/saved-users'),
+            users = await res.json();
       renderUserSection(users);
     }
+
     function renderUserSection(users){
-      const grid=document.querySelector('.users-grid'); grid.innerHTML='';
+      const grid = document.querySelector('.users-grid'); grid.innerHTML='';
       users.forEach(u=>{
-        const entry=document.createElement('div'); entry.className='user-entry';
-        const link=document.createElement('div'); link.className='user-card';
-        link.innerHTML=`<img src="https://i.imgur.com/bYLmsWi.png" alt="${u.username}"/><span class="handle">${u.username}</span>`;
+        const entry = document.createElement('div'); entry.className='user-entry';
+        const link  = document.createElement('div'); link.className='user-card';
+        link.innerHTML = `<img src="${u.avatar}" alt="${u.username}"/><span class="handle">${u.username}</span>`;
         entry.appendChild(link);
 
-        const vids=document.createElement('div'); vids.className='videos-container';
-        if(Array.isArray(u.videos)){
-          const vg=document.createElement('div'); vg.className='grid';
-          u.videos.forEach(v=>{
-            const c=document.createElement('div'); c.className='card';
-            // Directly embed each video instead of calling /api/embed
-            c.innerHTML=`
-              <video controls data-aweme-id="${v.aweme_id}">
-                <source src="${v.play_url}" type="video/mp4">
-              </video>
-              <div class="title">${v.text||('Video '+v.aweme_id)}</div>
-              <div class="views" id="views-${v.aweme_id}">${v.play_count||0} views</div>
-              <div class="card-buttons">
-                <a href="${v.play_url}"><button>Play</button></a>
-                <a href="${v.hd_url||v.play_url}"><button>HD</button></a>
-              </div>`;
-            vg.appendChild(c);
-          });
-          vids.appendChild(vg);
-        }
+        const vids = document.createElement('div'); vids.className='videos-container';
         entry.appendChild(vids);
 
-        const del=document.createElement('button'); del.className='delete-user';
-        del.dataset.username=u.username; del.textContent='Delete';
+        const del = document.createElement('button'); del.className='delete-user';
+        del.dataset.username = u.username; del.textContent = 'Delete';
         entry.appendChild(del);
 
-        link.onclick = ()=> {
-          vids.style.display = vids.style.display==='block'?'none':'block';
+        link.onclick = async ()=>{
+          if(vids.style.display==='block'){
+            vids.style.display='none';
+            return;
+          }
+          // fetch and display saved-user-urls for this user
+          const resp   = await fetch('/api/saved-user-urls'),
+                all    = await resp.json(),
+                userUrls = all.filter(item=>item.username===u.username);
+          vids.innerHTML = '';
+          if(userUrls.length){
+            const vg = document.createElement('div'); vg.className='grid';
+            userUrls.forEach(v=>{
+              const c = document.createElement('div'); c.className='card';
+              c.innerHTML = `
+                <video controls data-aweme-id="${v.aweme_id}">
+                  <source src="${v.play_url}" type="video/mp4">
+                </video>
+                <div class="title">Video ${v.aweme_id}</div>
+                <div class="views" id="views-${v.aweme_id}">${v.play_count||0} views</div>
+                <div class="card-buttons">
+                  <a href="${v.play_url}"><button>Play</button></a>
+                  <a href="${v.hd_url}"><button>HD</button></a>
+                </div>`;
+              vg.appendChild(c);
+            });
+            vids.appendChild(vg);
+          } else {
+            vids.innerHTML = '<p>No videos saved for this user.</p>';
+          }
+          vids.style.display='block';
+          bindDeleteUsers();
         };
 
         grid.appendChild(entry);
@@ -779,10 +816,11 @@
     // increment views
     document.body.addEventListener('play', async e=>{
       if(e.target.tagName==='VIDEO' && e.target.dataset.awemeId){
-        const r=await fetch(`/api/view/${e.target.dataset.awemeId}`, {method:'POST'});
+        const r = await fetch(`/api/view/${e.target.dataset.awemeId}`, {method:'POST'});
         if(r.ok){
-          const {play_count}=await r.json();
-          document.getElementById(`views-${e.target.dataset.aweme_id}`).textContent = `${play_count} views`;
+          const {play_count} = await r.json();
+          document.getElementById(`views-${e.target.dataset.aweme_id}`)
+            .textContent = `${play_count} views`;
         }
       }
     }, true);
@@ -792,6 +830,7 @@
       highlightNav();
       await fetchSavedUrls();
       await fetchSavedUsers();
+      await saveFetchedUserUrls();
       const count = document.querySelectorAll('#page-videos .card').length;
       showNotification(`${count} videos embedded`);
     }
@@ -799,7 +838,7 @@
       document.getElementById('loader').classList.add('fade-out');
       setTimeout(async ()=>{
         document.getElementById('loader').style.display='none';
-        const token=localStorage.getItem('tikify_token');
+        const token = localStorage.getItem('tikify_token');
         if(token){
           document.getElementById('auth-container').style.display='none';
           document.getElementById('app-content').style.display='block';

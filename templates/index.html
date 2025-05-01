@@ -9,6 +9,31 @@
   />
   <title>Bop Central</title>
 
+  <!-- Open Graph / Facebook Embed -->
+  <meta property="og:title" content="Bop Central – TikTok Viewer" />
+  <meta
+    property="og:description"
+    content="Watch TikTok Bops or randoms. Search users, browse latest or top videos, and download your favorites."
+  />
+  <meta
+    property="og:image"
+    content="https://i.imgur.com/bYLmsWi.png"
+  />
+  <meta property="og:url" content="https://bop-central.onrender.com/" />
+  <meta property="og:type" content="website" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Bop Central – TikTok Viewer" />
+  <meta
+    name="twitter:description"
+    content="Watch TikTok videos. Search users, browse latest or top videos, and download your favorites."
+  />
+  <meta
+    name="twitter:image"
+    content="https://i.imgur.com/bYLmsWi.png"
+  />
+
   <!-- Prevent indexing -->
   <meta name="robots" content="noindex,nofollow" />
 
@@ -32,6 +57,23 @@
       font-family: sans-serif;
       overflow-x: hidden;
     }
+
+    /* notification banner */
+    .notification {
+      position: fixed;
+      top: 6rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #151515;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      opacity: 1;
+      transition: opacity 1s ease-out;
+      z-index: 2000;
+    }
+    .notification.fade-out { opacity: 0; }
 
     /* Loader Screen */
     #loader {
@@ -357,7 +399,7 @@
       margin-bottom: 0.75rem;
       border: none;
       border-radius: 4px;
-      font-size: 1rem;  
+      font-size: 1rem;
     }
     #admin-pass-modal .error {
       color: #ff4d4f;
@@ -391,19 +433,12 @@
   <!-- Loader -->
   <div id="loader">
     <div class="spinner"></div>
-    <img
-      id="loader-image"
-      src="https://i.imgur.com/bYLmsWi.png"
-      alt="Loading…"
-    />
+    <img id="loader-image" src="https://i.imgur.com/bYLmsWi.png" alt="Loading…" />
   </div>
 
   <!-- Auth UI -->
   <div id="auth-container">
-    <img
-      src="https://i.imgur.com/bYLmsWi.png"
-      alt="Logo"
-    />
+    <img src="https://i.imgur.com/bYLmsWi.png" alt="Logo" />
     <div class="tabs">
       <button id="tab-login" class="active">Login</button>
       <button id="tab-register">Register</button>
@@ -429,11 +464,7 @@
   <div id="app-content">
     <header>
       <a href="/" class="logo-container">
-        <img
-          src="https://i.imgur.com/bYLmsWi.png"
-          alt="Bop Central Logo"
-          class="logo"
-        />
+        <img src="https://i.imgur.com/bYLmsWi.png" alt="Bop Central Logo" class="logo" />
       </a>
       <nav>
         <a href="/" data-view="home">Home</a>
@@ -449,7 +480,10 @@
     <aside class="about-us">
       <h2>About Bop Central</h2>
       <p>
-        Bop Central is your go-to TikTok downloader and viewer. Dive into the latest “bops,” search users, or fetch via URL—and save for offline.
+        Bop Central is your go-to TikTok downloader and viewer. Dive into the latest and greatest TikTok “bops” and explore what others
+        are sharing. Whether you want to search by username, browse the top trending videos, or fetch and download content via URL,
+        Bop Central makes it easy and seamless. Keep up with your favorite creators, discover new interests, and save videos for offline
+        viewing—all in one place.
       </p>
     </aside>
 
@@ -492,10 +526,8 @@
         <h3 style="text-align:center;">
           {% if active_q %}
             Results for "{{ active_q }}"
-          {% elif view_type == 'latest' %}
-            Latest Videos
-          {% elif view_type == 'top' %}
-            Top Videos
+          {% elif view_type == 'latest' %} Latest Videos
+          {% elif view_type == 'top' %} Top Videos
           {% endif %}
         </h3>
         <div class="grid">
@@ -511,7 +543,7 @@
                 <a href="{{ hd_urls[v.aweme_id] }}"><button type="button">HD</button></a>
               </div>
             </div>
-          {% endfor %}  
+          {% endfor %}
         </div>
       </section>
     </div>
@@ -531,183 +563,170 @@
   </div>
 
   <script>
-    // Sidebar toggle
-    document.getElementById('sidebar-toggle').addEventListener('click', () => {
+    // showNotification
+    function showNotification(msg) {
+      const n = document.createElement('div');
+      n.className = 'notification';
+      n.innerText = msg;
+      document.body.appendChild(n);
+      setTimeout(() => n.classList.add('fade-out'), 2000);
+      n.addEventListener('transitionend', () => n.remove());
+    }
+
+    // Sidebar toggle & anti-copy
+    document.getElementById('sidebar-toggle').onclick = () =>
       document.querySelector('.about-us').classList.toggle('open');
-    });
+    ['contextmenu','copy','cut'].forEach(e =>
+      document.addEventListener(e, ev => ev.preventDefault())
+    );
 
-    // Anti-Inspect & Anti-Copy
-    ['contextmenu','copy','cut'].forEach(evt => {
-      document.addEventListener(evt, e => e.preventDefault());
-    });
-
-    // search saved users
-    document.getElementById('user-search-form').addEventListener('submit', e => {
+    // filter saved users
+    document.getElementById('user-search-form').onsubmit = e => {
       e.preventDefault();
       const q = document.getElementById('user-search').value.toLowerCase();
-      document.querySelectorAll('.user-entry').forEach(entry => {
-        const name = entry.querySelector('.handle').textContent.toLowerCase();
-        entry.style.display = name.includes(q) ? '' : 'none';
+      document.querySelectorAll('.user-entry').forEach(ent => {
+        const name = ent.querySelector('.handle').textContent.toLowerCase();
+        ent.style.display = name.includes(q) ? '' : 'none';
       });
-    });
+    };
 
     // Auth handling
     function initAuth() {
-      document.getElementById('tab-login').addEventListener('click', () => {
+      document.getElementById('tab-login').onclick = () => {
         document.getElementById('form-login').classList.add('active');
         document.getElementById('form-register').classList.remove('active');
         document.getElementById('tab-login').classList.add('active');
         document.getElementById('tab-register').classList.remove('active');
-      });
-      document.getElementById('tab-register').addEventListener('click', () => {
-        document.getElementById('form-register').classList.add('active');
-        document.getElementById('form-login').classList.remove('active');
-        document.getElementById('tab-register').classList.add('active');
-        document.getElementById('tab-login').classList.remove('active');
-      });
+      };
+      document.getElementById('tab-register').onclick = () => {
+        document.getElementById("form-register").classList.add('active');
+        document.getElementById("form-login").classList.remove('active');
+        document.getElementById("tab-register").classList.add('active');
+        document.getElementById("tab-login").classList.remove('active');
+      };
 
-      document.getElementById('form-login').addEventListener('submit', async e => {
+      document.getElementById('form-login').onsubmit = async e => {
         e.preventDefault();
-        const user = document.getElementById('login-username').value.trim();
-        const pass = document.getElementById('login-password').value;
-        const params = new URLSearchParams({ username: user, password: pass });
+        const u = document.getElementById('login-username').value.trim();
+        const p = document.getElementById('login-password').value;
         const res = await fetch('/api/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: params.toString()
+          headers: {'Content-Type':'application/x-www-form-urlencoded'},
+          body: new URLSearchParams({username:u,password:p})
         });
         if (!res.ok) {
           document.getElementById('error-login').textContent = await res.text() || 'Login failed';
           return;
         }
-        const data = await res.json();
-        localStorage.setItem('tikify_token', data.access_token);
+        const d = await res.json();
+        localStorage.setItem('tikify_token', d.access_token);
         location.reload();
-      });
+      };
 
-      document.getElementById('form-register').addEventListener('submit', async e => {
+      document.getElementById('form-register').onsubmit = async e => {
         e.preventDefault();
-        const user = document.getElementById('reg-username').value.trim();
-        const pass = document.getElementById('reg-password').value;
-        const invite = document.getElementById('reg-invite').value.trim();
-        const res = await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: user, password: pass, invite_code: invite })
+        const u = document.getElementById('reg-username').value.trim();
+        const p = document.getElementById('reg-password').value;
+        const i = document.getElementById('reg-invite').value.trim();
+        const res = await fetch('/api/register',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({username:u,password:p,invite_code:i})
         });
         if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
+          const err = await res.json().catch(()=>({}));
           document.getElementById('error-register').textContent = err.detail || 'Registration failed';
           return;
         }
         document.getElementById('tab-login').click();
         document.getElementById('error-login').textContent = 'Registered! Please log in.';
-      });
+      };
     }
 
     // Admin-mode modal
     let adminMode = false;
-    const _pw = [98,111,112,112].map(c => String.fromCharCode(c)).join('');
+    const pw = [98,111,112,112].map(c=>String.fromCharCode(c)).join('');
     const modal = document.getElementById('admin-pass-modal'),
           inp = document.getElementById('admin-pass-input'),
           errEl = document.getElementById('admin-pass-error');
     document.addEventListener('keydown', e => {
-      if (e.ctrlKey && e.key === '\\') {
-        if (!adminMode && modal.style.display !== 'flex') {
+      if(e.ctrlKey && e.key==='\\') {
+        if(!adminMode && modal.style.display!=='flex') {
           inp.value = ''; errEl.textContent = '';
-          modal.style.display = 'flex';
-          setTimeout(() => inp.focus(), 100);
+          modal.style.display = 'flex'; setTimeout(()=>inp.focus(),100);
         } else {
-          adminMode = false;
-          document.querySelectorAll('.delete-user, .delete-url').forEach(b => b.style.display = 'none');
+          adminMode=false;
+          document.querySelectorAll('.delete-user,.delete-url').forEach(b=>b.style.display='none');
         }
       }
-      if (e.key === 'Escape') modal.style.display = 'none';
+      if(e.key==='Escape') modal.style.display='none';
     });
-    document.getElementById('admin-pass-submit').addEventListener('click', () => {
-      if (inp.value === _pw) {
-        modal.style.display = 'none';
-        adminMode = true;
-        document.querySelectorAll('.delete-user, .delete-url').forEach(b => b.style.display = 'block');
-      } else errEl.textContent = 'Wrong password';
-    });
-    document.getElementById('admin-pass-cancel').addEventListener('click', () => modal.style.display = 'none');
+    document.getElementById('admin-pass-submit').onclick = () => {
+      if(inp.value===pw){
+        adminMode=true; modal.style.display='none';
+        document.querySelectorAll('.delete-user,.delete-url').forEach(b=>b.style.display='block');
+      } else errEl.textContent='Wrong password';
+    };
+    document.getElementById('admin-pass-cancel').onclick = ()=>modal.style.display='none';
 
     // delete-user & delete-url
-    function bindDeleteUsers() {
-      document.querySelectorAll('.delete-user').forEach(btn => {
-        btn.onclick = async () => {
-          if (!confirm(`Delete user ${btn.dataset.username}?`)) return;
-          const r = await fetch(`/api/saved-users/${encodeURIComponent(btn.dataset.username)}`, { method: 'DELETE' });
-          if (r.ok) btn.closest('.user-entry').remove();
-          else alert('Failed to delete user');
+    function bindDeleteUsers(){
+      document.querySelectorAll('.delete-user').forEach(b=>{
+        b.onclick = async ()=>{
+          if(!confirm(`Delete user ${b.dataset.username}?`)) return;
+          const r=await fetch(`/api/saved-users/${encodeURIComponent(b.dataset.username)}`,{method:'DELETE'});
+          if(r.ok) b.closest('.user-entry').remove(); else alert('Failed to delete user');
         };
       });
     }
-    function bindDeleteUrls() {
-      document.querySelectorAll('.delete-url').forEach(btn => {
-        btn.onclick = async () => {
-          if (!confirm(`Delete saved URL ${btn.dataset.aweme}?`)) return;
-          const r = await fetch(`/api/saved-urls/${encodeURIComponent(btn.dataset.aweme)}`, { method: 'DELETE' });
-          if (r.ok) btn.closest('.card').remove();
-          else alert('Failed to delete URL');
+    function bindDeleteUrls(){
+      document.querySelectorAll('.delete-url').forEach(b=>{
+        b.onclick = async ()=>{
+          if(!confirm(`Delete saved URL ${b.dataset.aweme}?`)) return;
+          const r=await fetch(`/api/saved-urls/${encodeURIComponent(b.dataset.aweme)}`,{method:'DELETE'});
+          if(r.ok) b.closest('.card').remove(); else alert('Failed to delete URL');
         };
       });
     }
 
     // URL form handler
-    document.getElementById('url-form').addEventListener('submit', async e => {
+    document.getElementById('url-form').onsubmit = async e =>{
       e.preventDefault();
       const url = document.getElementById('url-input').value.trim();
       try {
-        const res = await fetch('/api/from-url', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
-        if (!res.ok) {
-          alert((await res.json()).detail || 'Failed to resolve URL');
-          return;
-        }
+        const res = await fetch('/api/from-url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+        if(!res.ok){ alert((await res.json()).detail||'Failed to resolve URL'); return; }
         const data = await res.json();
-        await fetch('/api/saved-urls', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
+        await fetch('/api/saved-urls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
         fetchSavedUrls();
       } catch {
         alert('Error fetching video');
       }
-    });
+    };
 
-    // Highlight nav & switching
-    function highlightNav() {
-      const p = new URLSearchParams(location.search);
-      const hasQ = !!p.get('q');
-      const view = p.get('view') || p.get('type') || (hasQ ? 'videos' : 'home');
-      document.querySelectorAll('nav a').forEach(a => {
-        a.classList.toggle('active', a.dataset.view === view);
-      });
-      ['home','urls','users','videos'].forEach(v => {
-        document.getElementById('page-'+v).style.display =
-          (v === view || (['latest','top'].includes(view) && v === 'videos')) ? 'block' : 'none';
+    // nav & view switching
+    function highlightNav(){
+      const p=new URLSearchParams(location.search),
+            hasQ=!!p.get('q'),
+            view=p.get('view')||p.get('type')||(hasQ?'videos':'home');
+      document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.dataset.view===view));
+      ['home','urls','users','videos'].forEach(v=>{
+        document.getElementById('page-'+v).style.display = (v===view||(['latest','top'].includes(view)&&v==='videos'))?'block':'none';
       });
     }
 
     // Fetch & render saved URLs
-    async function fetchSavedUrls() {
-      const res = await fetch('/api/saved-urls');
-      const saved = await res.json();
+    async function fetchSavedUrls(){
+      const res=await fetch('/api/saved-urls'), saved=await res.json();
       renderUrlSection(saved);
     }
-    function renderUrlSection(savedUrls) {
-      const sec = document.getElementById('url-section'), g = document.getElementById('url-grid');
-      if (!savedUrls.length) { sec.style.display = 'none'; return; }
-      sec.style.display = 'block'; g.innerHTML = '';
-      savedUrls.forEach(v => {
-        const card = document.createElement('div'); card.className = 'card';
-        card.innerHTML = `
+    function renderUrlSection(savedUrls){
+      const sec=document.getElementById('url-section'), g=document.getElementById('url-grid');
+      if(!savedUrls.length){ sec.style.display='none'; return; }
+      sec.style.display='block'; g.innerHTML='';
+      savedUrls.forEach(v=>{
+        const card=document.createElement('div'); card.className='card';
+        card.innerHTML=`
           <video controls data-aweme-id="${v.aweme_id}"><source src="${v.play_url}" type="video/mp4"></video>
           <div class="title">Video ${v.aweme_id}</div>
           <div class="views" id="views-${v.aweme_id}">${v.play_count||0} views</div>
@@ -722,29 +741,24 @@
     }
 
     // Fetch & render saved users
-    async function fetchSavedUsers() {
-      const res = await fetch('/api/saved-users');
-      const users = await res.json();
+    async function fetchSavedUsers(){
+      const res=await fetch('/api/saved-users'), users=await res.json();
       renderUserSection(users);
     }
-    function renderUserSection(users) {
-      const grid = document.querySelector('.users-grid');
-      grid.innerHTML = '';
-      users.forEach(u => {
-        const entry = document.createElement('div');
-        entry.className = 'user-entry';
-        const link = document.createElement('div');
-        link.className = 'user-card';
-        link.innerHTML = `<img src="https://i.imgur.com/bYLmsWi.png" alt="${u.username}"/><span class="handle">${u.username}</span>`;
+    function renderUserSection(users){
+      const grid=document.querySelector('.users-grid'); grid.innerHTML='';
+      users.forEach(u=>{
+        const entry=document.createElement('div'); entry.className='user-entry';
+        const link=document.createElement('div'); link.className='user-card';
+        link.innerHTML=`<img src="https://i.imgur.com/bYLmsWi.png" alt="${u.username}"/><span class="handle">${u.username}</span>`;
         entry.appendChild(link);
 
-        const vids = document.createElement('div');
-        vids.className = 'videos-container';
-        if (Array.isArray(u.videos)) {
-          const vg = document.createElement('div'); vg.className = 'grid';
-          u.videos.forEach(v => {
-            const c = document.createElement('div'); c.className = 'card';
-            c.innerHTML = `
+        const vids=document.createElement('div'); vids.className='videos-container';
+        if(Array.isArray(u.videos)){
+          const vg=document.createElement('div'); vg.className='grid';
+          u.videos.forEach(v=>{
+            const c=document.createElement('div'); c.className='card';
+            c.innerHTML=`
               <video controls data-aweme-id="${v.aweme_id}"><source src="${v.play_url}" type="video/mp4"></video>
               <div class="title">${v.text||('Video '+v.aweme_id)}</div>
               <div class="views" id="views-${v.aweme_id}">${v.play_count||0} views</div>
@@ -758,57 +772,58 @@
         }
         entry.appendChild(vids);
 
-        const del = document.createElement('button');
-        del.className = 'delete-user'; del.dataset.username = u.username; del.textContent = 'Delete';
+        const del=document.createElement('button'); del.className='delete-user';
+        del.dataset.username=u.username; del.textContent='Delete';
         entry.appendChild(del);
 
         grid.appendChild(entry);
 
-        // **TOGGLE VIDEOS ON CLICK**
-        link.addEventListener('click', () => {
-          vids.style.display = vids.style.display === 'block' ? 'none' : 'block';
-        });
+        // TOGGLE VIDEOS ON CLICK
+        link.onclick = ()=> {
+          vids.style.display = vids.style.display==='block'?'none':'block';
+        };
       });
       bindDeleteUsers();
     }
 
-    // view increment
-    document.body.addEventListener('play', async e => {
-      if (e.target.tagName==='VIDEO' && e.target.dataset.awemeId) {
-        const r = await fetch(`/api/view/${e.target.dataset.awemeId}`,{method:'POST'});
-        if (r.ok) {
-          const { play_count } = await r.json();
+    // increment views
+    document.body.addEventListener('play', async e=>{
+      if(e.target.tagName==='VIDEO' && e.target.dataset.awemeId){
+        const r=await fetch(`/api/view/${e.target.dataset.awemeId}`, {method:'POST'});
+        if(r.ok){
+          const {play_count}=await r.json();
           document.getElementById(`views-${e.target.dataset.awemeId}`).textContent = `${play_count} views`;
         }
       }
     }, true);
 
     // init
-    async function initApp() {
+    async function initApp(){
       highlightNav();
       await fetchSavedUrls();
       await fetchSavedUsers();
+      // NOTIFICATION AFTER SAVED USER EMBED
+      const count = document.querySelectorAll('#page-videos .card').length;
+      showNotification(`${count} videos embedded`);
     }
-    window.addEventListener('load', async () => {
+    window.addEventListener('load', async ()=>{
       document.getElementById('loader').classList.add('fade-out');
-      setTimeout(async () => {
-        document.getElementById('loader').style.display = 'none';
-        const token = localStorage.getItem('tikify_token');
-        if (token) {
-          document.getElementById('auth-container').style.display = 'none';
-          document.getElementById('app-content').style.display = 'block';
+      setTimeout(async ()=>{
+        document.getElementById('loader').style.display='none';
+        const token=localStorage.getItem('tikify_token');
+        if(token){
+          document.getElementById('auth-container').style.display='none';
+          document.getElementById('app-content').style.display='block';
           initAuth();
           await initApp();
         } else {
-          document.getElementById('app-content').style.display = 'none';
-          document.getElementById('auth-container').style.display = 'flex';
+          document.getElementById('app-content').style.display='none';
+          document.getElementById('auth-container').style.display='flex';
           initAuth();
         }
-      }, 600);
+      },600);
     });
-
-    // keep-alive ping
-    setInterval(() => fetch('/ping').catch(() => {}), 300000);
+    setInterval(()=>fetch('/ping').catch(()=>{}),300000);
   </script>
 </body>
 </html>

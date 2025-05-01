@@ -38,7 +38,7 @@ INVITES_FILE      = os.path.join(DATA_DIR, "invites.json")
 POSTS_FILE        = os.path.join(DATA_DIR, "posts.json")
 SAVED_URLS_FILE   = os.path.join(DATA_DIR, "saved_urls.json")    # ← new
 # (we already persist users in users.json)
-
+router = APIRouter()
 # ─── Logging ──────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [DEBUG] %(message)s')
 
@@ -452,7 +452,7 @@ async def schedule_ping_task():
 @app.get("/ping")
 async def ping():
     return {"status": "alive"}
-
+app.include_router(router)
 def start():
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT",8000)))

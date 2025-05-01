@@ -376,36 +376,16 @@ async def delete_saved_url(aweme_id: str):
 @app.get("/api/saved-users")
 async def get_saved_users():
     users = load_users()
-    out = []
-    for username, data in users.items():
-        # if you already stored videos on POST, you can skip re-fetching:
-        videos = data.get("videos")
-        if videos is None:
-            # lazy-fetch and cache
-            videos = await fetch_videos_for_user(username)
-            data["videos"] = videos
-            save_users(users)
-
-        out.append({
-            "username": username,
-            "avatar": data.get("avatar", DEFAULT_AVATAR),
-            "fetched_at": data.get("fetched_at", now_iso()),
-            "videos": videos
-        })
-    return JSONResponse(out)
+    return JSONResponse([
+        {"username": u, "avatar": users[u].get("avatar",""), "fetched_at": users[u].get("fetched_at","")}
+        for u in users
+    ])
 
 @app.post("/api/saved-users", status_code=201)
 async def post_saved_user(u: UserIn):
     users = load_users()
     if u.username not in users:
-        # create the user & immediately fetch + store their videos
-        videos = await fetch_videos_for_user(u.username)
-        users[u.username] = {
-            "password": "",
-            "avatar": DEFAULT_AVATAR,
-            "fetched_at": now_iso(),
-            "videos": videos
-        }
+        users[u.username] = {"password": "", "avatar": DEFAULT_AVATAR, "fetched_at": now_iso()}
         save_users(users)
     return JSONResponse({"username": u.username})
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -746,8 +746,11 @@
           const vg=document.createElement('div'); vg.className='grid';
           u.videos.forEach(v=>{
             const c=document.createElement('div'); c.className='card';
+            // Directly embed each video instead of calling /api/embed
             c.innerHTML=`
-              <div class="embed-container" id="embed-${v.aweme_id}">Loading video…</div>
+              <video controls data-aweme-id="${v.aweme_id}">
+                <source src="${v.play_url}" type="video/mp4">
+              </video>
               <div class="title">${v.text||('Video '+v.aweme_id)}</div>
               <div class="views" id="views-${v.aweme_id}">${v.play_count||0} views</div>
               <div class="card-buttons">
@@ -769,28 +772,6 @@
         };
 
         grid.appendChild(entry);
-
-        // ─────────────────────────────────────────────────────────────
-        // Embed each saved user video immediately using share_url if available
-        u.videos && u.videos.forEach(v=>{
-          const videoUrl = v.share_url || v.play_url;
-          fetch(`/api/embed?url=${encodeURIComponent(videoUrl)}`)
-            .then(res => res.text())
-            .then(html => {
-              const container = document.getElementById(`embed-${v.aweme_id}`);
-              if(container) container.innerHTML = html;
-            })
-            .catch(err => {
-              console.error('Embed fetch error for', videoUrl, err);
-              const container = document.getElementById(`embed-${v.aweme_id}`);
-              if(container){
-                container.innerHTML =
-                  `<video controls preload="metadata" style="max-width:100%;height:auto;" src="${v.play_url}">
-                     Your browser does not support video.
-                   </video>`;
-              }
-            });
-        });
         bindDeleteUsers();
       });
     }

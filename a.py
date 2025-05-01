@@ -195,32 +195,34 @@ async def index(
         "view_type":   type or "",
     })
 
-@app.get("/api/embed", response_class=HTMLResponse)
-async def api_embed(url: str):
+@router.get("/api/embed", response_class=HTMLResponse)
+async def api_embed(url: HttpUrl = Query(..., description="Full TikTok video URL or short link")):
     """
-    Given any TikTok video URL (or short link), resolve it and return
-    a <video> tag you can drop directly into a page or iframe.
+    Resolve a TikTok URL (or short link) into an HTML5 <video> snippet.
     """
-    # 1) resolve to aweme_id + play_url + hd_url
     try:
-        data = await from_url(URLIn(url=url))
-    except HTTPException as e:
-        # propagate 400s/404s
-        raise e
+        data = await from_url(URLIn(url=str(url)))
+    except HTTPException:
+        # pass through 400/404 with the same message
+        raise
+    except Exception as exc:
+        # catch-all so we return a clean 500
+        logger.error(f"Error resolving {url}: {exc}")
+        raise HTTPException(500, detail="Failed to resolve TikTok URL")
 
-    play_url = data["play_url"]
-    hd_url   = data["hd_url"]
-
-    # 2) build an HTML5 <video> snippet
+    # Prefer HD first
+    sources = [
+        f'<source src="{data["hd_url"]}" type="video/mp4">',
+        f'<source src="{data["play_url"]}" type="video/mp4">'
+    ]
     html = f"""
     <video controls preload="metadata" style="max-width:100%;height:auto;">
-      <source src="{play_url}" type="video/mp4">
-      <!-- fallback to HD if desired -->
-      <source src="{hd_url}" type="video/mp4">
+      {''.join(sources)}
       Your browser does not support the video tag.
     </video>
     """
 
+    # You could also set caching headers here if desired
     return HTMLResponse(content=html, status_code=200)
 
 @app.get("/download")

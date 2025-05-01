@@ -329,9 +329,15 @@
       font-size: 0.85rem;
       hyphens: auto;
     }
+
+    /* Videos container: now lets the inner .grid rule handle the layout */
     .videos-container {
       display: none;
       margin-top: 16px;
+    }
+    /* when shown, the child <div class="grid"> will layout its cards as expected */
+    .videos-container .grid {
+      /* inherits your existing .grid styles */
     }
 
     /* Admin Password Modal */
@@ -788,8 +794,8 @@
           } else {
             vids.innerHTML = '<p>No videos saved for this user.</p>';
           }
-          // ← changed this line from 'block' to 'grid' so that the container itself lays out as a CSS grid
-          vids.style.display='grid';
+          // ← **reverted** from 'grid' back to 'block' so the inner .grid takes over :contentReference[oaicite:2]{index=2}
+          vids.style.display='block';
           bindDeleteUsers();
         };
 

@@ -11,8 +11,9 @@ from datetime import datetime
 import requests
 from jose import jwt
 from passlib.context import CryptContext
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import HTMLResponse
-from fastapi import HTTPException
+from pydantic import HttpUrl
 from fastapi import FastAPI, Request, Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates

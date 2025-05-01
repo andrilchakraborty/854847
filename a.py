@@ -44,7 +44,7 @@ router = APIRouter()
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [DEBUG] %(message)s')
 
-# ─── Helpers ────────────────────────────────────────────────────────────────
+# ─── Helpers ────────────────────────────────────────────────────────────
 
 def load_json(path: str, default):
     if not os.path.exists(path):
@@ -59,7 +59,7 @@ def save_json(path: str, data):
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
 
-# ─── Persistence ────────────────────────────────────────────────────────────
+# ─── Persistence ───────────────────────────────────────────────────────────
 
 def load_users() -> Dict[str, dict]:
     return load_json(USERS_FILE, {})
@@ -95,7 +95,7 @@ def load_saved_user_urls() -> List[dict]:
 def save_saved_user_urls(urls: List[dict]):
     save_json(SAVED_USER_URLS_FILE, urls)
 
-# ─── Password hashing ───────────────────────────────────────────────────────
+# ─── Password hashing ────────────────────────────────────────────────────────
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -130,6 +130,7 @@ class SavedUserURL(BaseModel):
     hd_url:    str
 
 # ─── Globals ───────────────────────────────────────────────────────────────
+
 HD_URLS: Dict[str, str] = {}
 HEADERS = {
     "User-Agent": "Mozilla/5.0 ...",
@@ -141,10 +142,12 @@ DEFAULT_AVATAR = (
 )
 
 # ─── Utility ───────────────────────────────────────────────────────────────
+
 def now_iso():
     return datetime.utcnow().isoformat()
 
 # ─── FastAPI app ──────────────────────────────────────────────────────────
+
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
@@ -220,12 +223,33 @@ async def index(
     })
 
 
-
-
+# ─── Saved-User-URLs API Endpoints (with grid-HTML option) ─────────────────
 
 @app.get("/api/saved-user-urls")
-async def get_saved_user_urls():
-    return JSONResponse(load_saved_user_urls())
+async def get_saved_user_urls(format: str = Query("json")):
+    saved = load_saved_user_urls()
+
+    if format.lower() == "html":
+        cards = []
+        for u in saved:
+            cards.append(f"""
+            <div class="card">
+              <video controls data-aweme-id="{u['aweme_id']}">
+                <source src="{u['play_url']}" type="video/mp4">
+              </video>
+              <div class="title">Video {u['aweme_id']}</div>
+              <div class="card-buttons">
+                <a href="/download?video_id={u['aweme_id']}&hd=0"><button>Download</button></a>
+                <a href="/download?video_id={u['aweme_id']}&hd=1"><button>HD</button></a>
+              </div>
+            </div>
+            """)
+        html = f'<div class="grid">{"".join(cards)}</div>'
+        return HTMLResponse(content=html)
+
+    # default: JSON
+    return JSONResponse(content=saved)
+
 
 @app.post("/api/saved-user-urls", status_code=201)
 async def post_saved_user_url(data: SavedUserURL):
@@ -233,7 +257,7 @@ async def post_saved_user_url(data: SavedUserURL):
     if not any(u["username"] == data.username and u["aweme_id"] == data.aweme_id for u in saved):
         saved.insert(0, data.dict())
         save_saved_user_urls(saved)
-    return JSONResponse(data.dict())
+    return JSONResponse(content=data.dict())
 
 @app.delete("/api/saved-user-urls/{username}/{aweme_id}", status_code=204)
 async def delete_saved_user_url(username: str, aweme_id: str):
@@ -326,7 +350,7 @@ async def api_users():
         for u in users
     ])
 
-@app.delete("/api/users/{username}", status_code=204)   # ← new
+@app.delete("/api/users/{username}", status_code=204)
 async def delete_user(username: str):
     users = load_users()
     if username in users:
@@ -458,21 +482,22 @@ async def schedule_ping_task():
             while True:
                 try:
                     resp = await client.get(f"{SERVICE_URL}/ping")
-                    # optionally log if non-200:
                     if resp.status_code != 200:
                         print(f"Health ping returned {resp.status_code}")
                 except Exception as e:
                     print(f"External ping failed: {e!r}")
-                await asyncio.sleep(120)  # wait 10 seconds
+                await asyncio.sleep(120)
 
     asyncio.create_task(ping_loop())
 
 
-# ─── HEALTHCHECK ───────────────────────────────────────────────────────────────
+# ─── HEALTHCHECK ───────────────────────────────────────────────────────────
 @app.get("/ping")
 async def ping():
     return {"status": "alive"}
+
 app.include_router(router)
+
 def start():
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT",8000)))

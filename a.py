@@ -11,7 +11,8 @@ from datetime import datetime
 import requests
 from jose import jwt
 from passlib.context import CryptContext
-
+from fastapi.responses import HTMLResponse
+from fastapi import HTTPException
 from fastapi import FastAPI, Request, Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
@@ -193,6 +194,34 @@ async def index(
         "active_q":    q or "",
         "view_type":   type or "",
     })
+
+@app.get("/api/embed", response_class=HTMLResponse)
+async def api_embed(url: str):
+    """
+    Given any TikTok video URL (or short link), resolve it and return
+    a <video> tag you can drop directly into a page or iframe.
+    """
+    # 1) resolve to aweme_id + play_url + hd_url
+    try:
+        data = await from_url(URLIn(url=url))
+    except HTTPException as e:
+        # propagate 400s/404s
+        raise e
+
+    play_url = data["play_url"]
+    hd_url   = data["hd_url"]
+
+    # 2) build an HTML5 <video> snippet
+    html = f"""
+    <video controls preload="metadata" style="max-width:100%;height:auto;">
+      <source src="{play_url}" type="video/mp4">
+      <!-- fallback to HD if desired -->
+      <source src="{hd_url}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    """
+
+    return HTMLResponse(content=html, status_code=200)
 
 @app.get("/download")
 async def download(video_id: str, hd: int = 0):

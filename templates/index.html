@@ -365,7 +365,7 @@
       font-size: 1rem;
     }
     #admin-pass-modal .error {
-      color: #ff4d4f; margin-bottom: 0.75rem;
+      color: #ff004f; margin-bottom: 0.75rem;
       height: 1rem;
     }
     #admin-pass-modal .buttons {
@@ -788,7 +788,8 @@
           } else {
             vids.innerHTML = '<p>No videos saved for this user.</p>';
           }
-          vids.style.display='block';
+          // ← changed this line from 'block' to 'grid' so that the container itself lays out as a CSS grid
+          vids.style.display='grid';
           bindDeleteUsers();
         };
 

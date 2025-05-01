@@ -333,6 +333,10 @@
       display: none;
       margin-top: 16px;
     }
+    /* ensure grid class works on videos-container */
+    .videos-container.grid {
+      display: grid;
+    }
 
     /* Admin Password Modal */
     #admin-pass-modal {
@@ -745,8 +749,8 @@
         entry.appendChild(del);
 
         link.onclick = async ()=>{
-          if (vids.style.display==='grid'){
-            vids.style.display='none';
+          if (vids.classList.contains('grid')){
+            vids.classList.remove('grid');
             vids.innerHTML = '';
             return;
           }
@@ -772,11 +776,7 @@
                 </div>`;
               vids.appendChild(c);
             });
-            // **HERE** we force vids into the same grid style you use everywhere:
-            vids.style.display = 'grid';
-            vids.style.gridTemplateColumns = 'repeat(auto-fill, minmax(220px, 1fr))';
-            vids.style.gap = '20px';
-            vids.style.marginBottom = '20px';
+            vids.classList.add('grid');
           } else {
             vids.innerHTML = '<p>No videos saved for this user.</p>';
             vids.style.display='block';

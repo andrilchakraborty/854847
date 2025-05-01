@@ -527,8 +527,8 @@
               <div class="title">{{ v.text or ("Video " ~ v.aweme_id) }}</div>
               <div class="views" id="views-{{ v.aweme_id }}">{{ v.play_count }} views</div>
               <div class="card-buttons">
-                <a href="{{ v.play_url }}"><button type="button">Play</button></a>
-                <a href="{{ hd_urls[v.aweme_id] }}"><button type="button">HD</button></a>
+                <button class="play-btn" data-aweme-id="{{ v.aweme_id }}" data-play-url="{{ v.play_url }}">Play</button>
+                <a href="{{ hd_urls[v.aweme_id] }}"><button>HD</button></a>
               </div>
             </div>
           {% endfor %}
@@ -551,7 +551,7 @@
   </div>
 
   <script>
-    // showNotification
+    // showNotification (still available for other uses)
     function showNotification(msg) {
       const n = document.createElement('div');
       n.className = 'notification';
@@ -616,7 +616,7 @@
         const u = document.getElementById('reg-username').value.trim();
         const p = document.getElementById('reg-password').value;
         const i = document.getElementById('reg-invite').value.trim();
-        const res = await fetch('/api/register', {
+        const res = await fetch('/api/register',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify({username:u,password:p,invite_code:i})
@@ -635,35 +635,39 @@
     let adminMode = false;
     const pw = [98,111,112,112].map(c=>String.fromCharCode(c)).join('');
     const modal = document.getElementById('admin-pass-modal'),
-          inp = document.getElementById('admin-pass-input'),
+          inp   = document.getElementById('admin-pass-input'),
           errEl = document.getElementById('admin-pass-error');
     document.addEventListener('keydown', e => {
-      if(e.ctrlKey && e.key==='\\') {
-        if(!adminMode && modal.style.display!=='flex') {
+      if (e.ctrlKey && e.key==='\\') {
+        if (!adminMode && modal.style.display!=='flex') {
           inp.value = ''; errEl.textContent = '';
-          modal.style.display = 'flex'; setTimeout(()=>inp.focus(),100);
+          modal.style.display = 'flex';
+          setTimeout(()=>inp.focus(),100);
         } else {
-          adminMode=false;
-          document.querySelectorAll('.delete-user,.delete-url').forEach(b=>b.style.display='none');
+          adminMode = false;
+          document.querySelectorAll('.delete-user,.delete-url')
+                  .forEach(b=>b.style.display='none');
         }
       }
-      if(e.key==='Escape') modal.style.display='none';
+      if (e.key==='Escape') modal.style.display='none';
     });
     document.getElementById('admin-pass-submit').onclick = () => {
-      if(inp.value===pw){
-        adminMode=true; modal.style.display='none';
-        document.querySelectorAll('.delete-user,.delete-url').forEach(b=>b.style.display='block');
+      if (inp.value===pw){
+        adminMode=true;
+        modal.style.display='none';
+        document.querySelectorAll('.delete-user,.delete-url')
+                .forEach(b=>b.style.display='block');
       } else errEl.textContent='Wrong password';
     };
-    document.getElementById('admin-pass-cancel').onclick = ()=>modal.style.display='none';
+    document.getElementById('admin-pass-cancel').onclick = () => modal.style.display='none';
 
     // delete-user & delete-url
     function bindDeleteUsers(){
       document.querySelectorAll('.delete-user').forEach(b=>{
         b.onclick = async ()=>{
-          if(!confirm(`Delete user ${b.dataset.username}?`)) return;
+          if (!confirm(`Delete user ${b.dataset.username}?`)) return;
           const r = await fetch(`/api/saved-users/${encodeURIComponent(b.dataset.username)}`,{method:'DELETE'});
-          if(r.ok) b.closest('.user-entry').remove();
+          if (r.ok) b.closest('.user-entry').remove();
           else alert('Failed to delete user');
         };
       });
@@ -671,9 +675,9 @@
     function bindDeleteUrls(){
       document.querySelectorAll('.delete-url').forEach(b=>{
         b.onclick = async ()=>{
-          if(!confirm(`Delete saved URL ${b.dataset.aweme}?`)) return;
+          if (!confirm(`Delete saved URL ${b.dataset.aweme}?`)) return;
           const r = await fetch(`/api/saved-urls/${encodeURIComponent(b.dataset.aweme)}`,{method:'DELETE'});
-          if(r.ok) b.closest('.card').remove();
+          if (r.ok) b.closest('.card').remove();
           else alert('Failed to delete URL');
         };
       });
@@ -684,17 +688,28 @@
       e.preventDefault();
       const url = document.getElementById('url-input').value.trim();
       try {
-        const res = await fetch('/api/from-url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
-        if(!res.ok){ alert((await res.json()).detail||'Failed to resolve URL'); return; }
+        const res = await fetch('/api/from-url',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({url})
+        });
+        if (!res.ok){
+          alert((await res.json()).detail||'Failed to resolve URL');
+          return;
+        }
         const data = await res.json();
-        await fetch('/api/saved-urls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+        await fetch('/api/saved-urls',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(data)
+        });
         fetchSavedUrls();
       } catch {
         alert('Error fetching video');
       }
     };
 
-    // add: saveFetchedUserUrls
+    // saveFetchedUserUrls
     async function saveFetchedUserUrls() {
       const params = new URLSearchParams(location.search);
       const q = params.get('q');
@@ -718,10 +733,12 @@
       const p    = new URLSearchParams(location.search),
             hasQ = !!p.get('q'),
             view = p.get('view')||p.get('type')||(hasQ?'videos':'home');
-      document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.dataset.view===view));
+      document.querySelectorAll('nav a')
+              .forEach(a=>a.classList.toggle('active',a.dataset.view===view));
       ['home','urls','users','videos'].forEach(v=>{
         document.getElementById('page-'+v).style.display =
-          (v===view||(['latest','top'].includes(view)&&v==='videos'))?'block':'none';
+          (v===view||(['latest','top'].includes(view)&&v==='videos'))
+            ? 'block' : 'none';
       });
     }
 
@@ -734,69 +751,98 @@
     function renderUrlSection(savedUrls){
       const sec = document.getElementById('url-section'),
             g   = document.getElementById('url-grid');
-      if(!savedUrls.length){ sec.style.display='none'; return; }
-      sec.style.display='block'; g.innerHTML='';
+      if (!savedUrls.length){
+        sec.style.display='none';
+        return;
+      }
+      sec.style.display='block';
+      g.innerHTML='';
       savedUrls.forEach(v=>{
-        const card = document.createElement('div'); card.className='card';
+        const card = document.createElement('div');
+        card.className='card';
         card.innerHTML=`
-          <video controls data-aweme-id="${v.aweme_id}"><source src="${v.play_url}" type="video/mp4"></video>
+          <video controls data-aweme-id="${v.aweme_id}">
+            <source src="${v.play_url}" type="video/mp4">
+          </video>
           <div class="title">Video ${v.aweme_id}</div>
-          <div class="views" id="views-${v.aweme_id}">${v.play_count||0} views</div>
-          <div class="card-buttons">
-            <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
-            <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
+          <div class="views" id="views-${v.aweme_id}">
+            ${v.play_count||0} views
           </div>
-          <button class="delete-url" data-aweme="${v.aweme_id}">Delete</button>`;
+          <div class="card-buttons">
+            <a href="/download?video_id=${v.aweme_id}&hd=0">
+              <button>Download</button>
+            </a>
+            <a href="/download?video_id=${v.aweme_id}&hd=1">
+              <button>HD</button>
+            </a>
+          </div>
+          <button class="delete-url" data-aweme="${v.aweme_id}">
+            Delete
+          </button>`;
         g.appendChild(card);
       });
       bindDeleteUrls();
     }
 
-    // Fetch & render saved users (NEW: no inline .videos, we fetch on click)
+    // Fetch & render saved users
     async function fetchSavedUsers(){
       const res   = await fetch('/api/saved-users'),
             users = await res.json();
       renderUserSection(users);
     }
-
     function renderUserSection(users){
-      const grid = document.querySelector('.users-grid'); grid.innerHTML='';
+      const grid = document.querySelector('.users-grid');
+      grid.innerHTML='';
       users.forEach(u=>{
-        const entry = document.createElement('div'); entry.className='user-entry';
-        const link  = document.createElement('div'); link.className='user-card';
-        // use fixed Imgur avatar URL
-        link.innerHTML = `<img src="https://i.imgur.com/bYLmsWi.png" alt="${u.username}"/><span class="handle">${u.username}</span>`;
+        const entry = document.createElement('div');
+        entry.className='user-entry';
+
+        const link = document.createElement('div');
+        link.className='user-card';
+        link.innerHTML = `
+          <img src="https://i.imgur.com/bYLmsWi.png" alt="${u.username}"/>
+          <span class="handle">${u.username}</span>`;
         entry.appendChild(link);
 
-        const vids = document.createElement('div'); vids.className='videos-container';
+        const vids = document.createElement('div');
+        vids.className='videos-container';
         entry.appendChild(vids);
 
-        const del = document.createElement('button'); del.className='delete-user';
-        del.dataset.username = u.username; del.textContent = 'Delete';
+        const del = document.createElement('button');
+        del.className='delete-user';
+        del.dataset.username = u.username;
+        del.textContent = 'Delete';
         entry.appendChild(del);
 
         link.onclick = async ()=>{
-          if(vids.style.display==='block'){
+          if (vids.style.display==='block'){
             vids.style.display='none';
             return;
           }
-          // fetch and display saved-user-urls for this user
           const resp     = await fetch('/api/saved-user-urls'),
                 all      = await resp.json(),
                 userUrls = all.filter(item=>item.username===u.username);
-          vids.innerHTML = '';
-          if(userUrls.length){
-            const vg = document.createElement('div'); vg.className='grid';
+          vids.innerHTML='';
+          if (userUrls.length){
+            const vg = document.createElement('div');
+            vg.className='grid';
             userUrls.forEach(v=>{
-              const c = document.createElement('div'); c.className='card';
+              const c = document.createElement('div');
+              c.className='card';
               c.innerHTML = `
                 <video controls data-aweme-id="${v.aweme_id}">
                   <source src="${v.play_url}" type="video/mp4">
                 </video>
                 <div class="title">Video ${v.aweme_id}</div>
-                <div class="views" id="views-${v.aweme_id}">${v.play_count||0} views</div>
+                <div class="views" id="views-${v.aweme_id}">
+                  ${v.play_count||0} views
+                </div>
                 <div class="card-buttons">
-                  <a href="${v.play_url}"><button>Play</button></a>
+                  <button class="play-btn"
+                          data-aweme-id="${v.aweme_id}"
+                          data-play-url="${v.play_url}">
+                    Play
+                  </button>
                   <a href="${v.hd_url}"><button>HD</button></a>
                 </div>`;
               vg.appendChild(c);
@@ -814,17 +860,33 @@
       });
     }
 
-    // increment views
+    // increment views on native <video> play
     document.body.addEventListener('play', async e=>{
-      if(e.target.tagName==='VIDEO' && e.target.dataset.awemeId){
-        const r = await fetch(`/api/view/${e.target.dataset.awemeId}`, {method:'POST'});
-        if(r.ok){
+      if (e.target.tagName==='VIDEO' && e.target.dataset.awemeId){
+        const vid = e.target.dataset.awemeId;
+        const r = await fetch(`/api/view/${vid}`, {method:'POST'});
+        if (r.ok){
           const {play_count} = await r.json();
-          document.getElementById(`views-${e.target.dataset.aweme_id}`)
-            .textContent = `${play_count} views`;
+          const el = document.getElementById(`views-${vid}`);
+          if (el) el.textContent = `${play_count} views`;
         }
       }
     }, true);
+
+    // handle our custom Play buttons too
+    document.body.addEventListener('click', async e=>{
+      if (e.target.classList.contains('play-btn')){
+        const vid = e.target.dataset.awemeId;
+        const url = e.target.dataset.playUrl;
+        const r = await fetch(`/api/view/${vid}`, {method:'POST'});
+        if (r.ok){
+          const {play_count} = await r.json();
+          const el = document.getElementById(`views-${vid}`);
+          if (el) el.textContent = `${play_count} views`;
+        }
+        window.open(url, '_blank');
+      }
+    });
 
     // init
     async function initApp(){
@@ -832,15 +894,13 @@
       await fetchSavedUrls();
       await fetchSavedUsers();
       await saveFetchedUserUrls();
-      const count = document.querySelectorAll('#page-videos .card').length;
-      showNotification(`${count} videos embedded`);
     }
     window.addEventListener('load', async ()=>{
       document.getElementById('loader').classList.add('fade-out');
       setTimeout(async ()=>{
         document.getElementById('loader').style.display='none';
         const token = localStorage.getItem('tikify_token');
-        if(token){
+        if (token){
           document.getElementById('auth-container').style.display='none';
           document.getElementById('app-content').style.display='block';
           initAuth();

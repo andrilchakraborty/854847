@@ -191,7 +191,8 @@
     #page-home,
     #page-urls,
     #page-users,
-    #page-videos {
+    #page-videos,
+    #page-saved-user {
       max-width: 800px;
       margin: 40px auto;
       padding: 0 20px;
@@ -479,6 +480,14 @@
       <div class="users-grid"></div>
     </div>
 
+    <!-- SAVED USER PAGE -->
+    <div id="page-saved-user" style="display:none;">
+      <section>
+        <h3 style="text-align:center;" id="saved-user-title">Videos for </h3>
+        <div class="grid" id="saved-user-grid"></div>
+      </section>
+    </div>
+
     <!-- VIDEOS PAGE -->
     <div id="page-videos" style="display:none;">
       <section id="videos-section">
@@ -577,7 +586,11 @@
         const u = document.getElementById('reg-username').value.trim();
         const p = document.getElementById('reg-password').value;
         const i = document.getElementById('reg-invite').value.trim();
-        const res = await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({username:u,password:p,invite_code:i})});
+        const res = await fetch('/api/register',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({username:u,password:p,invite_code:i})
+        });
         if (!res.ok) {
           const err = await res.json().catch(()=>({}));
           document.getElementById('error-register').textContent = err.detail || 'Registration failed';
@@ -602,7 +615,8 @@
           setTimeout(()=>inp.focus(),100);
         } else {
           adminMode = false;
-          document.querySelectorAll('.delete-user,.delete-url').forEach(b=>b.style.display='none');
+          document.querySelectorAll('.delete-user,.delete-url')
+                  .forEach(b=>b.style.display='none');
         }
       }
       if (e.key==='Escape') modal.style.display='none';
@@ -611,7 +625,8 @@
       if (inp.value===pw){
         adminMode=true;
         modal.style.display='none';
-        document.querySelectorAll('.delete-user,.delete-url').forEach(b=>b.style.display='block');
+        document.querySelectorAll('.delete-user,.delete-url')
+                .forEach(b=>b.style.display='block');
       } else errEl.textContent='Wrong password';
     };
     document.getElementById('admin-pass-cancel').onclick = () => modal.style.display='none';
@@ -673,8 +688,10 @@
       const p    = new URLSearchParams(location.search),
             hasQ = !!p.get('q'),
             view = p.get('view')||p.get('type')||(hasQ?'videos':'home');
-      document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.dataset.view===view));
-      ['home','urls','users','videos'].forEach(v=>{
+      document.querySelectorAll('nav a').forEach(a=>
+        a.classList.toggle('active', a.dataset.view===view)
+      );
+      ['home','urls','users','videos','saved-user'].forEach(v=>{
         document.getElementById('page-'+v).style.display =
           (v===view||(['latest','top'].includes(view)&&v==='videos'))?'block':'none';
       });
@@ -748,45 +765,48 @@
         del.textContent = 'Delete';
         entry.appendChild(del);
 
-        link.onclick = async ()=>{
-          if (vids.classList.contains('grid')){
-            vids.classList.remove('grid');
-            vids.innerHTML = '';
-            return;
-          }
-          const resp     = await fetch('/api/saved-user-urls'),
-                all      = await resp.json(),
-                userUrls = all.filter(item=>item.username===u.username);
-          vids.innerHTML='';
-          if (userUrls.length){
-            userUrls.forEach(v=>{
-              const c = document.createElement('div');
-              c.className='card';
-              c.innerHTML = `
-                <video controls data-aweme-id="${v.aweme_id}">
-                  <source src="${v.play_url}" type="video/mp4">
-                </video>
-                <div class="title">Video ${v.aweme_id}</div>
-                <div class="views" id="views-${v.aweme_id}">
-                  ${v.play_count||0} views
-                </div>
-                <div class="card-buttons">
-                  <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
-                  <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
-                </div>`;
-              vids.appendChild(c);
-            });
-            vids.classList.add('grid');
-          } else {
-            vids.innerHTML = '<p>No videos saved for this user.</p>';
-            vids.style.display='block';
-          }
-          bindDeleteUsers();
-        };
+        // NAVIGATE to new page instead of inline
+        link.onclick = () => showSavedUser(u.username);
 
         grid.appendChild(entry);
         bindDeleteUsers();
       });
+    }
+
+    // SHOW SAVED USER PAGE
+    async function showSavedUser(username){
+      // populate title
+      document.getElementById('saved-user-title').textContent = `Videos for ${username}`;
+      const grid = document.getElementById('saved-user-grid');
+      grid.innerHTML = '';
+      // fetch all saved-user-urls
+      const resp     = await fetch('/api/saved-user-urls'),
+            all      = await resp.json(),
+            userUrls = all.filter(item=>item.username===username);
+      if (userUrls.length){
+        userUrls.forEach(v=>{
+          const c = document.createElement('div');
+          c.className='card';
+          c.innerHTML = `
+            <video controls data-aweme-id="${v.aweme_id}">
+              <source src="${v.play_url}" type="video/mp4">
+            </video>
+            <div class="title">Video ${v.aweme_id}</div>
+            <div class="views" id="views-${v.aweme_id}">
+              ${v.play_count||0} views
+            </div>
+            <div class="card-buttons">
+              <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
+              <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
+            </div>`;
+          grid.appendChild(c);
+        });
+      } else {
+        grid.innerHTML = '<p style="color:#aaa;text-align:center;">No videos saved for this user.</p>';
+      }
+      // switch view
+      document.querySelectorAll('#app-content > div[id^="page-"]').forEach(d=>d.style.display='none');
+      document.getElementById('page-saved-user').style.display = 'block';
     }
 
     // increment views on native <video> play

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <link
     rel="icon"
-    href="https://i.imgur.com/bYLmsWi.png"
+    href="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png?ex=6810dae4&is=680f8964&hm=3541cfcdc557fae800e4603bec2508dcaa17d8ee2634dbb942cf3478c8289c26&=&format=webp&quality=lossless"
     type="image/png"
   />
   <title>Bop Central</title>
@@ -223,7 +223,7 @@
       text-align: center;
     }
 
-    /* Shared search bar */
+    /* Shared search bar style */
     .search-bar {
       width: 100%;
       display: flex;
@@ -312,7 +312,7 @@
       font-size: 0.8rem;
     }
 
-    /* Circular PFP grid for saved users */
+    /* Circular TikTok‐style PFP grid */
     .users-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -341,7 +341,7 @@
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.75 );
+      background: rgba(0,0,0,0.75);
       z-index: 2000;
       align-items: center;
       justify-content: center;
@@ -401,7 +401,7 @@
     <div class="spinner"></div>
     <img
       id="loader-image"
-      src="https://i.imgur.com/bYLmsWi.png"
+      src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png"
       alt="Loading…"
     />
   </div>
@@ -409,7 +409,7 @@
   <!-- Auth UI -->
   <div id="auth-container">
     <img
-      src="https://i.imgur.com/bYLmsWi.png"
+      src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png"
       alt="Logo"
     />
     <div class="tabs">
@@ -438,7 +438,7 @@
     <header>
       <a href="/" class="logo-container">
         <img
-          src="https://i.imgur.com/bYLmsWi.png"
+          src="https://media.discordapp.net/attachments/1343576085098664020/1366231934887399434/image-removebg-preview_4.png"
           alt="Bop Central Logo"
           class="logo"
         />
@@ -478,7 +478,8 @@
 
     <!-- URLS PAGE -->
     <div id="page-urls" style="display:none;">
-      <form class="url-bar" id="url-form">
+      <!-- now using .search-bar style -->
+      <form class="search-bar" id="url-form">
         <input type="url" id="url-input" placeholder="Enter TikTok video URL…" required />
         <button type="submit">Fetch Video</button>
       </form>
@@ -490,7 +491,6 @@
 
     <!-- USERS PAGE -->
     <div id="page-users" style="display:none;">
-      <!-- USE SAME SEARCH BAR STYLE -->
       <form class="search-bar" id="user-search-form">
         <input type="text" id="user-search" placeholder="Search saved users…" />
         <button type="button">Go</button>
@@ -769,7 +769,7 @@
       users.forEach(u => {
         const entry = document.createElement('div');
         entry.className = 'user-entry';
-        // build profile card
+        // profile card
         const profile = document.createElement('div');
         profile.className = 'user-card';
         profile.innerHTML = `
@@ -778,7 +778,7 @@
         `;
         entry.appendChild(profile);
 
-        // embedded videos container (hidden by default)
+        // embedded videos container
         const vids = document.createElement('div');
         vids.className = 'videos-container';
         if (Array.isArray(u.videos) && u.videos.length) {

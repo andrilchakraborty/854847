@@ -9,31 +9,6 @@
   />
   <title>Bop Central</title>
 
-  <!-- Open Graph / Facebook Embed -->
-  <meta property="og:title" content="Bop Central – TikTok Viewer" />
-  <meta
-    property="og:description"
-    content="Watch TikTok Bops or randoms. Search users, browse latest or top videos, and download your favorites."
-  />
-  <meta
-    property="og:image"
-    content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg?ex=6810c150&is=680f6fd0&hm=7d128535b31463dfba1e9fd139a7ad7ae51b1ec7f08b7a54c09e2bcc5dac131e&=&format=webp"
-  />
-  <meta property="og:url" content="https://bop-central.onrender.com/" />
-  <meta property="og:type" content="website" />
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Bop Central – TikTok Viewer" />
-  <meta
-    name="twitter:description"
-    content="Watch TikTok videos. Search users, browse latest or top videos, and download your favorites."
-  />
-  <meta
-    name="twitter:image"
-    content="https://media.discordapp.net/attachments/1343576085098664020/1366204471633510530/IMG_20250427_190832_902.jpg?ex=6810c150&is=680f6fd0&hm=7d128535b31463dfba1e9fd139a7ad7ae51b1ec7f08b7a54c09e2bcc5dac131e&=&format=webp"
-  />
-
   <!-- Prevent indexing -->
   <meta name="robots" content="noindex,nofollow" />
 
@@ -312,24 +287,41 @@
       font-size: 0.8rem;
     }
 
-    /* Circular TikTok‐style PFP grid */
+    /* Users grid */
     .users-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       gap: 16px;
-      margin-top: 20px;
+      margin-bottom: 20px;
     }
-    .user-entry .user-card img {
+    .user-entry {
+      position: relative;
+      text-align: center;
+    }
+    .user-link {
+      text-decoration: none;
+    }
+    .user-card {
+      background: #151515;
+      padding: 12px;
+      border-radius: 6px;
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+    .user-card:hover {
+      transform: scale(1.05);
+    }
+    .user-card img {
       width: 80px;
       height: 80px;
       border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #444;
-      margin: 0 auto 8px;
-      cursor: pointer;
+      margin-bottom: 8px;
     }
-    .user-entry .user-card {
-      text-align: center;
+    .handle {
+      display: block;
+      font-weight: bold;
+      font-size: 0.85rem;
+      hyphens: auto;
     }
     .videos-container {
       display: none;
@@ -365,7 +357,7 @@
       margin-bottom: 0.75rem;
       border: none;
       border-radius: 4px;
-      font-size: 1rem;
+      font-size: 1rem;  
     }
     #admin-pass-modal .error {
       color: #ff4d4f;
@@ -457,10 +449,7 @@
     <aside class="about-us">
       <h2>About Bop Central</h2>
       <p>
-        Bop Central is your go-to TikTok downloader and viewer. Dive into the latest and greatest TikTok “bops” and explore what others
-        are sharing. Whether you want to search by username, browse the top trending videos, or fetch and download content via URL,
-        Bop Central makes it easy and seamless. Keep up with your favorite creators, discover new interests, and save videos for offline
-        viewing—all in one place.
+        Bop Central is your go-to TikTok downloader and viewer. Dive into the latest “bops,” search users, or fetch via URL—and save for offline.
       </p>
     </aside>
 
@@ -478,7 +467,6 @@
 
     <!-- URLS PAGE -->
     <div id="page-urls" style="display:none;">
-      <!-- now using .search-bar style -->
       <form class="search-bar" id="url-form">
         <input type="url" id="url-input" placeholder="Enter TikTok video URL…" required />
         <button type="submit">Fetch Video</button>
@@ -523,7 +511,7 @@
                 <a href="{{ hd_urls[v.aweme_id] }}"><button type="button">HD</button></a>
               </div>
             </div>
-          {% endfor %}
+          {% endfor %}  
         </div>
       </section>
     </div>
@@ -549,11 +537,11 @@
     });
 
     // Anti-Inspect & Anti-Copy
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('copy', e => e.preventDefault());
-    document.addEventListener('cut', e => e.preventDefault());
+    ['contextmenu','copy','cut'].forEach(evt => {
+      document.addEventListener(evt, e => e.preventDefault());
+    });
 
-    // filterUsers (search saved users)
+    // search saved users
     document.getElementById('user-search-form').addEventListener('submit', e => {
       e.preventDefault();
       const q = document.getElementById('user-search').value.toLowerCase();
@@ -565,7 +553,6 @@
 
     // Auth handling
     function initAuth() {
-      // tab switch
       document.getElementById('tab-login').addEventListener('click', () => {
         document.getElementById('form-login').classList.add('active');
         document.getElementById('form-register').classList.remove('active');
@@ -579,22 +566,18 @@
         document.getElementById('tab-login').classList.remove('active');
       });
 
-      // login
       document.getElementById('form-login').addEventListener('submit', async e => {
         e.preventDefault();
         const user = document.getElementById('login-username').value.trim();
         const pass = document.getElementById('login-password').value;
-        const params = new URLSearchParams();
-        params.append('username', user);
-        params.append('password', pass);
+        const params = new URLSearchParams({ username: user, password: pass });
         const res = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: params.toString()
         });
         if (!res.ok) {
-          const err = await res.text();
-          document.getElementById('error-login').textContent = err || 'Login failed';
+          document.getElementById('error-login').textContent = await res.text() || 'Login failed';
           return;
         }
         const data = await res.json();
@@ -602,7 +585,6 @@
         location.reload();
       });
 
-      // register
       document.getElementById('form-register').addEventListener('submit', async e => {
         e.preventDefault();
         const user = document.getElementById('reg-username').value.trim();
@@ -623,62 +605,53 @@
       });
     }
 
-    // Admin-mode + custom modal
+    // Admin-mode modal
     let adminMode = false;
     const _pw = [98,111,112,112].map(c => String.fromCharCode(c)).join('');
-    const modal = document.getElementById('admin-pass-modal');
-    const input = document.getElementById('admin-pass-input');
-    const error = document.getElementById('admin-pass-error');
+    const modal = document.getElementById('admin-pass-modal'),
+          inp = document.getElementById('admin-pass-input'),
+          errEl = document.getElementById('admin-pass-error');
     document.addEventListener('keydown', e => {
       if (e.ctrlKey && e.key === '\\') {
         if (!adminMode && modal.style.display !== 'flex') {
-          input.value = '';
-          error.textContent = '';
+          inp.value = ''; errEl.textContent = '';
           modal.style.display = 'flex';
-          setTimeout(() => input.focus(), 100);
+          setTimeout(() => inp.focus(), 100);
         } else {
           adminMode = false;
           document.querySelectorAll('.delete-user, .delete-url').forEach(b => b.style.display = 'none');
         }
       }
-      if (e.key === 'Escape') {
-        modal.style.display = 'none';
-      }
+      if (e.key === 'Escape') modal.style.display = 'none';
     });
     document.getElementById('admin-pass-submit').addEventListener('click', () => {
-      if (input.value === _pw) {
+      if (inp.value === _pw) {
         modal.style.display = 'none';
         adminMode = true;
         document.querySelectorAll('.delete-user, .delete-url').forEach(b => b.style.display = 'block');
-      } else {
-        error.textContent = 'Wrong password';
-      }
+      } else errEl.textContent = 'Wrong password';
     });
     document.getElementById('admin-pass-cancel').addEventListener('click', () => modal.style.display = 'none');
 
-    // delete-user
+    // delete-user & delete-url
     function bindDeleteUsers() {
       document.querySelectorAll('.delete-user').forEach(btn => {
         btn.onclick = async () => {
-          const u = btn.dataset.username;
-          if (!confirm(`Delete user ${u}?`)) return;
-          const r = await fetch(`/api/saved-users/${encodeURIComponent(u)}`, { method: 'DELETE' });
+          if (!confirm(`Delete user ${btn.dataset.username}?`)) return;
+          const r = await fetch(`/api/saved-users/${encodeURIComponent(btn.dataset.username)}`, { method: 'DELETE' });
           if (r.ok) btn.closest('.user-entry').remove();
-          else alert(`Failed to delete ${u}`);
-        }
+          else alert('Failed to delete user');
+        };
       });
     }
-
-    // delete-url
     function bindDeleteUrls() {
       document.querySelectorAll('.delete-url').forEach(btn => {
         btn.onclick = async () => {
-          const id = btn.dataset.aweme;
-          if (!confirm(`Delete saved URL ${id}?`)) return;
-          const r = await fetch(`/api/saved-urls/${encodeURIComponent(id)}`, { method: 'DELETE' });
+          if (!confirm(`Delete saved URL ${btn.dataset.aweme}?`)) return;
+          const r = await fetch(`/api/saved-urls/${encodeURIComponent(btn.dataset.aweme)}`, { method: 'DELETE' });
           if (r.ok) btn.closest('.card').remove();
-          else alert(`Failed to delete URL ${id}`);
-        }
+          else alert('Failed to delete URL');
+        };
       });
     }
 
@@ -693,12 +666,10 @@
           body: JSON.stringify({ url })
         });
         if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          alert(err.detail || 'Failed to resolve URL');
+          alert((await res.json()).detail || 'Failed to resolve URL');
           return;
         }
         const data = await res.json();
-        // save then refresh
         await fetch('/api/saved-urls', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -710,7 +681,7 @@
       }
     });
 
-    // Highlight nav & view switching
+    // Highlight nav & switching
     function highlightNav() {
       const p = new URLSearchParams(location.search);
       const hasQ = !!p.get('q');
@@ -719,8 +690,8 @@
         a.classList.toggle('active', a.dataset.view === view);
       });
       ['home','urls','users','videos'].forEach(v => {
-        const el = document.getElementById('page-' + v);
-        el.style.display = (v === view || (['latest','top'].includes(view) && v === 'videos')) ? 'block' : 'none';
+        document.getElementById('page-'+v).style.display =
+          (v === view || (['latest','top'].includes(view) && v === 'videos')) ? 'block' : 'none';
       });
     }
 
@@ -731,105 +702,83 @@
       renderUrlSection(saved);
     }
     function renderUrlSection(savedUrls) {
-      const sec = document.getElementById('url-section');
-      const g = document.getElementById('url-grid');
+      const sec = document.getElementById('url-section'), g = document.getElementById('url-grid');
       if (!savedUrls.length) { sec.style.display = 'none'; return; }
-      sec.style.display = 'block';
-      g.innerHTML = '';
+      sec.style.display = 'block'; g.innerHTML = '';
       savedUrls.forEach(v => {
-        const card = document.createElement('div');
-        card.className = 'card';
+        const card = document.createElement('div'); card.className = 'card';
         card.innerHTML = `
-          <video controls data-aweme-id="${v.aweme_id}">
-            <source src="${v.play_url}" type="video/mp4">
-          </video>
+          <video controls data-aweme-id="${v.aweme_id}"><source src="${v.play_url}" type="video/mp4"></video>
           <div class="title">Video ${v.aweme_id}</div>
           <div class="views" id="views-${v.aweme_id}">${v.play_count||0} views</div>
           <div class="card-buttons">
             <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
             <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
           </div>
-          <button class="delete-url" data-aweme="${v.aweme_id}">Delete</button>
-        `;
+          <button class="delete-url" data-aweme="${v.aweme_id}">Delete</button>`;
         g.appendChild(card);
       });
       bindDeleteUrls();
     }
 
-    // Fetch & render saved users with embedded videos
+    // Fetch & render saved users
     async function fetchSavedUsers() {
       const res = await fetch('/api/saved-users');
       const users = await res.json();
       renderUserSection(users);
     }
     function renderUserSection(users) {
-      const pu = document.getElementById('page-users');
-      const grid = pu.querySelector('.users-grid');
+      const grid = document.querySelector('.users-grid');
       grid.innerHTML = '';
       users.forEach(u => {
         const entry = document.createElement('div');
         entry.className = 'user-entry';
-        // profile card
-        const profile = document.createElement('div');
-        profile.className = 'user-card';
-        profile.innerHTML = `
-          <img src="${u.avatar}" alt="${u.username}"/>
-          <span class="handle">${u.username}</span>
-        `;
-        entry.appendChild(profile);
+        const link = document.createElement('div');
+        link.className = 'user-card';
+        link.innerHTML = `<img src="https://i.imgur.com/bYLmsWi.png" alt="${u.username}"/><span class="handle">${u.username}</span>`;
+        entry.appendChild(link);
 
-        // embedded videos container
         const vids = document.createElement('div');
         vids.className = 'videos-container';
-        if (Array.isArray(u.videos) && u.videos.length) {
-          const vidGrid = document.createElement('div');
-          vidGrid.className = 'grid';
+        if (Array.isArray(u.videos)) {
+          const vg = document.createElement('div'); vg.className = 'grid';
           u.videos.forEach(v => {
-            const c = document.createElement('div');
-            c.className = 'card';
+            const c = document.createElement('div'); c.className = 'card';
             c.innerHTML = `
-              <video controls data-aweme-id="${v.aweme_id}">
-                <source src="${v.play_url}" type="video/mp4">
-              </video>
+              <video controls data-aweme-id="${v.aweme_id}"><source src="${v.play_url}" type="video/mp4"></video>
               <div class="title">${v.text||('Video '+v.aweme_id)}</div>
               <div class="views" id="views-${v.aweme_id}">${v.play_count||0} views</div>
               <div class="card-buttons">
                 <a href="${v.play_url}"><button>Play</button></a>
                 <a href="${v.hd_url||v.play_url}"><button>HD</button></a>
-              </div>
-            `;
-            vidGrid.appendChild(c);
+              </div>`;
+            vg.appendChild(c);
           });
-          vids.appendChild(vidGrid);
+          vids.appendChild(vg);
         }
         entry.appendChild(vids);
 
-        // delete button
         const del = document.createElement('button');
-        del.className = 'delete-user';
-        del.dataset.username = u.username;
-        del.textContent = 'Delete';
+        del.className = 'delete-user'; del.dataset.username = u.username; del.textContent = 'Delete';
         entry.appendChild(del);
 
         grid.appendChild(entry);
 
-        // toggle videos on profile click
-        profile.addEventListener('click', () => {
+        // **TOGGLE VIDEOS ON CLICK**
+        link.addEventListener('click', () => {
           vids.style.display = vids.style.display === 'block' ? 'none' : 'block';
         });
       });
       bindDeleteUsers();
     }
 
-    // video view increment
+    // view increment
     document.body.addEventListener('play', async e => {
-      if (e.target.tagName === 'VIDEO' && e.target.dataset.awemeId) {
-        const id = e.target.dataset.awemeId;
-        const r = await fetch(`/api/view/${id}`, { method: 'POST' });
+      if (e.target.tagName==='VIDEO' && e.target.dataset.awemeId) {
+        const r = await fetch(`/api/view/${e.target.dataset.awemeId}`,{method:'POST'});
         if (r.ok) {
           const { play_count } = await r.json();
-          const el = document.getElementById(`views-${id}`);
-          if (el) el.textContent = `${play_count} views`;
+          document.getElementById(`views-${e.target.dataset.awemeId}`).textContent = `${play_count} views`;
         }
       }
     }, true);

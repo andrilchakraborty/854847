@@ -501,9 +501,6 @@
         <div class="grid">
           {% for v in user_videos %}
             <div class="card">
-              {% if v.image_url %}
-                <img src="{{ v.image_url }}" alt="Thumbnail for {{ v.text or ('Video ' ~ v.aweme_id) }}" />
-              {% endif %}
               <video controls data-aweme-id="{{ v.aweme_id }}">
                 <source src="{{ v.play_url }}" type="video/mp4">
               </video>
@@ -754,7 +751,7 @@
         const link = document.createElement('div');
         link.className='user-card';
         link.innerHTML = `
-          <img src="${u.image_url}" alt="${u.username}"/>
+          <img src="https://i.imgur.com/bYLmsWi.png" alt="${u.username}"/>
           <span class="handle">${u.username}</span>`;
         entry.appendChild(link);
 

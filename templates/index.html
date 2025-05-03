@@ -258,6 +258,11 @@
       margin-bottom: 10px;
       border-radius: 4px;
     }
+    .card .username {
+      font-size: 0.9rem;
+      color: #00ff6a;
+      margin-bottom: 4px;
+    }
     .card .title {
       font-size: 1rem;
       margin-top: 6px;
@@ -460,10 +465,22 @@
     </header>
 
     <!-- Custom Context Menu -->
-    <ul id="custom-menu">  
-      <li id="menu-save">Save video as…</li>  
-      <li id="menu-open">Open video in new tab</li>  
-    </ul>  
+    <ul id="custom-menu">
+      <li id="menu-save">Save video as…</li>
+      <li id="menu-open">Open video in new tab</li>
+    </ul>
+
+    <!-- Custom “Forbidden” Modal -->
+    <div id="forbidden-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+         background:rgba(0,0,0,0.85); z-index:2500; display:flex; align-items:center; justify-content:center;">
+      <div style="background:#111; padding:2rem; border-radius:8px; width:320px; text-align:center;
+                  box-shadow:0 0 20px rgba(0,0,0,0.5);">
+        <h2 style="color:#ff004f; margin-bottom:1rem;">Access Denied</h2>
+        <p style="color:#fff; margin-bottom:1.5rem;">You do not have permission to view the source.</p>
+        <button id="forbidden-close" style="padding:0.75rem 1.5rem; border:none; border-radius:4px;
+                background:#4a00e0; color:#fff; cursor:pointer;">Close</button>
+      </div>
+    </div>
 
     <!-- About sidebar -->
     <aside class="about-us">
@@ -533,12 +550,14 @@
               <video controls data-aweme-id="{{ v.aweme_id }}">
                 <source src="{{ v.play_url }}" type="video/mp4">
               </video>
+              <div class="username">@{{ v.username }}</div>
               <div class="title">{{ v.text or ("Video " ~ v.aweme_id) }}</div>
               <div class="views" id="views-{{ v.aweme_id }}">{{ v.play_count }} views</div>
               <div class="card-buttons">
                 <a href="/download?video_id={{ v.aweme_id }}&hd=0"><button>Download</button></a>
                 <a href="/download?video_id={{ v.aweme_id }}&hd=1"><button>HD</button></a>
               </div>
+              <button class="delete-url" data-aweme="{{ v.aweme_id }}">Delete</button>
             </div>
           {% endfor %}
         </div>
@@ -563,17 +582,20 @@
     // Sidebar toggle & anti-copy
     document.getElementById('sidebar-toggle').onclick = () =>
       document.querySelector('.about-us').classList.toggle('open');
-    ['contextmenu','copy','cut'].forEach(e =>
+    ['copy','cut'].forEach(e =>
       document.addEventListener(e, ev => ev.preventDefault())
     );
 
-    // *** ANTI-CTRL+U WITH CUSTOM ERROR MESSAGE ***
+    // *** ANTI-CTRL+U WITH CUSTOM MODAL ***
     document.addEventListener('keydown', function(e) {
       if (e.ctrlKey && e.key.toLowerCase() === 'u') {
         e.preventDefault();
-        alert('Custom Error: Viewing source is disabled on this site.');
+        document.getElementById('forbidden-modal').style.display = 'flex';
       }
     });
+    document.getElementById('forbidden-close').onclick = () => {
+      document.getElementById('forbidden-modal').style.display = 'none';
+    };
 
     // filter saved users
     document.getElementById('user-search-form').onsubmit = e => {

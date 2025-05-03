@@ -1,4 +1,4 @@
-<!DOCTYPE html>  
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -469,7 +469,7 @@
     <aside class="about-us">
       <h2>About Bop Central</h2>
       <p>
-        Bop Central is your go-to TikTok downloader and viewer. Dive into the latest and greatest TikTok “bops” and explore what others
+        Bop Central is your go‑to TikTok downloader and viewer. Dive into the latest and greatest TikTok “bops” and explore what others
         are sharing. Whether you want to search by username, browse the top trending videos, or fetch and download content via URL,
         Bop Central makes it easy and seamless. Keep up with your favorite creators, discover new interests, and save videos for offline
         viewing—all in one place.
@@ -575,7 +575,7 @@
       }
     });
 
-    // filter saved users
+    // filter saved users by search
     document.getElementById('user-search-form').onsubmit = e => {
       e.preventDefault();
       const q = document.getElementById('user-search').value.toLowerCase();
@@ -585,7 +585,7 @@
       });
     };
 
-    // Auth handling
+    // Auth handling (login/register)
     function initAuth() {
       document.getElementById('tab-login').onclick = () => {
         document.getElementById('form-login').classList.add('active');
@@ -720,7 +720,7 @@
       });
     }
 
-    // nav & view switching
+    // NAV & VIEW SWITCHING
     function highlightNav(){
       const p    = new URLSearchParams(location.search),
             hasQ = !!p.get('q'),
@@ -732,6 +732,10 @@
         document.getElementById('page-'+v).style.display =
           (v===view||(['latest','top'].includes(view)&&v==='videos'))?'block':'none';
       });
+      // Only fetch & render saved‑users when you click that tab
+      if(view==='users'){
+        fetchSavedUsers();
+      }
     }
 
     // Fetch & render saved URLs
@@ -772,11 +776,25 @@
       bindDeleteUrls();
     }
 
-    // Fetch & render saved users
+    // Fetch & render saved users (only those with videos, no duplicates)
     async function fetchSavedUsers(){
-      const res   = await fetch('/api/saved-users'),
-            users = await res.json();
-      renderUserSection(users);
+      const [resUsers, resUrls] = await Promise.all([
+        fetch('/api/saved-users'),
+        fetch('/api/saved-user-urls')
+      ]);
+      if (!resUsers.ok || !resUrls.ok) return;
+      const users = await resUsers.json();
+      const urls  = await resUrls.json();
+      const urlUsernames = new Set(urls.map(u => u.username));
+      const seen = new Set();
+      const filtered = users
+        .filter(u => urlUsernames.has(u.username))
+        .filter(u => {
+          if (seen.has(u.username)) return false;
+          seen.add(u.username);
+          return true;
+        });
+      renderUserSection(filtered);
     }
     function renderUserSection(users){
       const grid = document.querySelector('.users-grid');
@@ -802,21 +820,18 @@
         del.textContent = 'Delete';
         entry.appendChild(del);
 
-        // NAVIGATE to new page instead of inline
         link.onclick = () => showSavedUser(u.username);
 
         grid.appendChild(entry);
-        bindDeleteUsers();
       });
+      bindDeleteUsers();
     }
 
     // SHOW SAVED USER PAGE
     async function showSavedUser(username){
-      // populate title
       document.getElementById('saved-user-title').textContent = `Videos for ${username}`;
       const grid = document.getElementById('saved-user-grid');
       grid.innerHTML = '';
-      // fetch all saved-user-urls
       const resp     = await fetch('/api/saved-user-urls'),
             all      = await resp.json(),
             userUrls = all.filter(item=>item.username===username);
@@ -841,7 +856,6 @@
       } else {
         grid.innerHTML = '<p style="color:#aaa;text-align:center;">No videos saved for this user.</p>';
       }
-      // switch view
       document.querySelectorAll('#app-content > div[id^="page-"]').forEach(d=>d.style.display='none');
       document.getElementById('page-saved-user').style.display = 'block';
     }
@@ -895,7 +909,6 @@
     async function initApp(){
       highlightNav();
       await fetchSavedUrls();
-      await fetchSavedUsers();
       await saveFetchedUserUrls();
     }
     window.addEventListener('load', async ()=>{

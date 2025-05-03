@@ -128,10 +128,12 @@
       background: #000;
       z-index: 1000;
     }
+    /* LOGO STAYS IN PLACE WHEN SCROLLING */
     header .logo-container {
-      position: absolute;
+      position: fixed;
       left: 20px;
       top: 1rem;
+      z-index: 1001;
     }
     header img.logo {
       height: 10rem;
@@ -387,6 +389,27 @@
     #admin-pass-modal .buttons .cancel {
       background: #333; color: #fff;
     }
+
+    /* CUSTOM CONTEXT MENU */
+    #custom-menu {
+      position: fixed;
+      display: none;
+      background: #222;
+      border: 1px solid #555;
+      border-radius: 4px;
+      z-index: 3000;
+      padding: 8px 0;
+      font-size: 0.9rem;
+      color: #fff;
+    }
+    #custom-menu li {
+      list-style: none;
+      padding: 6px 20px;
+      cursor: pointer;
+    }
+    #custom-menu li:hover {
+      background: #444;
+    }
   </style>
 </head>
 <body>
@@ -435,6 +458,12 @@
       </nav>
       <button id="sidebar-toggle">☰</button>
     </header>
+
+    <!-- Custom Context Menu -->
+    <ul id="custom-menu">  
+      <li id="menu-save">Save video as…</li>  
+      <li id="menu-open">Open video in new tab</li>  
+    </ul>  
 
     <!-- About sidebar -->
     <aside class="about-us">
@@ -537,6 +566,14 @@
     ['contextmenu','copy','cut'].forEach(e =>
       document.addEventListener(e, ev => ev.preventDefault())
     );
+
+    // *** ANTI-CTRL+U WITH CUSTOM ERROR MESSAGE ***
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key.toLowerCase() === 'u') {
+        e.preventDefault();
+        alert('Custom Error: Viewing source is disabled on this site.');
+      }
+    });
 
     // filter saved users
     document.getElementById('user-search-form').onsubmit = e => {
@@ -821,6 +858,38 @@
         }
       }
     }, true);
+
+    // *** CUSTOM CONTEXT MENU LOGIC ***
+    const customMenu = document.getElementById('custom-menu');
+    let currentVideo = null;
+    document.addEventListener('contextmenu', e => {
+      if (e.target.tagName === 'VIDEO') {
+        e.preventDefault();
+        currentVideo = e.target;
+        const { clientX: x, clientY: y } = e;
+        customMenu.style.top = y + 'px';
+        customMenu.style.left = x + 'px';
+        customMenu.style.display = 'block';
+      } else {
+        customMenu.style.display = 'none';
+      }
+    });
+    window.addEventListener('click', () => customMenu.style.display = 'none');
+    document.getElementById('menu-save').onclick = () => {
+      customMenu.style.display = 'none';
+      const src = currentVideo.querySelector('source').src;
+      const a = document.createElement('a');
+      a.href = src;
+      a.download = '';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+    document.getElementById('menu-open').onclick = () => {
+      customMenu.style.display = 'none';
+      const src = currentVideo.querySelector('source').src;
+      window.open(src, '_blank');
+    };
 
     // init
     async function initApp(){

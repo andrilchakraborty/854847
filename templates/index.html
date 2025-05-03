@@ -460,10 +460,10 @@
     </header>
 
     <!-- Custom Context Menu -->
-    <ul id="custom-menu">  
-      <li id="menu-save">Save video as…</li>  
-      <li id="menu-open">Open video in new tab</li>  
-    </ul>  
+    <ul id="custom-menu">
+      <li id="menu-save">Save video as…</li>
+      <li id="menu-open">Open video in new tab</li>
+    </ul>
 
     <!-- About sidebar -->
     <aside class="about-us">
@@ -702,6 +702,15 @@
         fetchSavedUrls();
       } catch {
         alert('Error fetching video');
+      }
+    };
+
+    // Home search form: disallow URLs
+    document.querySelector('#page-home .search-bar').onsubmit = function(e) {
+      const q = this.querySelector('input[name="q"]').value.trim();
+      if (/https?:\/\//i.test(q) || q.includes('www.')) {
+        e.preventDefault();
+        alert('Please input username not url');
       }
     };
 

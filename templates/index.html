@@ -264,21 +264,21 @@
     }
     .card .title {
       font-size: 1rem;
-      margin-top: 6px;
+     	margin-top: 6px;
     }
     .card .views {
       font-size: 0.85rem;
-      margin-top: 4px;
-      color: #aaa;
+     	margin-top: 4px;
+     	color: #aaa;
     }
     .card-buttons {
-      display: flex;
+     	display: flex;
       justify-content: center;
       gap: 8px;
-      margin-top: 8px;
+     	margin-top: 8px;
     }
     .card-buttons a button {
-      padding: 8px 16px;
+     	padding: 8px 16px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
@@ -286,12 +286,12 @@
       color: #fff;
     }
     .card-buttons a button:hover {
-      background: #333;
+     	background: #333;
     }
 
     /* Slideshow Modal */
     #image-modal {
-      display: none;
+     	display: none;
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
@@ -308,7 +308,7 @@
     }
     #image-modal .prev,
     #image-modal .next {
-      position: absolute;
+     	position: absolute;
       top: 50%;
       transform: translateY(-50%);
       font-size: 3rem;
@@ -320,36 +320,46 @@
     }
     #image-modal .prev { left: 10px; }
     #image-modal .next { right: 10px; }
-    #image-modal .close {
-      position: absolute;
-      top: 20px; right: 30px;
+    #image-modal .close,
+    #modal-download {
+     	position: absolute;
+      top: 20px;
       font-size: 2rem;
       color: #fff;
       cursor: pointer;
       user-select: none;
       text-shadow: 0 0 8px #ff004f;
     }
+    #image-modal .close { right: 30px; }
+    #modal-download {
+      right: 80px;
+      background: none;
+      border: none;
+    }
+    #modal-download:hover {
+      color: #ff004f;
+    }
 
     /* Delete buttons */
     .delete-user,
     .delete-url {
       display: none;
-      margin-top: 8px;
-      background: #ff4d4f;
-      border: none;
+     	margin-top: 8px;
+     	background: #ff4d4f;
+     	border: none;
       padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      color: #fff;
-      font-size: 0.8rem;
+     	border-radius: 4px;
+     	cursor: pointer;
+     	color: #fff;
+     	font-size: 0.8rem;
     }
 
     /* Users grid */
     .users-grid {
-      display: grid;
+     	display: grid;
       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       gap: 16px;
-      margin-bottom: 20px;
+     	margin-bottom: 20px;
     }
     .user-entry {
       position: relative;
@@ -363,23 +373,23 @@
       cursor: pointer;
     }
     .user-card:hover {
-      transform: scale(1.05);
+     	transform: scale(1.05);
     }
     .user-card img {
-      width: 80px;
+     	width: 80px;
       height: 80px;
-      border-radius: 50%;
-      margin-bottom: 8px;
+     	border-radius: 50%;
+     	margin-bottom: 8px;
     }
     .handle {
      	display: block;
-      font-weight: bold;
-      font-size: 0.85rem;
-      hyphens: auto;
+     	font-weight: bold;
+     	font-size: 0.85rem;
+     	hyphens: auto;
     }
     .videos-container {
      	display: none;
-      margin-top: 16px;
+     	margin-top: 16px;
     }
     /* ensure grid class works on videos-container */
     .videos-container.grid {
@@ -389,8 +399,8 @@
     /* Admin Password Modal */
     #admin-pass-modal {
      	display: none;
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.75);
+     	position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+     	background: rgba(0,0,0,0.75);
      	z-index: 2000;
      	align-items: center;
       justify-content: center;
@@ -406,26 +416,26 @@
     #admin-pass-modal h2 {
      	margin-bottom: 1rem;
       color: #8e2de2;
-      font-size: 1.5rem;
+     	font-size: 1.5rem;
     }
     #admin-pass-modal input {
      	width: 100%;
       padding: 0.75rem;
       margin-bottom: 0.75rem;
       border: none; border-radius: 4px;
-      font-size: 1rem;
+     	font-size: 1rem;
     }
     #admin-pass-modal .error {
      	color: #ff004f; margin-bottom: 0.75rem;
-      height: 1rem;
+     	height: 1rem;
     }
     #admin-pass-modal .buttons {
      	display: flex; gap: 0.5rem; justify-content: center;
     }
     #admin-pass-modal .buttons button {
      	flex: 1; padding: 0.75rem; border: none;
-      border-radius: 4px; cursor: pointer;
-      font-size: 1rem;
+     	border-radius: 4px; cursor: pointer;
+     	font-size: 1rem;
     }
     #admin-pass-modal .buttons .submit { background: #4a00e0; color: #fff; }
     #admin-pass-modal .buttons .cancel { background: #333; color: #fff; }
@@ -603,6 +613,7 @@
     <span class="close">&times;</span>
     <span class="prev">&#10094;</span>
     <img src="" />
+    <button id="modal-download" title="Download image">⬇</button>
     <span class="next">&#10095;</span>
   </div>
 
@@ -1008,6 +1019,7 @@
       const closeBtn = imgModal.querySelector('.close');
       const prevBtn  = imgModal.querySelector('.prev');
       const nextBtn  = imgModal.querySelector('.next');
+      const downloadBtn = document.getElementById('modal-download');
       let currentImages = [];
       let currentIndex = 0;
 
@@ -1039,9 +1051,18 @@
         };
       });
 
-     	closeBtn.onclick = closeModal;
+      closeBtn.onclick = closeModal;
       prevBtn.onclick  = showPrev;
       nextBtn.onclick  = showNext;
+      downloadBtn.onclick = () => {
+        const src = modalImg.src;
+        const a = document.createElement('a');
+        a.href = src;
+        a.download = '';
+        document.body.appendChild(a);
+        a.click();
+       	document.body.removeChild(a);
+      };
       imgModal.onclick = e => {
         if (e.target === imgModal) closeModal();
       };

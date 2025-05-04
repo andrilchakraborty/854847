@@ -1,4 +1,4 @@
-import os 
+import os
 import json
 import secrets
 import logging
@@ -11,10 +11,9 @@ from datetime import datetime
 import requests
 from jose import jwt
 from passlib.context import CryptContext
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, FastAPI, Request, Depends, status
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from pydantic import HttpUrl, BaseModel
-from fastapi import FastAPI, Request, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
 
@@ -461,6 +460,35 @@ async def delete_saved_user(username: str):
         del users[username]
         save_users(users)
     return JSONResponse(status_code=204, content={})
+
+# ← NEW: Username API for Images
+@app.get("/api/images/username/{username}")
+async def get_images_by_username(username: str):
+    posts = load_posts()
+    if username not in posts:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+    result = []
+    for p in posts[username]:
+        images = p.get("images", [])
+        if images:
+            result.append({
+                "aweme_id": p["aweme_id"],
+                "images": images
+            })
+    return JSONResponse(result)
+
+# ← NEW: URL API for Images
+@app.get("/api/images/url/{video_id}")
+async def get_images_by_video(video_id: str):
+    posts = load_posts()
+    for ups in posts.values():
+        for p in ups:
+            if p["aweme_id"] == video_id:
+                return JSONResponse({
+                    "aweme_id": video_id,
+                    "images": p.get("images", [])
+                })
+    raise HTTPException(status.HTTP_404_NOT_FOUND, "Video not found")
 
 # ─── Scheduled external ping ─────────────────────────────────────────────────
 @app.on_event("startup")

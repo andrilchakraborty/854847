@@ -285,6 +285,64 @@
       background: #333;
     }
 
+    /* Image gallery thumbnails */
+    .gallery {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .gallery-thumb {
+      width: 60px;
+      height: auto;
+      cursor: pointer;
+      border: 2px solid #333;
+      border-radius: 4px;
+    }
+    .gallery-thumb:hover {
+      border-color: #ff004f;
+    }
+
+    /* Slideshow Modal */
+    #image-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      flex-direction: column;
+    }
+    #image-modal img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 4px;
+    }
+    #image-modal .prev,
+    #image-modal .next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 3rem;
+      color: #fff;
+      cursor: pointer;
+      user-select: none;
+      padding: 0 20px;
+    }
+    #image-modal .prev { left: 10px; }
+    #image-modal .next { right: 10px; }
+    #image-modal .close {
+      position: absolute;
+      top: 20px; right: 30px;
+      font-size: 2rem;
+      color: #fff;
+      cursor: pointer;
+      user-select: none;
+    }
+
     /* Delete buttons */
     .delete-user,
     .delete-url {
@@ -539,11 +597,26 @@
                 <a href="/download?video_id={{ v.aweme_id }}&hd=0"><button>Download</button></a>
                 <a href="/download?video_id={{ v.aweme_id }}&hd=1"><button>HD</button></a>
               </div>
+              {% if v.images and v.images|length > 0 %}
+                <div class="gallery">
+                  {% for img in v.images %}
+                    <img src="{{ img }}" class="gallery-thumb" data-aweme-id="{{ v.aweme_id }}" data-index="{{ loop.index0 }}" />
+                  {% endfor %}
+                </div>
+              {% endif %}
             </div>
           {% endfor %}
         </div>
       </section>
     </div>
+  </div>
+
+  <!-- Image Slideshow Modal -->
+  <div id="image-modal">
+    <span class="close">&times;</span>
+    <span class="prev">&#10094;</span>
+    <img src="" />
+    <span class="next">&#10095;</span>
   </div>
 
   <!-- Admin Password Modal -->
@@ -913,6 +986,49 @@
       const src = currentVideo.querySelector('source').src;
       window.open(src, '_blank');
     };
+
+    // Image slideshow
+    (function(){
+      const imgModal = document.getElementById('image-modal');
+      const modalImg = imgModal.querySelector('img');
+      const closeBtn = imgModal.querySelector('.close');
+      const prevBtn  = imgModal.querySelector('.prev');
+      const nextBtn  = imgModal.querySelector('.next');
+      let currentImages = [];
+      let currentIndex = 0;
+
+      function showModal(){
+        imgModal.style.display = 'flex';
+        modalImg.src = currentImages[currentIndex];
+      }
+      function closeModal(){
+        imgModal.style.display = 'none';
+      }
+      function showPrev(){
+        currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
+        showModal();
+      }
+      function showNext(){
+        currentIndex = (currentIndex + 1) % currentImages.length;
+        showModal();
+      }
+
+      document.querySelectorAll('.gallery-thumb').forEach(thumb => {
+        thumb.onclick = () => {
+          const aweme = thumb.dataset.awemeId;
+          currentImages = Array.from(document.querySelectorAll(`.gallery-thumb[data-aweme-id="${aweme}"]`))
+            .map(t => t.src);
+          currentIndex = Number(thumb.dataset.index);
+          showModal();
+        };
+      });
+      closeBtn.onclick = closeModal;
+      prevBtn.onclick  = showPrev;
+      nextBtn.onclick  = showNext;
+      imgModal.onclick = e => {
+        if (e.target === imgModal) closeModal();
+      };
+    })();
 
     // init
     async function initApp(){

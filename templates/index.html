@@ -316,6 +316,7 @@
       cursor: pointer;
       user-select: none;
       padding: 0 20px;
+      text-shadow: 0 0 8px #ff004f;
     }
     #image-modal .prev { left: 10px; }
     #image-modal .next { right: 10px; }
@@ -326,6 +327,7 @@
       color: #fff;
       cursor: pointer;
       user-select: none;
+      text-shadow: 0 0 8px #ff004f;
     }
 
     /* Delete buttons */
@@ -434,11 +436,20 @@
       border: 1px solid #555; border-radius: 4px;
       z-index: 3000; padding: 8px 0; font-size: 0.9rem;
       color: #fff;
+      box-shadow: 0 0 10px #ff004f;
     }
     #custom-menu li {
       list-style: none; padding: 6px 20px; cursor: pointer;
+      transition: all 0.2s;
     }
-    #custom-menu li:hover { background: #444; }
+    #custom-menu li:hover {
+      background: #333;
+      text-shadow: 0 0 5px #ff004f;
+    }
+    #custom-menu li.glow {
+      color: #ff004f;
+      text-shadow: 0 0 8px #ff004f;
+    }
   </style>
 </head>
 <body>
@@ -492,6 +503,7 @@
     <ul id="custom-menu">
       <li id="menu-save">Save video as…</li>
       <li id="menu-open">Open video in new tab</li>
+      <li id="menu-download-image">Download image</li>
     </ul>
 
     <!-- About sidebar -->
@@ -673,16 +685,16 @@
         const i = document.getElementById('reg-invite').value.trim();
         const res = await fetch('/api/register',{
           method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({username:u,password:p,invite_code:i})
+         	headers:{'Content-Type':'application/json'},
+         	body: JSON.stringify({username:u,password:p,invite_code:i})
         });
         if (!res.ok) {
-          const err = await res.json().catch(()=>({}));
+         	const err = await res.json().catch(()=>({}));
           document.getElementById('error-register').textContent = err.detail || 'Registration failed';
           return;
         }
         document.getElementById('tab-login').click();
-        document.getElementById('error-login').textContent = 'Registered! Please log in.';
+       	document.getElementById('error-login').textContent = 'Registered! Please log in.';
       };
     }
 
@@ -768,9 +780,9 @@
       const q = params.get('q');
       if (!q) return;
       document.querySelectorAll('#page-videos .card').forEach(async card => {
-        const videoEl = card.querySelector('audio, video');
-        const aweme_id = videoEl.dataset.awemeId;
-        const play_url = (videoEl.tagName==='AUDIO' ? videoEl.src : videoEl.querySelector('source').src);
+        const mediaEl = card.querySelector('audio, video');
+        const aweme_id = mediaEl.dataset.awemeId;
+        const play_url = mediaEl.tagName==='AUDIO' ? mediaEl.src : mediaEl.querySelector('source').src;
         const buttons  = card.querySelectorAll('.card-buttons a');
         const hd_url   = buttons[1]?.href || play_url;
         await fetch('/api/saved-user-urls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ username: q, aweme_id, play_url, hd_url })});
@@ -931,23 +943,36 @@
 
     // *** CUSTOM CONTEXT MENU LOGIC ***
     const customMenu = document.getElementById('custom-menu');
-    let currentVideo = null;
+    let currentTarget = null;
     document.addEventListener('contextmenu', e => {
       if (e.target.tagName === 'VIDEO') {
         e.preventDefault();
-        currentVideo = e.target;
-        const { clientX: x, clientY: y } = e;
-        customMenu.style.top = y + 'px';
-        customMenu.style.left = x + 'px';
-        customMenu.style.display = 'block';
-      } else {
+        currentTarget = e.target;
+        showMenuAt(e.clientX, e.clientY, ['menu-save','menu-open']);
+      }
+      else if (e.target.tagName === 'IMG' && e.target.classList.contains('single-img')) {
+        e.preventDefault();
+        currentTarget = e.target;
+        showMenuAt(e.clientX, e.clientY, ['menu-download-image']);
+      }
+      else {
         customMenu.style.display = 'none';
       }
     });
+    function showMenuAt(x,y,showIds){
+      customMenu.querySelectorAll('li').forEach(li=>{
+        li.style.display = showIds.includes(li.id)?'block':'none';
+        li.classList.toggle('glow', showIds.includes(li.id));
+      });
+      customMenu.style.top = y+'px';
+      customMenu.style.left = x+'px';
+      customMenu.style.display = 'block';
+    }
     window.addEventListener('click', () => customMenu.style.display = 'none');
+
     document.getElementById('menu-save').onclick = () => {
       customMenu.style.display = 'none';
-      const src = currentVideo.querySelector('source').src;
+      const src = currentTarget.querySelector('source').src;
       const a = document.createElement('a');
       a.href = src;
       a.download = '';
@@ -957,8 +982,18 @@
     };
     document.getElementById('menu-open').onclick = () => {
       customMenu.style.display = 'none';
-      const src = currentVideo.querySelector('source').src;
+      const src = currentTarget.querySelector('source').src;
       window.open(src, '_blank');
+    };
+    document.getElementById('menu-download-image').onclick = () => {
+      customMenu.style.display = 'none';
+      const src = currentTarget.src;
+      const a = document.createElement('a');
+      a.href = src;
+      a.download = '';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     };
 
     // Image slideshow

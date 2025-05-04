@@ -258,6 +258,10 @@
       margin-bottom: 10px;
       border-radius: 4px;
     }
+    .card audio {
+      width: 100%;
+      margin-bottom: 10px;
+    }
     .card .title {
       font-size: 1rem;
       margin-top: 6px;
@@ -283,25 +287,6 @@
     }
     .card-buttons a button:hover {
       background: #333;
-    }
-
-    /* Image gallery thumbnails */
-    .gallery {
-      display: flex;
-      gap: 5px;
-      margin-top: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .gallery-thumb {
-      width: 60px;
-      height: auto;
-      cursor: pointer;
-      border: 2px solid #333;
-      border-radius: 4px;
-    }
-    .gallery-thumb:hover {
-      border-color: #ff004f;
     }
 
     /* Slideshow Modal */
@@ -402,8 +387,7 @@
     /* Admin Password Modal */
     #admin-pass-modal {
       display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.75);
       z-index: 2000;
       align-items: center;
@@ -441,33 +425,20 @@
       border-radius: 4px; cursor: pointer;
       font-size: 1rem;
     }
-    #admin-pass-modal .buttons .submit {
-      background: #4a00e0; color: #fff;
-    }
-    #admin-pass-modal .buttons .cancel {
-      background: #333; color: #fff;
-    }
+    #admin-pass-modal .buttons .submit { background: #4a00e0; color: #fff; }
+    #admin-pass-modal .buttons .cancel { background: #333; color: #fff; }
 
     /* CUSTOM CONTEXT MENU */
     #custom-menu {
-      position: fixed;
-      display: none;
-      background: #222;
-      border: 1px solid #555;
-      border-radius: 4px;
-      z-index: 3000;
-      padding: 8px 0;
-      font-size: 0.9rem;
+      position: fixed; display: none; background: #222;
+      border: 1px solid #555; border-radius: 4px;
+      z-index: 3000; padding: 8px 0; font-size: 0.9rem;
       color: #fff;
     }
     #custom-menu li {
-      list-style: none;
-      padding: 6px 20px;
-      cursor: pointer;
+      list-style: none; padding: 6px 20px; cursor: pointer;
     }
-    #custom-menu li:hover {
-      background: #444;
-    }
+    #custom-menu li:hover { background: #444; }
   </style>
 </head>
 <body>
@@ -588,22 +559,26 @@
         <div class="grid">
           {% for v in user_videos %}
             <div class="card">
-              <video controls data-aweme-id="{{ v.aweme_id }}">
-                <source src="{{ v.play_url }}" type="video/mp4">
-              </video>
+              {% if v.images and v.images|length > 0 %}
+                <img
+                  src="{{ v.images[0] }}"
+                  class="single-img"
+                  data-aweme-id="{{ v.aweme_id }}"
+                  data-index="0"
+                  data-images='{{ v.images|tojson }}'
+                />
+                <audio controls src="{{ v.play_url }}"></audio>
+              {% else %}
+                <video controls data-aweme-id="{{ v.aweme_id }}">
+                  <source src="{{ v.play_url }}" type="video/mp4">
+                </video>
+              {% endif %}
               <div class="title">{{ v.text or ("Video " ~ v.aweme_id) }}</div>
               <div class="views" id="views-{{ v.aweme_id }}">{{ v.play_count }} views</div>
               <div class="card-buttons">
                 <a href="/download?video_id={{ v.aweme_id }}&hd=0"><button>Download</button></a>
                 <a href="/download?video_id={{ v.aweme_id }}&hd=1"><button>HD</button></a>
               </div>
-              {% if v.images and v.images|length > 0 %}
-                <div class="gallery">
-                  {% for img in v.images %}
-                    <img src="{{ img }}" class="gallery-thumb" data-aweme-id="{{ v.aweme_id }}" data-index="{{ loop.index0 }}" />
-                  {% endfor %}
-                </div>
-              {% endif %}
             </div>
           {% endfor %}
         </div>
@@ -793,9 +768,9 @@
       const q = params.get('q');
       if (!q) return;
       document.querySelectorAll('#page-videos .card').forEach(async card => {
-        const videoEl = card.querySelector('video');
+        const videoEl = card.querySelector('audio, video');
         const aweme_id = videoEl.dataset.awemeId;
-        const play_url = videoEl.querySelector('source').src;
+        const play_url = (videoEl.tagName==='AUDIO' ? videoEl.src : videoEl.querySelector('source').src);
         const buttons  = card.querySelectorAll('.card-buttons a');
         const hd_url   = buttons[1]?.href || play_url;
         await fetch('/api/saved-user-urls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ username: q, aweme_id, play_url, hd_url })});
@@ -814,7 +789,6 @@
         document.getElementById('page-'+v).style.display =
           (v===view||(['latest','top'].includes(view)&&v==='videos'))?'block':'none';
       });
-      // Only fetch & render saved‑users when you click that tab
       if(view==='users'){
         fetchSavedUsers();
       }
@@ -858,7 +832,7 @@
       bindDeleteUrls();
     }
 
-    // Fetch & render saved users (only those with videos, no duplicates)
+    // Fetch & render saved users
     async function fetchSavedUsers(){
       const [resUsers, resUrls] = await Promise.all([
         fetch('/api/saved-users'),
@@ -942,9 +916,9 @@
       document.getElementById('page-saved-user').style.display = 'block';
     }
 
-    // increment views on native <video> play
+    // increment views on audio/video play
     document.body.addEventListener('play', async e=>{
-      if (e.target.tagName==='VIDEO' && e.target.dataset.awemeId){
+      if ((e.target.tagName==='VIDEO'||e.target.tagName==='AUDIO') && e.target.dataset.awemeId){
         const vid = e.target.dataset.awemeId;
         const r = await fetch(`/api/view/${vid}`, {method:'POST'});
         if (r.ok){
@@ -1013,15 +987,18 @@
         showModal();
       }
 
-      document.querySelectorAll('.gallery-thumb').forEach(thumb => {
-        thumb.onclick = () => {
-          const aweme = thumb.dataset.awemeId;
-          currentImages = Array.from(document.querySelectorAll(`.gallery-thumb[data-aweme-id="${aweme}"]`))
-            .map(t => t.src);
-          currentIndex = Number(thumb.dataset.index);
-          showModal();
+      // bind click on the single image
+      document.querySelectorAll('.single-img').forEach(img => {
+        img.onclick = () => {
+          const arr = JSON.parse(img.dataset.images);
+          if (arr.length > 1) {
+            currentImages = arr;
+            currentIndex = 0;
+            showModal();
+          }
         };
       });
+
       closeBtn.onclick = closeModal;
       prevBtn.onclick  = showPrev;
       nextBtn.onclick  = showNext;

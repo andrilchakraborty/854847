@@ -400,10 +400,12 @@ async def api_view(video_id: str):
 @app.post("/api/from-url")
 async def from_url(payload: URLIn):
     try:
+        # resolve to final URL
         r = requests.get(payload.url, headers=HEADERS, timeout=10, allow_redirects=True)
         final = r.url
     except:
         raise HTTPException(400, "Failed to resolve URL")
+    # extract aweme_id
     parts = [p for p in urlparse(final).path.split("/") if p]
     aweme_id = None
     for i,p in enumerate(parts):
@@ -412,10 +414,27 @@ async def from_url(payload: URLIn):
             break
     if not aweme_id:
         raise HTTPException(400, "Could not extract video ID from URL")
+
+    # fetch images via TikWM API
+    try:
+        info = requests.get(
+            f"https://www.tikwm.com/api/?url={final}&hd=1",
+            headers=HEADERS, timeout=10
+        ).json()
+        images = info.get("data", {}).get("images", [])
+    except:
+        images = []
+
     play_url = f"https://www.tikwm.com/video/media/play/{aweme_id}.mp4"
     hd_url   = f"https://www.tikwm.com/video/media/hdplay/{aweme_id}.mp4"
     HD_URLS[aweme_id] = hd_url
-    return JSONResponse({"aweme_id": aweme_id, "play_url": play_url, "hd_url": hd_url})
+
+    return JSONResponse({
+        "aweme_id": aweme_id,
+        "play_url": play_url,
+        "hd_url":   hd_url,
+        "images":   images
+    })
 
 # ─── Saved URLs API Endpoints ───────────────────────────────────────────────
 @app.get("/api/saved-urls")
@@ -469,26 +488,37 @@ async def get_images_by_username(username: str):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
     result = []
     for p in posts[username]:
-        images = p.get("images", [])
-        if images:
+        vid = p["aweme_id"]
+        try:
+            info = requests.get(
+                f"https://www.tikwm.com/api/?url=https://www.tiktok.com/video/{vid}&hd=1",
+                headers=HEADERS, timeout=10
+            ).json()
+            imgs = info.get("data", {}).get("images", [])
+        except:
+            imgs = []
+        if imgs:
             result.append({
-                "aweme_id": p["aweme_id"],
-                "images": images
+                "aweme_id": vid,
+                "images":   imgs
             })
     return JSONResponse(result)
 
 # ← NEW: URL API for Images
 @app.get("/api/images/url/{video_id}")
 async def get_images_by_video(video_id: str):
-    posts = load_posts()
-    for ups in posts.values():
-        for p in ups:
-            if p["aweme_id"] == video_id:
-                return JSONResponse({
-                    "aweme_id": video_id,
-                    "images": p.get("images", [])
-                })
-    raise HTTPException(status.HTTP_404_NOT_FOUND, "Video not found")
+    try:
+        info = requests.get(
+            f"https://www.tikwm.com/api/?url=https://www.tiktok.com/video/{video_id}&hd=1",
+            headers=HEADERS, timeout=10
+        ).json()
+        imgs = info.get("data", {}).get("images", [])
+    except:
+        imgs = []
+    return JSONResponse({
+        "aweme_id": video_id,
+        "images":   imgs
+    })
 
 # ─── Scheduled external ping ─────────────────────────────────────────────────
 @app.on_event("startup")

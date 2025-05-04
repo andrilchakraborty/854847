@@ -356,7 +356,7 @@
       text-align: center;
     }
     .user-card {
-      background: #151515;
+     	background: #151515;
       padding: 12px;
       border-radius: 6px;
       transition: transform 0.2s;
@@ -372,31 +372,31 @@
       margin-bottom: 8px;
     }
     .handle {
-      display: block;
+     	display: block;
       font-weight: bold;
       font-size: 0.85rem;
       hyphens: auto;
     }
     .videos-container {
-      display: none;
+     	display: none;
       margin-top: 16px;
     }
     /* ensure grid class works on videos-container */
     .videos-container.grid {
-      display: grid;
+     	display: grid;
     }
 
     /* Admin Password Modal */
     #admin-pass-modal {
-      display: none;
+     	display: none;
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.75);
-      z-index: 2000;
-      align-items: center;
+     	z-index: 2000;
+     	align-items: center;
       justify-content: center;
     }
     #admin-pass-modal .modal-content {
-      background: #111;
+     	background: #111;
       padding: 2rem;
       border-radius: 8px;
       width: 320px;
@@ -404,26 +404,26 @@
       text-align: center;
     }
     #admin-pass-modal h2 {
-      margin-bottom: 1rem;
+     	margin-bottom: 1rem;
       color: #8e2de2;
       font-size: 1.5rem;
     }
     #admin-pass-modal input {
-      width: 100%;
+     	width: 100%;
       padding: 0.75rem;
       margin-bottom: 0.75rem;
       border: none; border-radius: 4px;
       font-size: 1rem;
     }
     #admin-pass-modal .error {
-      color: #ff004f; margin-bottom: 0.75rem;
+     	color: #ff004f; margin-bottom: 0.75rem;
       height: 1rem;
     }
     #admin-pass-modal .buttons {
-      display: flex; gap: 0.5rem; justify-content: center;
+     	display: flex; gap: 0.5rem; justify-content: center;
     }
     #admin-pass-modal .buttons button {
-      flex: 1; padding: 0.75rem; border: none;
+     	flex: 1; padding: 0.75rem; border: none;
       border-radius: 4px; cursor: pointer;
       font-size: 1rem;
     }
@@ -432,18 +432,18 @@
 
     /* CUSTOM CONTEXT MENU */
     #custom-menu {
-      position: fixed; display: none; background: #222;
-      border: 1px solid #555; border-radius: 4px;
-      z-index: 3000; padding: 8px 0; font-size: 0.9rem;
-      color: #fff;
-      box-shadow: 0 0 10px #ff004f;
+     	position: fixed; display: none; background: #222;
+     	border: 1px solid #555; border-radius: 4px;
+     	z-index: 3000; padding: 8px 0; font-size: 0.9rem;
+     	color: #fff;
+     	box-shadow: 0 0 10px #ff004f;
     }
     #custom-menu li {
       list-style: none; padding: 6px 20px; cursor: pointer;
       transition: all 0.2s;
     }
     #custom-menu li:hover {
-      background: #333;
+     	background: #333;
       text-shadow: 0 0 5px #ff004f;
     }
     #custom-menu li.glow {
@@ -726,7 +726,7 @@
                 .forEach(b=>b.style.display='block');
       } else errEl.textContent='Wrong password';
     };
-    document.getElementById('admin-pass-cancel').onclick = () => modal.style.display='none';
+    document.getElementById('admin-pass-cancel').onclick = () => modal.style.display='none';  
 
     // delete-user & delete-url
     function bindDeleteUsers(){
@@ -794,7 +794,7 @@
       const p    = new URLSearchParams(location.search),
             hasQ = !!p.get('q'),
             view = p.get('view')||p.get('type')||(hasQ?'videos':'home');
-      document.querySelectorAll('nav a').forEach(a=>
+     	document.querySelectorAll('nav a').forEach(a=>
         a.classList.toggle('active', a.dataset.view===view)
       );
       ['home','urls','users','videos','saved-user'].forEach(v=>{
@@ -866,27 +866,27 @@
     }
     function renderUserSection(users){
       const grid = document.querySelector('.users-grid');
-      grid.innerHTML='';
+     	grid.innerHTML='';
       users.forEach(u=>{
         const entry = document.createElement('div');
         entry.className='user-entry';
 
         const link = document.createElement('div');
-        link.className='user-card';
-        link.innerHTML = `
+       	link.className='user-card';
+       	link.innerHTML = `
           <img src="https://i.imgur.com/bYLmsWi.png" alt="${u.username}"/>
           <span class="handle">${u.username}</span>`;
-        entry.appendChild(link);
+       	entry.appendChild(link);
 
         const vids = document.createElement('div');
         vids.className='videos-container';
         entry.appendChild(vids);
 
         const del = document.createElement('button');
-        del.className='delete-user';
-        del.dataset.username = u.username;
-        del.textContent = 'Delete';
-        entry.appendChild(del);
+       	del.className='delete-user';
+       	del.dataset.username = u.username;
+       	del.textContent = 'Delete';
+       	entry.appendChild(del);
 
         link.onclick = () => showSavedUser(u.username);
 
@@ -899,7 +899,7 @@
     async function showSavedUser(username){
       document.getElementById('saved-user-title').textContent = `Videos for ${username}`;
       const grid = document.getElementById('saved-user-grid');
-      grid.innerHTML = '';
+     	grid.innerHTML = '';
       const resp     = await fetch('/api/saved-user-urls'),
             all      = await resp.json(),
             userUrls = all.filter(item=>item.username===username);
@@ -925,21 +925,21 @@
         grid.innerHTML = '<p style="color:#aaa;text-align:center;">No videos saved for this user.</p>';
       }
       document.querySelectorAll('#app-content > div[id^="page-"]').forEach(d=>d.style.display='none');
-      document.getElementById('page-saved-user').style.display = 'block';
+     	document.getElementById('page-saved-user').style.display = 'block';
     }
 
     // increment views on audio/video play
     document.body.addEventListener('play', async e=>{
-      if ((e.target.tagName==='VIDEO'||e.target.tagName==='AUDIO') && e.target.dataset.awemeId){
+     	if ((e.target.tagName==='VIDEO'||e.target.tagName==='AUDIO') && e.target.dataset.awemeId){
         const vid = e.target.dataset.awemeId;
-        const r = await fetch(`/api/view/${vid}`, {method:'POST'});
+       	const r = await fetch(`/api/view/${vid}`, {method:'POST'});
         if (r.ok){
-          const {play_count} = await r.json();
-          const el = document.getElementById(`views-${vid}`);
-          if (el) el.textContent = `${play_count} views`;
-        }
-      }
-    }, true);
+         	const {play_count} = await r.json();
+         	const el = document.getElementById(`views-${vid}`);
+         	if (el) el.textContent = `${play_count} views`;
+       	}
+     	}
+   	}, true);
 
     // *** CUSTOM CONTEXT MENU LOGIC ***
     const customMenu = document.getElementById('custom-menu');
@@ -955,6 +955,11 @@
         currentTarget = e.target;
         showMenuAt(e.clientX, e.clientY, ['menu-download-image']);
       }
+      else if (e.target.tagName === 'IMG' && e.target.closest('#image-modal')) {
+        e.preventDefault();
+        currentTarget = e.target;
+        showMenuAt(e.clientX, e.clientY, ['menu-download-image']);
+      }
       else {
         customMenu.style.display = 'none';
       }
@@ -964,7 +969,7 @@
         li.style.display = showIds.includes(li.id)?'block':'none';
         li.classList.toggle('glow', showIds.includes(li.id));
       });
-      customMenu.style.top = y+'px';
+     	customMenu.style.top = y+'px';
       customMenu.style.left = x+'px';
       customMenu.style.display = 'block';
     }
@@ -978,22 +983,22 @@
       a.download = '';
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+     	document.body.removeChild(a);
     };
     document.getElementById('menu-open').onclick = () => {
-      customMenu.style.display = 'none';
+     	customMenu.style.display = 'none';
       const src = currentTarget.querySelector('source').src;
       window.open(src, '_blank');
     };
     document.getElementById('menu-download-image').onclick = () => {
       customMenu.style.display = 'none';
       const src = currentTarget.src;
-      const a = document.createElement('a');
-      a.href = src;
-      a.download = '';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+     	const a = document.createElement('a');
+     	a.href = src;
+     	a.download = '';
+     	document.body.appendChild(a);
+     	a.click();
+     	document.body.removeChild(a);
     };
 
     // Image slideshow
@@ -1007,11 +1012,11 @@
       let currentIndex = 0;
 
       function showModal(){
-        imgModal.style.display = 'flex';
+       	imgModal.style.display = 'flex';
         modalImg.src = currentImages[currentIndex];
       }
       function closeModal(){
-        imgModal.style.display = 'none';
+       	imgModal.style.display = 'none';
       }
       function showPrev(){
         currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
@@ -1034,7 +1039,7 @@
         };
       });
 
-      closeBtn.onclick = closeModal;
+     	closeBtn.onclick = closeModal;
       prevBtn.onclick  = showPrev;
       nextBtn.onclick  = showNext;
       imgModal.onclick = e => {
@@ -1044,9 +1049,9 @@
 
     // init
     async function initApp(){
-      highlightNav();
+     	highlightNav();
       await fetchSavedUrls();
-      await saveFetchedUserUrls();
+     	await saveFetchedUserUrls();
     }
     window.addEventListener('load', async ()=>{
       document.getElementById('loader').classList.add('fade-out');

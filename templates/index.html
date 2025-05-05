@@ -332,7 +332,8 @@
       text-shadow: 0 0 8px #ff004f;
     }
     #image-modal .close { right: 30px; }
-    #modal-download {
+    #modal-
+download {
       right: 80px;
       background: none;
       border: none;
@@ -377,8 +378,7 @@
       transform: scale(1.05);
     }
     .user-card img {
-      width: 80px;
-      height: 80px;
+      width: 80px; height: 80px;
       border-radius: 50%;
       margin-bottom: 8px;
     }
@@ -510,25 +510,20 @@
       <button id="sidebar-toggle">☰</button>
     </header>
 
-    <!-- Custom Context Menu -->
+    <!-- Context menu -->
     <ul id="custom-menu">
       <li id="menu-save">Save video as…</li>
       <li id="menu-open">Open video in new tab</li>
       <li id="menu-download-image">Download image</li>
     </ul>
 
-    <!-- About sidebar -->
+    <!-- About -->
     <aside class="about-us">
       <h2>About Bop Central</h2>
-      <p>
-        Bop Central is your go‑to TikTok downloader and viewer. Dive into the latest and greatest TikTok “bops” and explore what others
-        are sharing. Whether you want to search by username, browse the top trending videos, or fetch and download content via URL,
-        Bop Central makes it easy and seamless. Keep up with your favorite creators, discover new interests, and save videos for offline
-        viewing—all in one place.
-      </p>
+      <p>Bop Central is your go‑to TikTok downloader and viewer. Dive into the latest and greatest TikTok “bops”...</p>
     </aside>
 
-    <!-- HOME PAGE -->
+    <!-- HOME -->
     <div id="page-home">
       <section class="hero">
         <h2>Bop Central – Watch & Download TikTok Videos</h2>
@@ -540,7 +535,7 @@
       </form>
     </div>
 
-    <!-- URLS PAGE -->
+    <!-- URLS -->
     <div id="page-urls" style="display:none;">
       <form class="search-bar" id="url-form">
         <input type="url" id="url-input" placeholder="Enter TikTok video URL…" required />
@@ -552,7 +547,7 @@
       </section>
     </div>
 
-    <!-- USERS PAGE -->
+    <!-- USERS -->
     <div id="page-users" style="display:none;">
       <form class="search-bar" id="user-search-form">
         <input type="text" id="user-search" placeholder="Search saved users…" />
@@ -561,43 +556,36 @@
       <div class="users-grid"></div>
     </div>
 
-    <!-- SAVED USER PAGE -->
+    <!-- SAVED USER -->
     <div id="page-saved-user" style="display:none;">
       <section>
-        <h3 style="text-align:center;" id="saved-user-title">Videos & Slideshows for </h3>
+        <h3 id="saved-user-title" style="text-align:center;">Videos & Slideshows for </h3>
         <div class="grid" id="saved-user-grid"></div>
       </section>
     </div>
 
-    <!-- VIDEOS PAGE -->
+    <!-- VIDEOS -->
     <div id="page-videos" style="display:none;">
       <section id="videos-section">
         <h3 style="text-align:center;">
-          {% if active_q %}
-            Results for "{{ active_q }}"
-          {% elif view_type == 'latest' %} Latest Videos
-          {% elif view_type == 'top' %} Top Videos
-          {% endif %}
+          {% if active_q %}Results for "{{ active_q }}"
+          {% elif view_type == 'latest' %}Latest Videos
+          {% elif view_type == 'top' %}Top Videos{% endif %}
         </h3>
         <div class="grid">
           {% for v in user_videos %}
             <div class="card"
                  data-aweme-id="{{ v.aweme_id }}"
                  data-play-url="{{ v.play_url }}"
-                 data-hd-url="{% if HD_URLS[v.aweme_id] %}{{ HD_URLS[v.aweme_id] }}{% endif %}"
+                 data-hd-url="{{ hd_urls[v.aweme_id] or '' }}"
                  data-images='{{ v.images|tojson }}'>
               {% if v.images and v.images|length > 0 %}
-                <img
-                  src="{{ v.images[0] }}"
-                  class="single-img"
-                  data-aweme-id="{{ v.aweme_id }}"
-                  data-images='{{ v.images|tojson }}'
-                />
+                <img src="{{ v.images[0] }}" class="single-img"
+                     data-aweme-id="{{ v.aweme_id }}"
+                     data-images='{{ v.images|tojson }}'/>
                 <audio controls src="{{ v.play_url }}"></audio>
               {% else %}
-                <video controls data-aweme-id="{{ v.aweme_id }}">
-                  <source src="{{ v.play_url }}" type="video/mp4">
-                </video>
+                <video controls><source src="{{ v.play_url }}" type="video/mp4"></video>
               {% endif %}
               <div class="title">{{ v.text or ("Video " ~ v.aweme_id) }}</div>
               <div class="views" id="views-{{ v.aweme_id }}">{{ v.play_count }} views</div>
@@ -611,19 +599,12 @@
       </section>
     </div>
 
-    <!-- SLIDESHOW PAGE -->
+    <!-- SLIDESHOW -->
     <div id="page-slideshow" style="display:none;">
       <section>
-        <h3 style="text-align:center;">
-          Slideshows{% if active_q %} for "{{ active_q }}"{% endif %}
-        </h3>
+        <h3 style="text-align:center;">Slideshows{% if active_q %} for "{{ active_q }}"{% endif %}</h3>
         <form class="search-bar" id="slideshow-search-form">
-          <input
-            type="text"
-            id="slideshow-search"
-            placeholder="Enter username(s), comma-separated..."
-            value="{{ active_q }}"
-          />
+          <input type="text" id="slideshow-search" placeholder="Enter username(s), comma-separated..." value="{{ active_q }}"/>
           <button type="button">Filter</button>
         </form>
         <div class="grid" id="slideshow-grid"></div>
@@ -631,20 +612,20 @@
     </div>
   </div>
 
-  <!-- Image Slideshow Modal -->
+  <!-- Image Modal -->
   <div id="image-modal">
     <span class="close">&times;</span>
     <span class="prev">&#10094;</span>
-    <img src="" />
+    <img />
     <button id="modal-download" title="Download image">⬇</button>
     <span class="next">&#10095;</span>
   </div>
 
-  <!-- Admin Password Modal -->
+  <!-- Admin Modal -->
   <div id="admin-pass-modal">
     <div class="modal-content">
       <h2>Admin Access</h2>
-      <input type="password" id="admin-pass-input" placeholder="Enter password…" />
+      <input type="password" id="admin-pass-input" placeholder="Enter password…"/>
       <div class="error" id="admin-pass-error"></div>
       <div class="buttons">
         <button class="submit" id="admin-pass-submit">Unlock</button>
@@ -654,43 +635,36 @@
   </div>
 
   <script>
-    // Helper: save into posts then redirect to your /download endpoint
-    async function saveAndDownload(buttonEl, hdFlag) {
-      const card = buttonEl.closest('.card');
-      const aweme_id = card.dataset.awemeId;
-      const play_url = card.dataset.playUrl;
-      const hd_url   = card.dataset.hdUrl || play_url;
-      const images   = JSON.parse(card.dataset.images || '[]');
-      // active_q from server-side
+    async function saveAndDownload(btn, hdFlag) {
+      const card = btn.closest('.card');
+      const aweme_id = card.getAttribute('data-aweme-id');
+      const play_url = card.getAttribute('data-play-url');
+      const hd_url   = card.getAttribute('data-hd-url') || play_url;
+      const images   = JSON.parse(card.getAttribute('data-images') || '[]');
       const username = "{{ active_q|e }}";
 
-      // 1) save into your store
       await fetch('/api/saved-user-urls', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ username, aweme_id, play_url, hd_url, images })
       });
 
-      // 2) navigate to your existing download endpoint
-      window.location.href = `/download?video_id=${aweme_id}&hd=${hdFlag}`;
+      window.location.href = `/download?video_id=${encodeURIComponent(aweme_id)}&hd=${hdFlag}`;
     }
 
-    // Sidebar toggle & anti-copy
     document.getElementById('sidebar-toggle').onclick = () =>
       document.querySelector('.about-us').classList.toggle('open');
     ['contextmenu','copy','cut'].forEach(e =>
       document.addEventListener(e, ev => ev.preventDefault())
     );
 
-    // *** ANTI-CTRL+U WITH CUSTOM ERROR MESSAGE ***
-    document.addEventListener('keydown', function(e) {
-      if (e.ctrlKey && e.key.toLowerCase() === 'u') {
+    document.addEventListener('keydown', e => {
+      if (e.ctrlKey && e.key.toLowerCase()==='u') {
         e.preventDefault();
         alert('Custom Error: Viewing source is disabled on this site.');
       }
     });
 
-    // filter saved users by search
     document.getElementById('user-search-form').onsubmit = e => {
       e.preventDefault();
       const q = document.getElementById('user-search').value.toLowerCase();
@@ -700,7 +674,6 @@
       });
     };
 
-    // Auth handling (login/register)
     function initAuth() {
       document.getElementById('tab-login').onclick = () => {
         document.getElementById('form-login').classList.add('active');
@@ -709,10 +682,10 @@
         document.getElementById('tab-register').classList.remove('active');
       };
       document.getElementById('tab-register').onclick = () => {
-        document.getElementById("form-register").classList.add('active');
-        document.getElementById("form-login").classList.remove('active');
-        document.getElementById("tab-register").classList.add('active');
-        document.getElementById("tab-login").classList.remove('active');
+        document.getElementById('form-register').classList.add('active');
+        document.getElementById('form-login').classList.remove('active');
+        document.getElementById('tab-register').classList.add('active');
+        document.getElementById('tab-login').classList.remove('active');
       };
 
       document.getElementById('form-login').onsubmit = async e => {
@@ -753,7 +726,6 @@
       };
     }
 
-    // Admin-mode modal
     let adminMode = false;
     const pw = [98,111,112,112].map(c=>String.fromCharCode(c)).join('');
     const modal = document.getElementById('admin-pass-modal'),
@@ -767,8 +739,7 @@
           setTimeout(()=>inp.focus(),100);
         } else {
           adminMode = false;
-          document.querySelectorAll('.delete-user,.delete-url')
-                  .forEach(b=>b.style.display='none');
+          document.querySelectorAll('.delete-user,.delete-url').forEach(b=>b.style.display='none');
         }
       }
       if (e.key==='Escape') modal.style.display='none';
@@ -777,13 +748,11 @@
       if (inp.value===pw){
         adminMode=true;
         modal.style.display='none';
-        document.querySelectorAll('.delete-user,.delete-url')
-                .forEach(b=>b.style.display='block');
+        document.querySelectorAll('.delete-user,.delete-url').forEach(b=>b.style.display='block');
       } else errEl.textContent='Wrong password';
     };
-    document.getElementById('admin-pass-cancel').onclick = () => modal.style.display='none';  
+    document.getElementById('admin-pass-cancel').onclick = () => modal.style.display='none';
 
-    // delete-user & delete-url
     function bindDeleteUsers(){
       document.querySelectorAll('.delete-user').forEach(b=>{
         b.onclick = async ()=>{
@@ -805,8 +774,7 @@
       });
     }
 
-    // URL form handler
-    document.getElementById('url-form').onsubmit = async e =>{
+    document.getElementById('url-form').onsubmit = async e=>{
       e.preventDefault();
       const url = document.getElementById('url-input').value.trim();
       try {
@@ -820,392 +788,200 @@
       }
     };
 
-    // Home search form: disallow URLs
-    document.querySelector('#page-home .search-bar').onsubmit = function(e) {
+    document.querySelector('#page-home .search-bar').onsubmit = function(e){
       const q = this.querySelector('input[name="q"]').value.trim();
-      if (/https?:\/\//i.test(q) || q.includes('www.')) {
+      if (/https?:\/\//i.test(q) || q.includes('www.')){
         e.preventDefault();
         alert('Please input username not url');
       }
     };
 
-    // saveFetchedUserUrls for initial load
-    async function saveFetchedUserUrls() {
+    async function saveFetchedUserUrls(){
       const params = new URLSearchParams(location.search);
       const q = params.get('q');
       if (!q) return;
-      document.querySelectorAll('#page-videos .card').forEach(async card => {
-        const aweme_id = card.dataset.awemeId;
-        const play_url = card.dataset.playUrl;
-        const hd_url   = card.dataset.hdUrl || play_url;
-        const images   = JSON.parse(card.dataset.images || '[]');
-        await fetch('/api/saved-user-urls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ username: q, aweme_id, play_url, hd_url, images })});
+      document.querySelectorAll('#page-videos .card').forEach(async card=>{
+        const aweme_id = card.getAttribute('data-aweme-id');
+        const play_url = card.getAttribute('data-play-url');
+        const hd_url   = card.getAttribute('data-hd-url') || play_url;
+        const images   = JSON.parse(card.getAttribute('data-images') || '[]');
+        await fetch('/api/saved-user-urls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:q,aweme_id,play_url,hd_url,images})});
       });
     }
 
-    // NAV & VIEW SWITCHING
     function highlightNav(){
-      const p    = new URLSearchParams(location.search),
+      const p = new URLSearchParams(location.search),
             hasQ = !!p.get('q'),
             view = p.get('view')||p.get('type')||(hasQ?'videos':'home');
-      document.querySelectorAll('nav a').forEach(a=>
-        a.classList.toggle('active', a.dataset.view===view)
-      );
+      document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.dataset.view===view));
       ['home','urls','users','videos','saved-user','slideshow'].forEach(v=>{
-        document.getElementById('page-'+v).style.display =
-          (v===view||(['latest','top'].includes(view)&&v==='videos'))?'block':'none';
+        document.getElementById('page-'+v).style.display=(v===view||(['latest','top'].includes(view)&&v==='videos'))?'block':'none';
       });
-      if(view==='users'){
-        fetchSavedUsers();
-      }
-      if(view==='slideshow'){
-        fetchSlides();
-      }
+      if(view==='users') fetchSavedUsers();
+      if(view==='slideshow') fetchSlides();
     }
 
-    // Fetch & render saved URLs
     async function fetchSavedUrls(){
-      const res   = await fetch('/api/saved-urls'),
-            saved = await res.json();
+      const res = await fetch('/api/saved-urls'), saved = await res.json();
       renderUrlSection(saved);
     }
     function renderUrlSection(savedUrls){
-      const sec = document.getElementById('url-section'),
-            g   = document.getElementById('url-grid');
-      if (!savedUrls.length){
-        sec.style.display='none';
-        return;
-      }
-      sec.style.display='block';
-      g.innerHTML='';
+      const sec = document.getElementById('url-section'), g = document.getElementById('url-grid');
+      if(!savedUrls.length){ sec.style.display='none'; return; }
+      sec.style.display='block'; g.innerHTML='';
       savedUrls.forEach(v=>{
-        const card = document.createElement('div');
-        card.className='card';
+        const card = document.createElement('div'); card.className='card';
         card.innerHTML=`
           <video controls data-aweme-id="${v.aweme_id}">
             <source src="${v.play_url}" type="video/mp4">
           </video>
           <div class="title">Video ${v.aweme_id}</div>
-          <div class="views" id="views-${v.aweme_id}">
-            ${v.play_count||0} views
-          </div>
+          <div class="views" id="views-${v.aweme_id}">${v.play_count||0} views</div>
           <div class="card-buttons">
             <button onclick="saveAndDownload(this,0)">Download</button>
             <button onclick="saveAndDownload(this,1)">HD</button>
           </div>
-          <button class="delete-url" data-aweme="${v.aweme_id}">
-            Delete
-          </button>`;
+          <button class="delete-url" data-aweme="${v.aweme_id}">Delete</button>`;
         g.appendChild(card);
       });
       bindDeleteUrls();
     }
 
-    // Fetch & render saved users
     async function fetchSavedUsers(){
-      const [resUsers, resUrls] = await Promise.all([
-        fetch('/api/saved-users'),
-        fetch('/api/saved-user-urls')
-      ]);
-      if (!resUsers.ok || !resUrls.ok) return;
-      const users = await resUsers.json();
-      const urls  = await resUrls.json();
-      const urlUsernames = new Set(urls.map(u => u.username));
-      const seen = new Set();
-      const filtered = users
-        .filter(u => urlUsernames.has(u.username))
-        .filter(u => {
-          if (seen.has(u.username)) return false;
-          seen.add(u.username);
-          return true;
-        });
+      const [resU,resU2]=await Promise.all([fetch('/api/saved-users'),fetch('/api/saved-user-urls')]);
+      if(!resU.ok||!resU2.ok) return;
+      const users=await resU.json(),urls=await resU2.json();
+      const names=new Set(urls.map(u=>u.username)),seen=new Set(),filtered=users.filter(u=>names.has(u.username)).filter(u=>{if(seen.has(u.username))return false;seen.add(u.username);return true;});
       renderUserSection(filtered);
     }
     function renderUserSection(users){
-      const grid = document.querySelector('.users-grid');
-      grid.innerHTML='';
+      const grid=document.querySelector('.users-grid');grid.innerHTML='';
       users.forEach(u=>{
-        const entry = document.createElement('div');
-        entry.className='user-entry';
-
-        const link = document.createElement('div');
-        link.className='user-card';
-        link.innerHTML = `
-          <img src="/static/bop.png" alt="${u.username}"/>
-          <span class="handle">${u.username}</span>`;
+        const entry=document.createElement('div');entry.className='user-entry';
+        const link=document.createElement('div');link.className='user-card';
+        link.innerHTML=`<img src="/static/bop.png" alt="${u.username}"/><span class="handle">${u.username}</span>`;
         entry.appendChild(link);
-
-        const vids = document.createElement('div');
-        vids.className='videos-container';
-        entry.appendChild(vids);
-
-        const del = document.createElement('button');
-        del.className='delete-user';
-        del.dataset.username = u.username;
-        del.textContent = 'Delete';
-        entry.appendChild(del);
-
-        link.onclick = () => showSavedUser(u.username);
-
+        const vids=document.createElement('div');vids.className='videos-container';entry.appendChild(vids);
+        const del=document.createElement('button');del.className='delete-user';del.dataset.username=u.username;del.textContent='Delete';entry.appendChild(del);
+        link.onclick=()=>showSavedUser(u.username);
         grid.appendChild(entry);
       });
       bindDeleteUsers();
     }
 
-    // SHOW SAVED USER PAGE (updated to include download buttons)
     async function showSavedUser(username){
-      document.getElementById('saved-user-title').textContent = `Videos & Slideshows for ${username}`;
-      const grid = document.getElementById('saved-user-grid');
-      grid.innerHTML = '';
-      const resp     = await fetch('/api/saved-user-urls'),
-            all      = await resp.json(),
-            userUrls = all.filter(item=>item.username===username);
-
-      if (userUrls.length){
+      document.getElementById('saved-user-title').textContent=`Videos & Slideshows for ${username}`;
+      const grid=document.getElementById('saved-user-grid');grid.innerHTML='';
+      const resp=await fetch('/api/saved-user-urls'),all=await resp.json(),userUrls=all.filter(item=>item.username===username);
+      if(userUrls.length){
         userUrls.forEach(v=>{
-          const c = document.createElement('div');
-          c.className='card';
-          let inner = '';
-          if (v.images && v.images.length){
-            // slideshow card
-            inner = `
-              <img src="${v.images[0]}"
-                   class="single-img"
-                   data-images='${JSON.stringify(v.images)}'
-                   data-aweme-id="${v.aweme_id}" />
-              <div class="title">${v.aweme_id}</div>
-              <div class="card-buttons">
-                <button onclick="saveAndDownload(this,0)">Download</button>
-                <button onclick="saveAndDownload(this,1)">HD</button>
-              </div>
-            `;
+          const card=document.createElement('div');card.className='card';
+          card.setAttribute('data-aweme-id',v.aweme_id);
+          card.setAttribute('data-play-url',v.play_url);
+          card.setAttribute('data-hd-url',v.hd_url);
+          card.setAttribute('data-images',JSON.stringify(v.images||[]));
+          let inner='';
+          if(v.images&&v.images.length){
+            inner+=`<img src="${v.images[0]}" class="single-img" data-aweme-id="${v.aweme_id}" data-images='${JSON.stringify(v.images)}'/><div class="title">${v.aweme_id}</div>`;
           } else {
-            // plain video
-            inner = `
-              <video controls data-aweme-id="${v.aweme_id}">
-                <source src="${v.play_url}" type="video/mp4">
-              </video>
-              <div class="title">${v.aweme_id}</div>
-              <div class="card-buttons">
-                <button onclick="saveAndDownload(this,0)">Download</button>
-                <button onclick="saveAndDownload(this,1)">HD</button>
-              </div>
-            `;
+            inner+=`<video controls><source src="${v.play_url}" type="video/mp4"></video><div class="title">${v.aweme_id}</div>`;
           }
-          c.innerHTML = inner;
-          grid.appendChild(c);
+          inner+=`<div class="card-buttons"><button onclick="saveAndDownload(this,0)">Download</button><button onclick="saveAndDownload(this,1)">HD</button></div>`;
+          card.innerHTML=inner;grid.appendChild(card);
         });
       } else {
-        grid.innerHTML = '<p style="color:#aaa;text-align:center;">No saved content for this user.</p>';
+        grid.innerHTML='<p style="color:#aaa;text-align:center;">No saved content for this user.</p>';
       }
-      // switch views
       document.querySelectorAll('#app-content > div[id^="page-"]').forEach(d=>d.style.display='none');
-      document.getElementById('page-saved-user').style.display = 'block';
-      // re-bind slideshow clicks
+      document.getElementById('page-saved-user').style.display='block';
       window.dispatchEvent(new Event('slideshowRendered'));
     }
 
-    // increment views on audio/video play
-    document.body.addEventListener('play', async e=>{
-      if ((e.target.tagName==='VIDEO'||e.target.tagName==='AUDIO') && e.target.dataset.awemeId){
-        const vid = e.target.dataset.awemeId;
-        const r = await fetch(`/api/view/${vid}`, {method:'POST'});
-        if (r.ok){
-          const {play_count} = await r.json();
-          const el = document.getElementById(`views-${vid}`);
-          if (el) el.textContent = `${play_count} views`;
+    document.body.addEventListener('play',async e=>{
+      if((e.target.tagName==='VIDEO'||e.target.tagName==='AUDIO')&&e.target.dataset.awemeId){
+        const vid=e.target.dataset.awemeId;
+        const r=await fetch(`/api/view/${vid}`,{method:'POST'});
+        if(r.ok){
+          const {play_count}=await r.json();
+          const el=document.getElementById(`views-${vid}`);
+          if(el)el.textContent=`${play_count} views`;
         }
       }
-    }, true);
+    },true);
 
-    // *** CUSTOM CONTEXT MENU LOGIC ***
-    const customMenu = document.getElementById('custom-menu');
-    let currentTarget = null;
-    document.addEventListener('contextmenu', e => {
-      if (e.target.tagName === 'VIDEO') {
-        e.preventDefault();
-        currentTarget = e.target;
-        showMenuAt(e.clientX, e.clientY, ['menu-save','menu-open']);
-      }
-      else if (e.target.tagName === 'IMG' && e.target.classList.contains('single-img')) {
-        e.preventDefault();
-        currentTarget = e.target;
-        showMenuAt(e.clientX, e.clientY, ['menu-download-image']);
-      }
-      else if (e.target.tagName === 'IMG' && e.target.closest('#image-modal')) {
-        e.preventDefault();
-        currentTarget = e.target;
-        showMenuAt(e.clientX, e.clientY, ['menu-download-image']);
-      }
-      else {
-        customMenu.style.display = 'none';
-      }
-    });
-    function showMenuAt(x,y,showIds){
-      customMenu.querySelectorAll('li').forEach(li=>{
-        li.style.display = showIds.includes(li.id)?'block':'none';
-        li.classList.toggle('glow', showIds.includes(li.id));
-      });
-      customMenu.style.top = y+'px';
-      customMenu.style.left = x+'px';
-      customMenu.style.display = 'block';
-    }
-    window.addEventListener('click', () => customMenu.style.display = 'none');
-
-    document.getElementById('menu-save').onclick = () => {
-      customMenu.style.display = 'none';
-      const src = currentTarget.querySelector('source').src;
-      const a = document.createElement('a');
-      a.href = src;
-      a.download = '';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    };
-    document.getElementById('menu-open').onclick = () => {
-      customMenu.style.display = 'none';
-      const src = currentTarget.querySelector('source').src;
-      window.open(src, '_blank');
-    };
-    document.getElementById('menu-download-image').onclick = () => {
-      customMenu.style.display = 'none';
-      const src = currentTarget.src;
-      const a = document.createElement('a');
-      a.href = src;
-      a.download = '';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    };
-
-    // Image slideshow
     (function(){
-      const imgModal = document.getElementById('image-modal');
-      const modalImg = imgModal.querySelector('img');
-      const closeBtn = imgModal.querySelector('.close');
-      const prevBtn  = imgModal.querySelector('.prev');
-      const nextBtn  = imgModal.querySelector('.next');
-      const downloadBtn = document.getElementById('modal-download');
-      let currentImages = [];
-      let currentIndex = 0;
-
-      function showModal(){
-        imgModal.style.display = 'flex';
-        modalImg.src = currentImages[currentIndex];
-      }
-      function closeModal(){
-        imgModal.style.display = 'none';
-      }
-      function showPrev(){
-        currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
-        showModal();
-      }
-      function showNext(){
-        currentIndex = (currentIndex + 1) % currentImages.length;
-        showModal();
-      }
-
-      // bind click on the single image
+      const imgModal=document.getElementById('image-modal');
+      const modalImg=imgModal.querySelector('img');
+      const closeBtn=imgModal.querySelector('.close');
+      const prevBtn=imgModal.querySelector('.prev');
+      const nextBtn=imgModal.querySelector('.next');
+      const downloadBtn=document.getElementById('modal-download');
+      let currentImages=[],currentIndex=0;
+      function showModal(){imgModal.style.display='flex';modalImg.src=currentImages[currentIndex];}
+      function closeModal(){imgModal.style.display='none';}
+      function showPrev(){currentIndex=(currentIndex-1+currentImages.length)%currentImages.length;showModal();}
+      function showNext(){currentIndex=(currentIndex+1)%currentImages.length;showModal();}
       function bindSingleImages(){
-        document.querySelectorAll('.single-img').forEach(img => {
-          img.onclick = () => {
-            const arr = JSON.parse(img.dataset.images);
-            if (arr.length > 1) {
-              currentImages = arr;
-              currentIndex = 0;
-              showModal();
-            }
+        document.querySelectorAll('.single-img').forEach(img=>{
+          img.onclick=()=>{
+            const arr=JSON.parse(img.dataset.images);
+            if(arr.length>1){currentImages=arr;currentIndex=0;showModal();}
           };
         });
       }
       bindSingleImages();
-
-      closeBtn.onclick = closeModal;
-      prevBtn.onclick  = showPrev;
-      nextBtn.onclick  = showNext;
-      downloadBtn.onclick = () => {
-        const src = modalImg.src;
-        const a = document.createElement('a');
-        a.href = src;
-        a.download = '';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+      closeBtn.onclick=closeModal;
+      prevBtn.onclick=showPrev;
+      nextBtn.onclick=showNext;
+      downloadBtn.onclick=()=>{
+        const src=modalImg.src;
+        const a=document.createElement('a');a.href=src;a.download='';document.body.appendChild(a);a.click();document.body.removeChild(a);
       };
-      imgModal.onclick = e => {
-        if (e.target === imgModal) closeModal();
-      };
-
-      // re-bind after dynamic content
-      window.addEventListener('slideshowRendered', bindSingleImages);
+      imgModal.onclick=e=>{ if(e.target===imgModal)closeModal(); };
+      window.addEventListener('slideshowRendered',bindSingleImages);
     })();
 
-    // Slideshow functions
     async function fetchSlides(){
-      const res = await fetch('/api/saved-user-urls');
-      const all = await res.json();
-      const params = new URLSearchParams(location.search);
-      const q = params.get('q') || '';
-      let usernames = [];
-      if (q) usernames = q.split(',').map(u=>u.trim().toLowerCase()).filter(u=>u);
-      let filtered = all;
-      if (usernames.length) {
-        filtered = all.filter(item=>usernames.includes(item.username.toLowerCase()));
-      }
-      renderSlides(filtered);
-      window.dispatchEvent(new Event('slideshowRendered'));
+      const res=await fetch('/api/slideshow'),all=await res.json();
+      const params=new URLSearchParams(location.search),q=params.get('q')||'';
+      let usernames=[]; if(q)usernames=q.split(',').map(u=>u.trim().toLowerCase()).filter(u=>u);
+      let filtered=all; if(usernames.length) filtered=all.filter(item=>usernames.includes(item.username.toLowerCase()));
+      renderSlides(filtered);window.dispatchEvent(new Event('slideshowRendered'));
     }
-
     function renderSlides(entries){
-      const grid = document.getElementById('slideshow-grid');
-      grid.innerHTML = '';
-      entries.forEach(v => {
-        if (v.images && v.images.length){
-          const card = document.createElement('div');
-          card.className = 'card';
-          const img = document.createElement('img');
-          img.src = v.images[0];
-          img.className = 'single-img';
-          img.dataset.images = JSON.stringify(v.images);
-          img.dataset.awemeId = v.aweme_id;
+      const grid=document.getElementById('slideshow-grid');grid.innerHTML='';
+      entries.forEach(v=>{
+        if(v.image_url){
+          const card=document.createElement('div');card.className='card';
+          const img=document.createElement('img');img.src=v.image_url;img.className='single-img';
+          img.dataset.images=JSON.stringify([v.image_url]);img.dataset.awemeId=v.aweme_id;
           card.appendChild(img);
-          const info = document.createElement('div');
-          info.className = 'title';
-          info.textContent = `${v.username} • ${v.aweme_id}`;
-          card.appendChild(info);
+          const info=document.createElement('div');info.className='title';
+          info.textContent=`${v.username} • ${v.aweme_id}`;card.appendChild(info);
           grid.appendChild(card);
         }
       });
     }
-
-    document.getElementById('slideshow-search-form').onsubmit = e=>e.preventDefault();
-    document.querySelector('#slideshow-search-form button').onclick = () => {
-      const input = document.getElementById('slideshow-search').value.trim();
-      const params = new URLSearchParams(location.search);
-      if (input) params.set('q', input);
-      else params.delete('q');
+    document.getElementById('slideshow-search-form').onsubmit=e=>e.preventDefault();
+    document.querySelector('#slideshow-search-form button').onclick=()=>{
+      const input=document.getElementById('slideshow-search').value.trim();
+      const params=new URLSearchParams(location.search);
+      if(input)params.set('q',input);else params.delete('q');
       params.set('view','slideshow');
-      window.history.replaceState({},'', `${location.pathname}?${params}`);
+      window.history.replaceState({},'',`${location.pathname}?${params}`);
       fetchSlides();
     };
 
-    // init
-    async function initApp(){
-      highlightNav();
-      await fetchSavedUrls();
-      await saveFetchedUserUrls();
-      await fetchSlides();
-    }
-    window.addEventListener('load', async ()=>{
+    async function initApp(){highlightNav();await fetchSavedUrls();await saveFetchedUserUrls();await fetchSlides();}
+    window.addEventListener('load',async ()=>{
       document.getElementById('loader').classList.add('fade-out');
       setTimeout(async ()=>{
         document.getElementById('loader').style.display='none';
-        const token = localStorage.getItem('tikify_token');
-        if (token){
+        const token=localStorage.getItem('tikify_token');
+        if(token){
           document.getElementById('auth-container').style.display='none';
           document.getElementById('app-content').style.display='block';
-          initAuth();
-          await initApp();
+          initAuth();await initApp();
         } else {
           document.getElementById('app-content').style.display='none';
           document.getElementById('auth-container').style.display='flex';

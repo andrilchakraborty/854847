@@ -929,7 +929,7 @@
       bindDeleteUsers();
     }
 
-    // SHOW SAVED USER PAGE (updated to include slideshows)
+    // SHOW SAVED USER PAGE (updated to include download buttons)
     async function showSavedUser(username){
       document.getElementById('saved-user-title').textContent = `Videos & Slideshows for ${username}`;
       const grid = document.getElementById('saved-user-grid');
@@ -940,27 +940,36 @@
 
       if (userUrls.length){
         userUrls.forEach(v=>{
-          // video card
           const c = document.createElement('div');
           c.className='card';
+          let inner = '';
           if (v.images && v.images.length){
             // slideshow card
-            c.innerHTML = `
+            inner = `
               <img src="${v.images[0]}"
                    class="single-img"
                    data-images='${JSON.stringify(v.images)}'
                    data-aweme-id="${v.aweme_id}" />
               <div class="title">${v.aweme_id}</div>
+              <div class="card-buttons">
+                <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
+                <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
+              </div>
             `;
           } else {
             // plain video
-            c.innerHTML = `
+            inner = `
               <video controls data-aweme-id="${v.aweme_id}">
                 <source src="${v.play_url}" type="video/mp4">
               </video>
               <div class="title">${v.aweme_id}</div>
+              <div class="card-buttons">
+                <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
+                <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
+              </div>
             `;
           }
+          c.innerHTML = inner;
           grid.appendChild(c);
         });
       } else {

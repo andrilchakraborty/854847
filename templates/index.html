@@ -194,7 +194,8 @@
     #page-urls,
     #page-users,
     #page-videos,
-    #page-saved-user {
+    #page-saved-user,
+    #page-slideshow {
       max-width: 800px;
       margin: 40px auto;
       padding: 0 20px;
@@ -264,21 +265,21 @@
     }
     .card .title {
       font-size: 1rem;
-     	margin-top: 6px;
+      margin-top: 6px;
     }
     .card .views {
       font-size: 0.85rem;
-     	margin-top: 4px;
-     	color: #aaa;
+      margin-top: 4px;
+      color: #aaa;
     }
     .card-buttons {
-     	display: flex;
+      display: flex;
       justify-content: center;
       gap: 8px;
-     	margin-top: 8px;
+      margin-top: 8px;
     }
     .card-buttons a button {
-     	padding: 8px 16px;
+      padding: 8px 16px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
@@ -286,12 +287,12 @@
       color: #fff;
     }
     .card-buttons a button:hover {
-     	background: #333;
+      background: #333;
     }
 
     /* Slideshow Modal */
     #image-modal {
-     	display: none;
+      display: none;
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
@@ -308,7 +309,7 @@
     }
     #image-modal .prev,
     #image-modal .next {
-     	position: absolute;
+      position: absolute;
       top: 50%;
       transform: translateY(-50%);
       font-size: 3rem;
@@ -322,7 +323,7 @@
     #image-modal .next { right: 10px; }
     #image-modal .close,
     #modal-download {
-     	position: absolute;
+      position: absolute;
       top: 20px;
       font-size: 2rem;
       color: #fff;
@@ -344,69 +345,68 @@
     .delete-user,
     .delete-url {
       display: none;
-     	margin-top: 8px;
-     	background: #ff4d4f;
-     	border: none;
+      margin-top: 8px;
+      background: #ff4d4f;
+      border: none;
       padding: 6px 12px;
-     	border-radius: 4px;
-     	cursor: pointer;
-     	color: #fff;
-     	font-size: 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #fff;
+      font-size: 0.8rem;
     }
 
     /* Users grid */
     .users-grid {
-     	display: grid;
+      display: grid;
       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       gap: 16px;
-     	margin-bottom: 20px;
+      margin-bottom: 20px;
     }
     .user-entry {
       position: relative;
       text-align: center;
     }
     .user-card {
-     	background: #151515;
+      background: #151515;
       padding: 12px;
       border-radius: 6px;
       transition: transform 0.2s;
       cursor: pointer;
     }
     .user-card:hover {
-     	transform: scale(1.05);
+      transform: scale(1.05);
     }
     .user-card img {
-     	width: 80px;
+      width: 80px;
       height: 80px;
-     	border-radius: 50%;
-     	margin-bottom: 8px;
+      border-radius: 50%;
+      margin-bottom: 8px;
     }
     .handle {
-     	display: block;
-     	font-weight: bold;
-     	font-size: 0.85rem;
-     	hyphens: auto;
+      display: block;
+      font-weight: bold;
+      font-size: 0.85rem;
+      hyphens: auto;
     }
     .videos-container {
-     	display: none;
-     	margin-top: 16px;
+      display: none;
+      margin-top: 16px;
     }
-    /* ensure grid class works on videos-container */
     .videos-container.grid {
-     	display: grid;
+      display: grid;
     }
 
     /* Admin Password Modal */
     #admin-pass-modal {
-     	display: none;
-     	position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-     	background: rgba(0,0,0,0.75);
-     	z-index: 2000;
-     	align-items: center;
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 2000;
+      align-items: center;
       justify-content: center;
     }
     #admin-pass-modal .modal-content {
-     	background: #111;
+      background: #111;
       padding: 2rem;
       border-radius: 8px;
       width: 320px;
@@ -414,46 +414,46 @@
       text-align: center;
     }
     #admin-pass-modal h2 {
-     	margin-bottom: 1rem;
+      margin-bottom: 1rem;
       color: #8e2de2;
-     	font-size: 1.5rem;
+      font-size: 1.5rem;
     }
     #admin-pass-modal input {
-     	width: 100%;
+      width: 100%;
       padding: 0.75rem;
       margin-bottom: 0.75rem;
       border: none; border-radius: 4px;
-     	font-size: 1rem;
+      font-size: 1rem;
     }
     #admin-pass-modal .error {
-     	color: #ff004f; margin-bottom: 0.75rem;
-     	height: 1rem;
+      color: #ff004f; margin-bottom: 0.75rem;
+      height: 1rem;
     }
     #admin-pass-modal .buttons {
-     	display: flex; gap: 0.5rem; justify-content: center;
+      display: flex; gap: 0.5rem; justify-content: center;
     }
     #admin-pass-modal .buttons button {
-     	flex: 1; padding: 0.75rem; border: none;
-     	border-radius: 4px; cursor: pointer;
-     	font-size: 1rem;
+      flex: 1; padding: 0.75rem; border: none;
+      border-radius: 4px; cursor: pointer;
+      font-size: 1rem;
     }
     #admin-pass-modal .buttons .submit { background: #4a00e0; color: #fff; }
     #admin-pass-modal .buttons .cancel { background: #333; color: #fff; }
 
     /* CUSTOM CONTEXT MENU */
     #custom-menu {
-     	position: fixed; display: none; background: #222;
-     	border: 1px solid #555; border-radius: 4px;
-     	z-index: 3000; padding: 8px 0; font-size: 0.9rem;
-     	color: #fff;
-     	box-shadow: 0 0 10px #ff004f;
+      position: fixed; display: none; background: #222;
+      border: 1px solid #555; border-radius: 4px;
+      z-index: 3000; padding: 8px 0; font-size: 0.9rem;
+      color: #fff;
+      box-shadow: 0 0 10px #ff004f;
     }
     #custom-menu li {
       list-style: none; padding: 6px 20px; cursor: pointer;
       transition: all 0.2s;
     }
     #custom-menu li:hover {
-     	background: #333;
+      background: #333;
       text-shadow: 0 0 5px #ff004f;
     }
     #custom-menu li.glow {
@@ -505,6 +505,7 @@
         <a href="/?type=top" data-view="top">Top</a>
         <a href="/?view=urls" data-view="urls">Saved URLs</a>
         <a href="/?view=users" data-view="users">Saved Users</a>
+        <a href="/?view=slideshow" data-view="slideshow">Slideshows</a>
       </nav>
       <button id="sidebar-toggle">☰</button>
     </header>
@@ -606,6 +607,25 @@
         </div>
       </section>
     </div>
+
+    <!-- SLIDESHOW PAGE -->
+    <div id="page-slideshow" style="display:none;">
+      <section>
+        <h3 style="text-align:center;">
+          Slideshows{% if active_q %} for "{{ active_q }}"{% endif %}
+        </h3>
+        <form class="search-bar" id="slideshow-search-form">
+          <input
+            type="text"
+            id="slideshow-search"
+            placeholder="Enter username(s), comma-separated..."
+            value="{{ active_q }}"
+          />
+          <button type="button">Filter</button>
+        </form>
+        <div class="grid" id="slideshow-grid"></div>
+      </section>
+    </div>
   </div>
 
   <!-- Image Slideshow Modal -->
@@ -696,16 +716,16 @@
         const i = document.getElementById('reg-invite').value.trim();
         const res = await fetch('/api/register',{
           method:'POST',
-         	headers:{'Content-Type':'application/json'},
-         	body: JSON.stringify({username:u,password:p,invite_code:i})
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({username:u,password:p,invite_code:i})
         });
         if (!res.ok) {
-         	const err = await res.json().catch(()=>({}));
+          const err = await res.json().catch(()=>({}));
           document.getElementById('error-register').textContent = err.detail || 'Registration failed';
           return;
         }
         document.getElementById('tab-login').click();
-       	document.getElementById('error-login').textContent = 'Registered! Please log in.';
+        document.getElementById('error-login').textContent = 'Registered! Please log in.';
       };
     }
 
@@ -796,7 +816,7 @@
         const play_url = mediaEl.tagName==='AUDIO' ? mediaEl.src : mediaEl.querySelector('source').src;
         const buttons  = card.querySelectorAll('.card-buttons a');
         const hd_url   = buttons[1]?.href || play_url;
-        await fetch('/api/saved-user-urls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ username: q, aweme_id, play_url, hd_url })});
+        await fetch('/api/saved-user-urls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ username: q, aweme_id, play_url, hd_url, images: JSON.parse(card.querySelector('.single-img')?.dataset.images || '[]') })});
       });
     }
 
@@ -805,15 +825,18 @@
       const p    = new URLSearchParams(location.search),
             hasQ = !!p.get('q'),
             view = p.get('view')||p.get('type')||(hasQ?'videos':'home');
-     	document.querySelectorAll('nav a').forEach(a=>
+      document.querySelectorAll('nav a').forEach(a=>
         a.classList.toggle('active', a.dataset.view===view)
       );
-      ['home','urls','users','videos','saved-user'].forEach(v=>{
+      ['home','urls','users','videos','saved-user','slideshow'].forEach(v=>{
         document.getElementById('page-'+v).style.display =
           (v===view||(['latest','top'].includes(view)&&v==='videos'))?'block':'none';
       });
       if(view==='users'){
         fetchSavedUsers();
+      }
+      if(view==='slideshow'){
+        fetchSlides();
       }
     }
 
@@ -877,27 +900,27 @@
     }
     function renderUserSection(users){
       const grid = document.querySelector('.users-grid');
-     	grid.innerHTML='';
+      grid.innerHTML='';
       users.forEach(u=>{
         const entry = document.createElement('div');
         entry.className='user-entry';
 
         const link = document.createElement('div');
-       	link.className='user-card';
-       	link.innerHTML = `
+        link.className='user-card';
+        link.innerHTML = `
           <img src="https://i.imgur.com/bYLmsWi.png" alt="${u.username}"/>
           <span class="handle">${u.username}</span>`;
-       	entry.appendChild(link);
+        entry.appendChild(link);
 
         const vids = document.createElement('div');
         vids.className='videos-container';
         entry.appendChild(vids);
 
         const del = document.createElement('button');
-       	del.className='delete-user';
-       	del.dataset.username = u.username;
-       	del.textContent = 'Delete';
-       	entry.appendChild(del);
+        del.className='delete-user';
+        del.dataset.username = u.username;
+        del.textContent = 'Delete';
+        entry.appendChild(del);
 
         link.onclick = () => showSavedUser(u.username);
 
@@ -910,7 +933,7 @@
     async function showSavedUser(username){
       document.getElementById('saved-user-title').textContent = `Videos for ${username}`;
       const grid = document.getElementById('saved-user-grid');
-     	grid.innerHTML = '';
+      grid.innerHTML = '';
       const resp     = await fetch('/api/saved-user-urls'),
             all      = await resp.json(),
             userUrls = all.filter(item=>item.username===username);
@@ -936,21 +959,21 @@
         grid.innerHTML = '<p style="color:#aaa;text-align:center;">No videos saved for this user.</p>';
       }
       document.querySelectorAll('#app-content > div[id^="page-"]').forEach(d=>d.style.display='none');
-     	document.getElementById('page-saved-user').style.display = 'block';
+      document.getElementById('page-saved-user').style.display = 'block';
     }
 
     // increment views on audio/video play
     document.body.addEventListener('play', async e=>{
-     	if ((e.target.tagName==='VIDEO'||e.target.tagName==='AUDIO') && e.target.dataset.awemeId){
+      if ((e.target.tagName==='VIDEO'||e.target.tagName==='AUDIO') && e.target.dataset.awemeId){
         const vid = e.target.dataset.awemeId;
-       	const r = await fetch(`/api/view/${vid}`, {method:'POST'});
+        const r = await fetch(`/api/view/${vid}`, {method:'POST'});
         if (r.ok){
-         	const {play_count} = await r.json();
-         	const el = document.getElementById(`views-${vid}`);
-         	if (el) el.textContent = `${play_count} views`;
-       	}
-     	}
-   	}, true);
+          const {play_count} = await r.json();
+          const el = document.getElementById(`views-${vid}`);
+          if (el) el.textContent = `${play_count} views`;
+        }
+      }
+    }, true);
 
     // *** CUSTOM CONTEXT MENU LOGIC ***
     const customMenu = document.getElementById('custom-menu');
@@ -980,7 +1003,7 @@
         li.style.display = showIds.includes(li.id)?'block':'none';
         li.classList.toggle('glow', showIds.includes(li.id));
       });
-     	customMenu.style.top = y+'px';
+      customMenu.style.top = y+'px';
       customMenu.style.left = x+'px';
       customMenu.style.display = 'block';
     }
@@ -994,22 +1017,22 @@
       a.download = '';
       document.body.appendChild(a);
       a.click();
-     	document.body.removeChild(a);
+      document.body.removeChild(a);
     };
     document.getElementById('menu-open').onclick = () => {
-     	customMenu.style.display = 'none';
+      customMenu.style.display = 'none';
       const src = currentTarget.querySelector('source').src;
       window.open(src, '_blank');
     };
     document.getElementById('menu-download-image').onclick = () => {
       customMenu.style.display = 'none';
       const src = currentTarget.src;
-     	const a = document.createElement('a');
-     	a.href = src;
-     	a.download = '';
-     	document.body.appendChild(a);
-     	a.click();
-     	document.body.removeChild(a);
+      const a = document.createElement('a');
+      a.href = src;
+      a.download = '';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     };
 
     // Image slideshow
@@ -1024,11 +1047,11 @@
       let currentIndex = 0;
 
       function showModal(){
-       	imgModal.style.display = 'flex';
+        imgModal.style.display = 'flex';
         modalImg.src = currentImages[currentIndex];
       }
       function closeModal(){
-       	imgModal.style.display = 'none';
+        imgModal.style.display = 'none';
       }
       function showPrev(){
         currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length;
@@ -1040,16 +1063,19 @@
       }
 
       // bind click on the single image
-      document.querySelectorAll('.single-img').forEach(img => {
-        img.onclick = () => {
-          const arr = JSON.parse(img.dataset.images);
-          if (arr.length > 1) {
-            currentImages = arr;
-            currentIndex = 0;
-            showModal();
-          }
-        };
-      });
+      function bindSingleImages(){
+        document.querySelectorAll('.single-img').forEach(img => {
+          img.onclick = () => {
+            const arr = JSON.parse(img.dataset.images);
+            if (arr.length > 1) {
+              currentImages = arr;
+              currentIndex = 0;
+              showModal();
+            }
+          };
+        });
+      }
+      bindSingleImages();
 
       closeBtn.onclick = closeModal;
       prevBtn.onclick  = showPrev;
@@ -1061,18 +1087,71 @@
         a.download = '';
         document.body.appendChild(a);
         a.click();
-       	document.body.removeChild(a);
+        document.body.removeChild(a);
       };
       imgModal.onclick = e => {
         if (e.target === imgModal) closeModal();
       };
+
+      // re-bind after dynamic content
+      window.addEventListener('slideshowRendered', bindSingleImages);
     })();
+
+    // Slideshow functions
+    async function fetchSlides(){
+      const res = await fetch('/api/saved-user-urls');
+      const all = await res.json();
+      const params = new URLSearchParams(location.search);
+      const q = params.get('q') || '';
+      let usernames = [];
+      if (q) usernames = q.split(',').map(u=>u.trim().toLowerCase()).filter(u=>u);
+      let filtered = all;
+      if (usernames.length) {
+        filtered = all.filter(item=>usernames.includes(item.username.toLowerCase()));
+      }
+      renderSlides(filtered);
+      window.dispatchEvent(new Event('slideshowRendered'));
+    }
+
+    function renderSlides(entries){
+      const grid = document.getElementById('slideshow-grid');
+      grid.innerHTML = '';
+      entries.forEach(v => {
+        if (v.images && v.images.length){
+          const card = document.createElement('div');
+          card.className = 'card';
+          const img = document.createElement('img');
+          img.src = v.images[0];
+          img.className = 'single-img';
+          img.dataset.images = JSON.stringify(v.images);
+          img.dataset.awemeId = v.aweme_id;
+          card.appendChild(img);
+          const info = document.createElement('div');
+          info.className = 'title';
+          info.textContent = `${v.username} • ${v.aweme_id}`;
+          card.appendChild(info);
+          grid.appendChild(card);
+        }
+      });
+    }
+
+    document.getElementById('slideshow-search-form').onsubmit = e=>e.preventDefault();
+    document.querySelector('#slideshow-search-form button').onclick = () => {
+      const input = document.getElementById('slideshow-search').value.trim();
+      const params = new URLSearchParams(location.search);
+      if (input) params.set('q', input);
+      else params.delete('q');
+      params.set('view','slideshow');
+      window.history.replaceState({},'', `${location.pathname}?${params}`);
+      fetchSlides();
+    };
 
     // init
     async function initApp(){
-     	highlightNav();
+      highlightNav();
       await fetchSavedUrls();
-     	await saveFetchedUserUrls();
+      await saveFetchedUserUrls();
+      await fetchSlides();
     }
     window.addEventListener('load', async ()=>{
       document.getElementById('loader').classList.add('fade-out');

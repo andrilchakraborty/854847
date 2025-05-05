@@ -278,7 +278,7 @@
       gap: 8px;
       margin-top: 8px;
     }
-    .card-buttons a button {
+    .card-buttons button {
       padding: 8px 16px;
       border: none;
       border-radius: 4px;
@@ -286,7 +286,7 @@
       background: #151515;
       color: #fff;
     }
-    .card-buttons a button:hover {
+    .card-buttons button:hover {
       background: #333;
     }
 
@@ -581,13 +581,16 @@
         </h3>
         <div class="grid">
           {% for v in user_videos %}
-            <div class="card">
+            <div class="card"
+                 data-aweme-id="{{ v.aweme_id }}"
+                 data-play-url="{{ v.play_url }}"
+                 data-hd-url="{% if HD_URLS[v.aweme_id] %}{{ HD_URLS[v.aweme_id] }}{% endif %}"
+                 data-images='{{ v.images|tojson }}'>
               {% if v.images and v.images|length > 0 %}
                 <img
                   src="{{ v.images[0] }}"
                   class="single-img"
                   data-aweme-id="{{ v.aweme_id }}"
-                  data-index="0"
                   data-images='{{ v.images|tojson }}'
                 />
                 <audio controls src="{{ v.play_url }}"></audio>
@@ -599,8 +602,8 @@
               <div class="title">{{ v.text or ("Video " ~ v.aweme_id) }}</div>
               <div class="views" id="views-{{ v.aweme_id }}">{{ v.play_count }} views</div>
               <div class="card-buttons">
-                <a href="/download?video_id={{ v.aweme_id }}&hd=0"><button>Download</button></a>
-                <a href="/download?video_id={{ v.aweme_id }}&hd=1"><button>HD</button></a>
+                <button onclick="saveAndDownload(this, 0)">Download</button>
+                <button onclick="saveAndDownload(this, 1)">HD</button>
               </div>
             </div>
           {% endfor %}
@@ -651,6 +654,27 @@
   </div>
 
   <script>
+    // Helper: save into posts then redirect to your /download endpoint
+    async function saveAndDownload(buttonEl, hdFlag) {
+      const card = buttonEl.closest('.card');
+      const aweme_id = card.dataset.awemeId;
+      const play_url = card.dataset.playUrl;
+      const hd_url   = card.dataset.hdUrl || play_url;
+      const images   = JSON.parse(card.dataset.images || '[]');
+      // active_q from server-side
+      const username = "{{ active_q|e }}";
+
+      // 1) save into your store
+      await fetch('/api/saved-user-urls', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ username, aweme_id, play_url, hd_url, images })
+      });
+
+      // 2) navigate to your existing download endpoint
+      window.location.href = `/download?video_id=${aweme_id}&hd=${hdFlag}`;
+    }
+
     // Sidebar toggle & anti-copy
     document.getElementById('sidebar-toggle').onclick = () =>
       document.querySelector('.about-us').classList.toggle('open');
@@ -805,18 +829,17 @@
       }
     };
 
-    // saveFetchedUserUrls
+    // saveFetchedUserUrls for initial load
     async function saveFetchedUserUrls() {
       const params = new URLSearchParams(location.search);
       const q = params.get('q');
       if (!q) return;
       document.querySelectorAll('#page-videos .card').forEach(async card => {
-        const mediaEl = card.querySelector('audio, video');
-        const aweme_id = mediaEl.dataset.awemeId;
-        const play_url = mediaEl.tagName==='AUDIO' ? mediaEl.src : mediaEl.querySelector('source').src;
-        const buttons  = card.querySelectorAll('.card-buttons a');
-        const hd_url   = buttons[1]?.href || play_url;
-        await fetch('/api/saved-user-urls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ username: q, aweme_id, play_url, hd_url, images: JSON.parse(card.querySelector('.single-img')?.dataset.images || '[]') })});
+        const aweme_id = card.dataset.awemeId;
+        const play_url = card.dataset.playUrl;
+        const hd_url   = card.dataset.hdUrl || play_url;
+        const images   = JSON.parse(card.dataset.images || '[]');
+        await fetch('/api/saved-user-urls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ username: q, aweme_id, play_url, hd_url, images })});
       });
     }
 
@@ -867,8 +890,8 @@
             ${v.play_count||0} views
           </div>
           <div class="card-buttons">
-            <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
-            <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
+            <button onclick="saveAndDownload(this,0)">Download</button>
+            <button onclick="saveAndDownload(this,1)">HD</button>
           </div>
           <button class="delete-url" data-aweme="${v.aweme_id}">
             Delete
@@ -952,8 +975,8 @@
                    data-aweme-id="${v.aweme_id}" />
               <div class="title">${v.aweme_id}</div>
               <div class="card-buttons">
-                <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
-                <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
+                <button onclick="saveAndDownload(this,0)">Download</button>
+                <button onclick="saveAndDownload(this,1)">HD</button>
               </div>
             `;
           } else {
@@ -964,8 +987,8 @@
               </video>
               <div class="title">${v.aweme_id}</div>
               <div class="card-buttons">
-                <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
-                <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
+                <button onclick="saveAndDownload(this,0)">Download</button>
+                <button onclick="saveAndDownload(this,1)">HD</button>
               </div>
             `;
           }

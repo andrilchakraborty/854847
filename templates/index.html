@@ -564,7 +564,7 @@
     <!-- SAVED USER PAGE -->
     <div id="page-saved-user" style="display:none;">
       <section>
-        <h3 style="text-align:center;" id="saved-user-title">Videos for </h3>
+        <h3 style="text-align:center;" id="saved-user-title">Videos & Slideshows for </h3>
         <div class="grid" id="saved-user-grid"></div>
       </section>
     </div>
@@ -929,37 +929,48 @@
       bindDeleteUsers();
     }
 
-    // SHOW SAVED USER PAGE
+    // SHOW SAVED USER PAGE (updated to include slideshows)
     async function showSavedUser(username){
-      document.getElementById('saved-user-title').textContent = `Videos for ${username}`;
+      document.getElementById('saved-user-title').textContent = `Videos & Slideshows for ${username}`;
       const grid = document.getElementById('saved-user-grid');
       grid.innerHTML = '';
       const resp     = await fetch('/api/saved-user-urls'),
             all      = await resp.json(),
             userUrls = all.filter(item=>item.username===username);
+
       if (userUrls.length){
         userUrls.forEach(v=>{
+          // video card
           const c = document.createElement('div');
           c.className='card';
-          c.innerHTML = `
-            <video controls data-aweme-id="${v.aweme_id}">
-              <source src="${v.play_url}" type="video/mp4">
-            </video>
-            <div class="title">Video ${v.aweme_id}</div>
-            <div class="views" id="views-${v.aweme_id}">
-              ${v.play_count||0} views
-            </div>
-            <div class="card-buttons">
-              <a href="/download?video_id=${v.aweme_id}&hd=0"><button>Download</button></a>
-              <a href="/download?video_id=${v.aweme_id}&hd=1"><button>HD</button></a>
-            </div>`;
+          if (v.images && v.images.length){
+            // slideshow card
+            c.innerHTML = `
+              <img src="${v.images[0]}"
+                   class="single-img"
+                   data-images='${JSON.stringify(v.images)}'
+                   data-aweme-id="${v.aweme_id}" />
+              <div class="title">${v.aweme_id}</div>
+            `;
+          } else {
+            // plain video
+            c.innerHTML = `
+              <video controls data-aweme-id="${v.aweme_id}">
+                <source src="${v.play_url}" type="video/mp4">
+              </video>
+              <div class="title">${v.aweme_id}</div>
+            `;
+          }
           grid.appendChild(c);
         });
       } else {
-        grid.innerHTML = '<p style="color:#aaa;text-align:center;">No videos saved for this user.</p>';
+        grid.innerHTML = '<p style="color:#aaa;text-align:center;">No saved content for this user.</p>';
       }
+      // switch views
       document.querySelectorAll('#app-content > div[id^="page-"]').forEach(d=>d.style.display='none');
       document.getElementById('page-saved-user').style.display = 'block';
+      // re-bind slideshow clicks
+      window.dispatchEvent(new Event('slideshowRendered'));
     }
 
     // increment views on audio/video play

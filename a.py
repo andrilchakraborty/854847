@@ -7,15 +7,14 @@ from typing import Dict, List
 from urllib.parse import urlparse
 import asyncio
 import httpx
-from datetime import datetime
 import requests
 from jose import jwt
 from passlib.context import CryptContext
 from fastapi import APIRouter, HTTPException, Query, FastAPI, Request, Depends, status
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
-from pydantic import HttpUrl, BaseModel
-from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
+from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel
 
 # ─── Config ────────────────────────────────────────────────────────────────
 
@@ -29,13 +28,11 @@ SECRET_KEY      = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 ALGORITHM       = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-USERS_FILE      = os.path.join(DATA_DIR, "users.json")
-INVITES_FILE    = os.path.join(DATA_DIR, "invites.json")
-POSTS_FILE      = os.path.join(DATA_DIR, "posts.json")
-SAVED_URLS_FILE = os.path.join(DATA_DIR, "saved_urls.json")
-
-# ← NEW
-SAVED_USER_URLS_FILE = os.path.join(DATA_DIR, "saved_user_urls.json")
+USERS_FILE            = os.path.join(DATA_DIR, "users.json")
+INVITES_FILE          = os.path.join(DATA_DIR, "invites.json")
+POSTS_FILE            = os.path.join(DATA_DIR, "posts.json")
+SAVED_URLS_FILE       = os.path.join(DATA_DIR, "saved_urls.json")
+SAVED_USER_URLS_FILE  = os.path.join(DATA_DIR, "saved_user_urls.json")
 
 router = APIRouter()
 
@@ -58,7 +55,7 @@ def save_json(path: str, data):
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
 
-# ─── Persistence ────────────────────────────────────────────────────────────
+# ─── Persistence ───────────────────────────────────────────────────────────
 
 def load_users() -> Dict[str, dict]:
     return load_json(USERS_FILE, {})
@@ -86,7 +83,7 @@ def load_saved_urls() -> List[dict]:
 def save_saved_urls(urls: List[dict]):
     save_json(SAVED_URLS_FILE, urls)
 
-# ← NEW: Saved User-URLs Persistence
+# ─── Saved User-URLs Persistence ───────────────────────────────────────────
 
 def load_saved_user_urls() -> List[dict]:
     return load_json(SAVED_USER_URLS_FILE, [])
@@ -120,15 +117,15 @@ class SavedURL(BaseModel):
 class UserIn(BaseModel):
     username: str
 
-# ← NEW: model for saving username+URL together
-
 class SavedUserURL(BaseModel):
     username: str
     aweme_id: str
     play_url: str
     hd_url:    str
+    images:   List[str]
 
-# ─── Globals ───────────────────────────────────────────────────────────────
+# ─── Globals ────────────────────────────────────────────────────────────────
+
 HD_URLS: Dict[str, str] = {}
 HEADERS = {
     "User-Agent": "Mozilla/5.0 ...",
@@ -136,14 +133,16 @@ HEADERS = {
 }
 DEFAULT_AVATAR = (
     "https://media.discordapp.net/attachments/1343576085098664020/"
-    "1366204471633510530/IMG_20250427_190832_902.jpg?ex=68101890&is=680ec710&hm=af0c0b334d70dd00c729c91a43f706028689ed04fb6e64e0c32e09244ad85f4b&=&format=webp"
+    "1366204471633510530/IMG_20250427_190832_902.jpg?..."
 )
 
-# ─── Utility ───────────────────────────────────────────────────────────────
+# ─── Utility ────────────────────────────────────────────────────────────────
+
 def now_iso():
     return datetime.utcnow().isoformat()
 
-# ─── FastAPI app ──────────────────────────────────────────────────────────
+# ─── FastAPI app ────────────────────────────────────────────────────────────
+
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
@@ -158,10 +157,74 @@ async def index(
     users = load_users()
     posts = load_posts()
 
-    # fetch posts by username when searching
+    # ─── MULTIPLE USER SUPPORT ─────────────────────────────────────────────
+    if q:
+        usernames = [u.strip() for u in q.split(",") if u.strip()]
+        if len(usernames) > 1:
+            saved_user_urls = load_saved_user_urls()
+            for uname in usernames:
+                if uname not in users:
+                    users[uname] = {
+                        "password": "",
+                        "avatar": DEFAULT_AVATAR,
+                        "fetched_at": now_iso()
+                    }
+                else:
+                    users[uname]["fetched_at"] = now_iso()
+
+                all_posts = []
+                cursor = 0
+                while True:
+                    resp = requests.get(
+                        "https://www.tikwm.com/api/user/posts",
+                        params={"unique_id": uname, "count": 50, "cursor": cursor},
+                        headers=HEADERS, timeout=10
+                    ).json()
+                    if resp.get("msg") != "success":
+                        break
+                    vids = resp.get("data", {}).get("videos", [])
+                    if not vids:
+                        break
+                    all_posts.extend(vids)
+                    if not resp["data"].get("has_more", False):
+                        break
+                    cursor = resp["data"].get("cursor", cursor)
+
+                for v in all_posts:
+                    vid = v["video_id"]
+                    play = f"https://www.tikwm.com/video/media/play/{vid}.mp4"
+                    hd   = f"https://www.tikwm.com/video/media/hdplay/{vid}.mp4"
+                    imgs = v.get("images", []) or []
+                    entry = {
+                        "username": uname,
+                        "aweme_id": vid,
+                        "play_url": play,
+                        "hd_url":   hd,
+                        "images":   imgs
+                    }
+                    if not any(u["username"] == uname and u["aweme_id"] == vid for u in saved_user_urls):
+                        saved_user_urls.insert(0, entry)
+
+            save_users(users)
+            save_saved_user_urls(saved_user_urls)
+
+            return templates.TemplateResponse("index.html", {
+                "request":     request,
+                "users":       users,
+                "user_videos": [],
+                "hd_urls":     HD_URLS,
+                "active_q":    q,
+                "view_type":   type or "",
+            })
+
+    # ─── SINGLE USER (existing logic) ───────────────────────────────────────
     if q:
         if q not in users:
-            users[q] = {"password": "", "avatar": DEFAULT_AVATAR, "fetched_at": now_iso()}
+            users[q] = {
+                "password": "",
+                "avatar": DEFAULT_AVATAR,
+                "fetched_at": now_iso()
+            }
         else:
             users[q]["fetched_at"] = now_iso()
         posts[q] = []
@@ -188,25 +251,24 @@ async def index(
             vid = v["video_id"]
             HD_URLS[vid] = f"https://www.tikwm.com/video/media/hdplay/{vid}.mp4"
             posts[q].append({
-                "aweme_id": vid,
-                "text":      v.get("title", ""),
-                "cover":     v.get("cover", ""),
-                "play_url":  f"https://www.tikwm.com/video/media/play/{vid}.mp4",
+                "aweme_id":   vid,
+                "text":       v.get("title", ""),
+                "cover":      v.get("cover", ""),
+                "play_url":   f"https://www.tikwm.com/video/media/play/{vid}.mp4",
                 "play_count": 0,
-                "images":    v.get("images", [])    # ensure images field is carried
+                "images":     v.get("images", [])
             })
         save_posts(posts)
         save_users(users)
 
-    # pick videos to render
     videos = []
     if type == "latest":
         for ups in posts.values():
             if ups:
                 videos.append(ups[0])
     elif type == "top":
-        top_list = [max(ups, key=lambda p: p.get("play_count",0)) for ups in posts.values() if ups]
-        videos = sorted(top_list, key=lambda p: p.get("play_count",0), reverse=True)[:50]
+        top_list = [max(ups, key=lambda p: p.get("play_count", 0)) for ups in posts.values() if ups]
+        videos = sorted(top_list, key=lambda p: p.get("play_count", 0), reverse=True)[:50]
     elif q:
         videos = posts.get(q, [])
 
@@ -234,12 +296,27 @@ async def post_saved_user_url(data: SavedUserURL):
 @app.delete("/api/saved-user-urls/{username}/{aweme_id}", status_code=204)
 async def delete_saved_user_url(username: str, aweme_id: str):
     saved = load_saved_user_urls()
-    filtered = [
-        u for u in saved
-        if not (u["username"] == username and u["aweme_id"] == aweme_id)
-    ]
+    filtered = [u for u in saved if not (u["username"] == username and u["aweme_id"] == aweme_id)]
     save_saved_user_urls(filtered)
     return JSONResponse(status_code=204, content={})
+
+# ←── NEW: Slideshow API ────────────────────────────────────────────────────
+@app.get("/api/slideshow")
+async def get_slideshow():
+    """
+    Returns a flat list of every saved image URL with its username and aweme_id.
+    """
+    slides = []
+    for entry in load_saved_user_urls():
+        uname = entry["username"]
+        aid   = entry["aweme_id"]
+        for img in entry.get("images", []):
+            slides.append({
+                "username":  uname,
+                "aweme_id":  aid,
+                "image_url": img
+            })
+    return JSONResponse(slides)
 
 @app.get("/download")
 async def download(video_id: str, hd: int = 0):
@@ -255,13 +332,10 @@ async def download(video_id: str, hd: int = 0):
     if not found:
         raise HTTPException(404, "Video not found")
 
-    # ← INSERTED IMAGE-DOWNLOAD LOGIC HERE
-    data = found
-    username = next(u for u, ups in posts.items() if any(v["aweme_id"]==video_id for v in ups))
-    uid = username
-    if "images" in data and data["images"]:
-        for i, image_url in enumerate(data["images"]):
-            image_file_path = f"Downloads/{username}_{uid}/{video_id}_{i+1}.jpg"
+    username = next(u for u, ups in posts.items() if any(v["aweme_id"] == video_id for v in ups))
+    if "images" in found and found["images"]:
+        for i, image_url in enumerate(found["images"]):
+            image_file_path = f"Downloads/{username}/{video_id}_{i+1}.jpg"
             os.makedirs(os.path.dirname(image_file_path), exist_ok=True)
             image_resp = requests.get(image_url, headers=HEADERS, stream=True)
             if image_resp.status_code == 200:
@@ -271,7 +345,6 @@ async def download(video_id: str, hd: int = 0):
                 logging.debug("Downloaded image %d for video %s to %s", i+1, video_id, image_file_path)
             else:
                 logging.error("Failed to download image %d for video %s: HTTP %s", i+1, video_id, image_resp.status_code)
-    # ← END INSERT
 
     url = HD_URLS.get(video_id) if hd else found["play_url"]
     r = requests.get(url, headers=HEADERS, timeout=10, stream=True)
@@ -316,10 +389,12 @@ async def register(data: RegisterIn):
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     users = load_users()
     user = users.get(form_data.username)
-    if not user or not pwd_context.verify(form_data.password, user.get("password","")):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED,
-                            "Incorrect username or password",
-                            headers={"WWW-Authenticate":"Bearer"})
+    if not user or not pwd_context.verify(form_data.password, user.get("password", "")):
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            "Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
     token = jwt.encode(
         {"sub": form_data.username,
          "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)},
@@ -331,15 +406,13 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 async def api_users():
     users = load_users()
     return JSONResponse([
-        {
-          "username":  u,
-          "avatar":    users[u].get("avatar",""),
-          "fetched_at": users[u].get("fetched_at","")
-        }
+        {"username": u,
+         "avatar": users[u].get("avatar", ""),
+         "fetched_at": users[u].get("fetched_at", "")}
         for u in users
     ])
 
-@app.delete("/api/users/{username}", status_code=204)   # ← new
+@app.delete("/api/users/{username}", status_code=204)
 async def delete_user(username: str):
     users = load_users()
     if username in users:
@@ -351,38 +424,40 @@ async def delete_user(username: str):
 async def api_latest():
     posts = load_posts()
     result = []
+    users = load_users()
     for user, ups in posts.items():
         if ups:
             p = ups[0]
             result.append({
-                "aweme_id":  p["aweme_id"],
-                "text":      p["text"],
-                "cover":     p["cover"],
-                "play_url":  p["play_url"],
-                "hd_url":    HD_URLS.get(p["aweme_id"], ""),
-                "username":  user,
-                "avatar":    load_users()[user].get("avatar","")
+                "aweme_id": p["aweme_id"],
+                "text":     p["text"],
+                "cover":    p["cover"],
+                "play_url": p["play_url"],
+                "hd_url":   HD_URLS.get(p["aweme_id"], ""),
+                "username": user,
+                "avatar":   users.get(user, {}).get("avatar", "")
             })
     return JSONResponse(result)
 
 @app.get("/api/top")
 async def api_top(limit: int = 20):
     posts = load_posts()
+    users = load_users()
     top = []
     for ups in posts.values():
         if ups:
-            top.append(max(ups, key=lambda p: p.get("play_count",0)))
-    top = sorted(top, key=lambda p: p.get("play_count",0), reverse=True)[:limit]
+            top.append(max(ups, key=lambda p: p.get("play_count", 0)))
+    top = sorted(top, key=lambda p: p.get("play_count", 0), reverse=True)[:limit]
     return JSONResponse([
         {
-          "aweme_id":   pc["aweme_id"],
-          "text":       pc["text"],
-          "cover":      pc["cover"],
-          "play_url":   pc["play_url"],
-          "hd_url":     HD_URLS.get(pc["aweme_id"], ""),
-          "username":   next(u for u,ups in posts.items() if pc in ups),
-          "avatar":     load_users()[next(u for u,ups in posts.items() if pc in ups)].get("avatar",""),
-          "play_count": pc.get("play_count",0)
+            "aweme_id":   pc["aweme_id"],
+            "text":       pc["text"],
+            "cover":      pc["cover"],
+            "play_url":   pc["play_url"],
+            "hd_url":     HD_URLS.get(pc["aweme_id"], ""),
+            "username":   next(u for u, ups in posts.items() if pc in ups),
+            "avatar":     users.get(next(u for u, ups in posts.items() if pc in ups), {}).get("avatar", ""),
+            "play_count": pc.get("play_count", 0)
         } for pc in top
     ])
 
@@ -392,7 +467,7 @@ async def api_view(video_id: str):
     for ups in posts.values():
         for p in ups:
             if p["aweme_id"] == video_id:
-                p["play_count"] = p.get("play_count",0) + 1
+                p["play_count"] = p.get("play_count", 0) + 1
                 save_posts(posts)
                 return {"play_count": p["play_count"]}
     raise HTTPException(404, "Video not found")
@@ -400,22 +475,18 @@ async def api_view(video_id: str):
 @app.post("/api/from-url")
 async def from_url(payload: URLIn):
     try:
-        # resolve to final URL
         r = requests.get(payload.url, headers=HEADERS, timeout=10, allow_redirects=True)
         final = r.url
     except:
         raise HTTPException(400, "Failed to resolve URL")
-    # extract aweme_id
     parts = [p for p in urlparse(final).path.split("/") if p]
     aweme_id = None
-    for i,p in enumerate(parts):
-        if p == "video" and i+1 < len(parts):
-            aweme_id = parts[i+1]
+    for i, p in enumerate(parts):
+        if p == "video" and i + 1 < len(parts):
+            aweme_id = parts[i + 1]
             break
     if not aweme_id:
         raise HTTPException(400, "Could not extract video ID from URL")
-
-    # fetch images via TikWM API
     try:
         info = requests.get(
             f"https://www.tikwm.com/api/?url={final}&hd=1",
@@ -424,11 +495,9 @@ async def from_url(payload: URLIn):
         images = info.get("data", {}).get("images", [])
     except:
         images = []
-
     play_url = f"https://www.tikwm.com/video/media/play/{aweme_id}.mp4"
     hd_url   = f"https://www.tikwm.com/video/media/hdplay/{aweme_id}.mp4"
     HD_URLS[aweme_id] = hd_url
-
     return JSONResponse({
         "aweme_id": aweme_id,
         "play_url": play_url,
@@ -436,7 +505,6 @@ async def from_url(payload: URLIn):
         "images":   images
     })
 
-# ─── Saved URLs API Endpoints ───────────────────────────────────────────────
 @app.get("/api/saved-urls")
 async def get_saved_urls():
     return JSONResponse(load_saved_urls())
@@ -460,7 +528,11 @@ async def delete_saved_url(aweme_id: str):
 async def get_saved_users():
     users = load_users()
     return JSONResponse([
-        {"username": u, "avatar": users[u].get("avatar",""), "fetched_at": users[u].get("fetched_at","")}
+        {
+            "username":   u,
+            "avatar":     users[u].get("avatar", ""),
+            "fetched_at": users[u].get("fetched_at", "")
+        }
         for u in users
     ])
 
@@ -468,7 +540,9 @@ async def get_saved_users():
 async def post_saved_user(u: UserIn):
     users = load_users()
     if u.username not in users:
-        users[u.username] = {"password": "", "avatar": DEFAULT_AVATAR, "fetched_at": now_iso()}
+        users[u.username] = {
+            "password": "", "avatar": DEFAULT_AVATAR, "fetched_at": now_iso()
+        }
         save_users(users)
     return JSONResponse({"username": u.username})
 
@@ -480,7 +554,6 @@ async def delete_saved_user(username: str):
         save_users(users)
     return JSONResponse(status_code=204, content={})
 
-# ← NEW: Username API for Images
 @app.get("/api/images/username/{username}")
 async def get_images_by_username(username: str):
     posts = load_posts()
@@ -498,13 +571,9 @@ async def get_images_by_username(username: str):
         except:
             imgs = []
         if imgs:
-            result.append({
-                "aweme_id": vid,
-                "images":   imgs
-            })
+            result.append({"aweme_id": vid, "images": imgs})
     return JSONResponse(result)
 
-# ← NEW: URL API for Images
 @app.get("/api/images/url/{video_id}")
 async def get_images_by_video(video_id: str):
     try:
@@ -515,12 +584,8 @@ async def get_images_by_video(video_id: str):
         imgs = info.get("data", {}).get("images", [])
     except:
         imgs = []
-    return JSONResponse({
-        "aweme_id": video_id,
-        "images":   imgs
-    })
+    return JSONResponse({"aweme_id": video_id, "images": imgs})
 
-# ─── Scheduled external ping ─────────────────────────────────────────────────
 @app.on_event("startup")
 async def schedule_ping_task():
     async def ping_loop():
@@ -533,10 +598,8 @@ async def schedule_ping_task():
                 except Exception as e:
                     print(f"External ping failed: {e!r}")
                 await asyncio.sleep(120)
-
     asyncio.create_task(ping_loop())
 
-# ─── HEALTHCHECK ───────────────────────────────────────────────────────────────
 @app.get("/ping")
 async def ping():
     return {"status": "alive"}
@@ -545,7 +608,7 @@ app.include_router(router)
 
 def start():
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT",8000)))
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
 
 if __name__ == "__main__":
     start()

@@ -10,6 +10,7 @@ import httpx
 import requests
 from jose import jwt
 from passlib.context import CryptContext
+from fastapi.staticfiles import StaticFiles
 from fastapi import APIRouter, HTTPException, Query, FastAPI, Request, Depends, status
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -19,7 +20,6 @@ from pydantic import BaseModel
 # ─── Config ────────────────────────────────────────────────────────────────
 
 SERVICE_URL = "https://bop-central.onrender.com"
-
 DATA_DIR        = os.getenv("DATA_DIR", "data")
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
@@ -145,6 +145,7 @@ def now_iso():
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ─── Routes ────────────────────────────────────────────────────────────────
 

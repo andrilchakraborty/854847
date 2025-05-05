@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" href="https://i.imgur.com/bYLmsWi.png" type="image/png" />
+  <link rel="icon" href="/static/bop.png" type="image/png" />
   <title>Bop Central</title>
 
   <!-- Open Graph / Facebook Embed -->
@@ -466,12 +466,12 @@
   <!-- Loader -->
   <div id="loader">
     <div class="spinner"></div>
-    <img id="loader-image" src="https://i.imgur.com/bYLmsWi.png" alt="Loading…" />
+    <img id="loader-image" src="/static/bop.png" alt="Loading…" />
   </div>
 
   <!-- Auth UI -->
   <div id="auth-container">
-    <img src="https://i.imgur.com/bYLmsWi.png" alt="Logo" />
+    <img src="/static/bop.png" alt="Logo" />
     <div class="tabs">
       <button id="tab-login" class="active">Login</button>
       <button id="tab-register">Register</button>
@@ -497,7 +497,7 @@
   <div id="app-content">
     <header>
       <a href="/" class="logo-container">
-        <img src="https://i.imgur.com/bYLmsWi.png" alt="Bop Central Logo" class="logo" />
+        <img src="/static/bop.png" alt="Bop Central Logo" class="logo" />
       </a>
       <nav>
         <a href="/" data-view="home">Home</a>
@@ -908,7 +908,7 @@
         const link = document.createElement('div');
         link.className='user-card';
         link.innerHTML = `
-          <img src="https://i.imgur.com/bYLmsWi.png" alt="${u.username}"/>
+          <img src="/static/bop.png" alt="${u.username}"/>
           <span class="handle">${u.username}</span>`;
         entry.appendChild(link);
 

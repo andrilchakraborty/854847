@@ -19,7 +19,7 @@ from pydantic import BaseModel
 
 # ─── Config ────────────────────────────────────────────────────────────────
 
-SERVICE_URL = "https://bop-central.onrender.com"
+SERVICE_URL = "https://bop-central-vcbk.onrender.com/"
 DATA_DIR        = os.getenv("DATA_DIR", "data")
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)

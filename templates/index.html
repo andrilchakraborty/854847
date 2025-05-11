@@ -523,7 +523,7 @@
     <aside class="about-us">
       <h2>About Bop Central</h2>
       <p>
-        Bop Central is your go‑to TikTok downloader and viewer. Dive into the latest and greatest TikTok “bops” and explore what others
+        Bop Central is your go-to TikTok downloader and viewer. Dive into the latest and greatest TikTok “bops” and explore what others
         are sharing. Whether you want to search by username, browse the top trending videos, or fetch and download content via URL,
         Bop Central makes it easy and seamless. Keep up with your favorite creators, discover new interests, and save videos for offline
         viewing—all in one place.
@@ -1120,7 +1120,7 @@
 
     // Slideshow functions
     async function fetchSlides(){
-      const res = await fetch('/api/saved-user-urls');
+      const res = await fetch('/api/slideshow');
       const all = await res.json();
       const params = new URLSearchParams(location.search);
       const q = params.get('q') || '';
@@ -1138,21 +1138,24 @@
       const grid = document.getElementById('slideshow-grid');
       grid.innerHTML = '';
       entries.forEach(v => {
-        if (v.images && v.images.length){
-          const card = document.createElement('div');
-          card.className='card';
-          const img = document.createElement('img');
-          img.src = v.images[0];
-          img.className = 'single-img';
-          img.dataset.images = JSON.stringify(v.images);
-          img.dataset.awemeId = v.aweme_id;
-          card.appendChild(img);
-          const info = document.createElement('div');
-          info.className = 'title';
-          info.textContent = `${v.username} • ${v.aweme_id}`;
-          card.appendChild(info);
-          grid.appendChild(card);
-        }
+        // v: { username, aweme_id, image_url }
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const img = document.createElement('img');
+        img.src = v.image_url;
+        img.className = 'single-img';
+        // wrap single image in array for modal structure
+        img.dataset.images = JSON.stringify([v.image_url]);
+        img.dataset.awemeId = v.aweme_id;
+        card.appendChild(img);
+
+        const info = document.createElement('div');
+        info.className = 'title';
+        info.textContent = `${v.username} • ${v.aweme_id}`;
+        card.appendChild(info);
+
+        grid.appendChild(card);
       });
     }
 
